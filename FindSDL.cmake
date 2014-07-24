@@ -248,15 +248,16 @@ if(SDL_LIBRARY_TEMP)
 
   set(SDL_INTERFACE_LIBS ${SDL_MAIN_LIBRARY})
 
-  # For OS X, SDL uses Cocoa as a backend so it must link to Cocoa.
-  # CMake doesn't display the -framework Cocoa string in the UI even
-  # though it actually is there if I modify a pre-used variable.
-  # I think it has something to do with the CACHE STRING.
-  # So I use a temporary variable until the end so I can set the
-  # "real" variable in one-shot.
+  # For OS X, SDL uses Cocoa as a backend so it must link to Cocoa (as
+  # well as the dependencies of Cocoa (the frameworks: Carbon, IOKit,
+  # and the library: iconv)).  CMake doesn't display the -framework Cocoa
+  # string in the UI even though it actually is there if I modify a 
+  # pre-used variable.  I think it has something to do with the CACHE
+  # STRING.  So I use a temporary variable until the end so I can set
+  # the "real" variable in one-shot.
   if(APPLE)
-    set(SDL_LIBRARY_TEMP ${SDL_LIBRARY_TEMP} "-framework Cocoa")
-    set(SDL_INTERFACE_LIBS ${SDL_INTERFACE_LIBS} "-framework Cocoa")
+    set(SDL_LIBRARY_TEMP ${SDL_LIBRARY_TEMP})
+    set(SDL_INTERFACE_LIBS ${SDL_INTERFACE_LIBS} "-framework Cocoa" "-framework IOKit"  "-framework Carbon" "iconv")
   endif()
 
   # For threads, as mentioned Apple doesn't need this.
