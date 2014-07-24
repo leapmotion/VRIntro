@@ -1,0 +1,3 @@
+#### Notes & TODOs 
+-Better helpers and handling for modules which may be either SHARED or STATIC
+  -proposed solution is to define SHARED_LIBRARY and STATIC_LIBRARY separately, then set LIBRARY to whichever one exists, and if both are defined then create an option so the user can choose.  Alternatively, we could detect which are available, default to SHARED if both are, and expose an Xxx_IMPORT_TYPE cache variable that the user could override.  This would also let us throw errors if the files for the desired type are unavailable.
