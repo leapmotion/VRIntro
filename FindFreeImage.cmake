@@ -28,8 +28,8 @@ find_path(FreeImage_INCLUDE_DIR "FreeImage.h"
 
 
 if(MSVC)
-  find_library(FreeImage_LIBRARY_RELEASE "FreeImage.lib" HINTS "${FreeImage_ROOT_DIR}" PATH_SUFFIXES Dist)
-  find_library(FreeImage_LIBRARY_DEBUG "FreeImaged.lib" HINTS "${FreeImage_ROOT_DIR}" PATH_SUFFIXES Dist)
+  find_library(FreeImage_LIBRARY_RELEASE "FreeImage.lib" HINTS "${FreeImage_ROOT_DIR}" PATH_SUFFIXES lib Dist)
+  find_library(FreeImage_LIBRARY_DEBUG "FreeImaged.lib" HINTS "${FreeImage_ROOT_DIR}" PATH_SUFFIXES lib Dist)
 else()
   find_library(FreeImage_LIBRARY_RELEASE "libfreeimage.dylib" HINTS "${FreeImage_ROOT_DIR}" PATH_SUFFIXES lib Dist)
   find_library(FreeImage_LIBRARY_DEBUG "libfreeimage.dylib" HINTS "${FreeImage_ROOT_DIR}" PATH_SUFFIXES lib Dist)
