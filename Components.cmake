@@ -104,7 +104,8 @@ function(define_install_rules TARGET DESIRED_COMPONENTS)
         INCLUDES DESTINATION ${INCLUDE_DIRECTORIES})
     install(
         EXPORT ${TARGET}
-        DESTINATION cmake-modules)
+        DESTINATION .
+        FILE ComponentsConfig.cmake)
     # message("defining install rules for components ${DESIRED_COMPONENTS}")
     foreach(COMPONENT ${DESIRED_COMPONENTS})
         # message("defining install rules for component ${COMPONENT}")
@@ -112,14 +113,14 @@ function(define_install_rules TARGET DESIRED_COMPONENTS)
             # message("\tdefining include file install rule ${COMPONENT}/${SOURCE_TO_INSTALL} -> include/${COMPONENT}/${SOURCE_TO_INSTALL}")
             install(
                 FILES ${COMPONENT}/${SOURCE_TO_INSTALL}
-                DESTINATION include/${COMPONENT}/${SOURCE_TO_INSTALL}
+                DESTINATION include/${COMPONENT}
             )
         endforeach()
         foreach(RESOURCE_TO_INSTALL ${${COMPONENT}_RESOURCES_TO_INSTALL})
             # message("\tdefining resource file install rule ${COMPONENT}/${RESOURCE_TO_INSTALL} -> resources/${RESOURCE_TO_INSTALL}")
             install(
                 FILES ${COMPONENT}/${RESOURCE_TO_INSTALL}
-                DESTINATION resources/${RESOURCE_TO_INSTALL}
+                DESTINATION resources
             )
         endforeach()
     endforeach()
