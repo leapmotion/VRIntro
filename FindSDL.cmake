@@ -295,3 +295,10 @@ else()
   message(FATAL_ERROR "Unable to determine library type of file ${SDL_LIBRARY}")
 endif()
 
+#HACK FOR MAC X11 DEPENDENCY
+#TODO - Create a modernized FindX11.cmake module, make SDL depend on it on macs
+if(APPLE)
+  find_package(X11 REQUIRED)
+  message("inc=${X11_INCLUDE_DIR}")
+  set_property(TARGET SDL::SDL APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${X11_INCLUDE_DIR})
+endif()
