@@ -27,12 +27,13 @@ find_path(FreeImage_INCLUDE_DIR "FreeImage.h"
           PATH_SUFFIXES Dist include)
 
 
+#Todo: add the ability to select between shared and dynamic versions
 if(MSVC)
   find_library(FreeImage_LIBRARY_RELEASE "FreeImage.lib" HINTS "${FreeImage_ROOT_DIR}" PATH_SUFFIXES lib Dist)
   find_library(FreeImage_LIBRARY_DEBUG "FreeImaged.lib" HINTS "${FreeImage_ROOT_DIR}" PATH_SUFFIXES lib Dist)
 else()
-  find_library(FreeImage_LIBRARY_RELEASE "libfreeimage.dylib" HINTS "${FreeImage_ROOT_DIR}" PATH_SUFFIXES lib Dist)
-  find_library(FreeImage_LIBRARY_DEBUG "libfreeimage.dylib" HINTS "${FreeImage_ROOT_DIR}" PATH_SUFFIXES lib Dist)
+  find_library(FreeImage_LIBRARY_RELEASE "libfreeimage.a" HINTS "${FreeImage_ROOT_DIR}" PATH_SUFFIXES lib Dist)
+  find_library(FreeImage_LIBRARY_DEBUG "libfreeimage.a" HINTS "${FreeImage_ROOT_DIR}" PATH_SUFFIXES lib Dist)
 endif()
 
 include(SelectConfigurations)
@@ -43,8 +44,4 @@ find_package_handle_standard_args(FreeImage DEFAULT_MSG FreeImage_ROOT_DIR FreeI
 
 include(CreateImportTargetHelpers)
 
-if(MSVC)
-  generate_import_target(FreeImage STATIC)
-else()
-  generate_import_target(FreeImage SHARED)
-endif()
+generate_import_target(FreeImage STATIC)
