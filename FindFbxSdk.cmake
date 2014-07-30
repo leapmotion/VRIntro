@@ -29,8 +29,8 @@ find_path(FbxSdk_ROOT_DIR
 set(FbxSdk_INCLUDE_DIR "${FbxSdk_ROOT_DIR}/include")
 
 if(MSVC)
-  find_library(FbxSdk_LIBRARY_RELEASE "libfbxsdk-mt.lib" HINTS "${FbxSdk_ROOT_DIR}/lib/vs2010/x86/release")
-  find_library(FbxSdk_LIBRARY_DEBUG "libfbxsdk-mt.lib" HINTS "${FbxSdk_ROOT_DIR}/lib/vs2010/x86/debug")
+  find_library(FbxSdk_LIBRARY_RELEASE "libfbxsdk-md.lib" HINTS "${FbxSdk_ROOT_DIR}/lib/vs2010/x86/release" "${FbxSdk_ROOT_DIR}/lib/vs2013/x86/release")
+  find_library(FbxSdk_LIBRARY_DEBUG "libfbxsdk-md.lib" HINTS "${FbxSdk_ROOT_DIR}/lib/vs2010/x86/debug" "${FbxSdk_ROOT_DIR}/lib/vs2013/x86/debug")
 else()
   find_library(FbxSdk_LIBRARY_RELEASE "libfbxsdk.a" HINTS "${FbxSdk_ROOT_DIR}/lib/clang/ub/release")
   find_library(FbxSdk_LIBRARY_DEBUG "libfbxsdk.a" HINTS "${FbxSdk_ROOT_DIR}/lib/clang/ub/debug")
