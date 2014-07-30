@@ -33,6 +33,7 @@
 #   * Compiled in, or
 #   * linked as libraries themselves.
 # - A compiled-and-minimal distribution of a component or set of components should be layed out as follows:
+#   * DIST_DIR/doc/                                     # Dir for all documentation
 #   * DIST_DIR/include/                                 # This is the include dir for everything
 #   * DIST_DIR/include/Component1/something.h
 #   * DIST_DIR/include/Component1/otherthing.h
@@ -45,12 +46,11 @@
 #   * DIST_DIR/resources/                               # Dir for non-compiled, non-header files, e.g. shaders.
 #   * DIST_DIR/resources/fancy-shader.glsl
 #   * DIST_DIR/resources/pumpkin.png
-#   * DIST_DIR/cmake-modules/                           # Contains files for easy/correct usage of cmake
-#   * DIST_DIR/cmake-modules/Components.cmake           # Components cmake functionality
-#   * DIST_DIR/cmake-modules/FindComponents.cmake       # Defines how to include and link the lib
+#   * DIST_DIR/ComponentsConfig.cmake                   # Used by cmake projects that link to Components.
 # - The components library should also be usable from its source dir, rather than only from
-#   a packaged distribution.  Because in theory this should only be done by Components team members,
-#   it may be acceptable to manually configure the include/lib/cmake-modules dir variables in ccmake.
+#   a packaged distribution.  This should be done by creating a ComponentsConfig.cmake file
+#   in the build dir which sets the include dirs (from ${CMAKE_CURRENT_SOURCE_DIR}/source)
+#   and the linking libraries (from the build dir).
 
 # COMPONENTS is a list of strings enumerating all the defined components.  Defining a component
 # should append to it -- the define_component macro is a convience macro for defining all the
