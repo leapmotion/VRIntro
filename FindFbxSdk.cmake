@@ -21,7 +21,10 @@ find_path(FbxSdk_ROOT_DIR
           HINTS ${EXTERNAL_LIBRARY_DIR}
           PATH_SUFFIXES fbx-sdk-${FbxSdk_FIND_VERSION}
                         fbx-sdk
-                        fbx-sdk/2014.2)
+                        # NOTE: 2014.2 does not compile with VS2012
+                        # fbx-sdk/2014.2
+                        # TODO: we should make this folder structure more consistent, most likely fbx-sdk/2015.1
+                        fbx2015/2015.1)
 
 set(FbxSdk_INCLUDE_DIR "${FbxSdk_ROOT_DIR}/include")
 
