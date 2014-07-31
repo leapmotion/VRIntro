@@ -4,18 +4,22 @@ Find<Package> files and utility modules.  It is intended to be incorporated into
 as a subtree. 
 
 ##### Usage
-To add to your repository:
-
+First add the cmake-module repo as a remote, so you can more easily reference it
 ```
   git remote add -f cmake-modules-repo git@sf-github.leap.corp:leapmotion/cmake-module.git
+```
+
+To setup cmake-modules in your repository (only run once as a setup step):
+
+```
   git subtree add --prefix cmake-modules cmake-modules-repo master --squash
 ```
-To update:
+To update the copy of cmake-modules in your repository:
 ```
   git fetch cmake-modules-repo master
   git subtree pull --prefix cmake-modules cmake-modules-repo master --squash
 ```
-To push changes upstream:
+To push changes from your repository upstream into the cmake-module repo:
 ```
   git subtree push --prefix cmake-modules cmake-modules repo <branch>
   Open a pull request to merge <branch> to master
