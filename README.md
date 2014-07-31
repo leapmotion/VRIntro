@@ -1,3 +1,30 @@
+#### CMake-Modules
+This repo is a common place to store useful cmake modules, including customized
+Find<Package> files and utility modules.  It is intended to be incorporated into projects
+as a subtree. 
+
+##### Usage
+To add to your repository:
+
+```
+  git remote add -f cmake-modules-repo git@sf-github.leap.corp:leapmotion/cmake-module.git
+  git subtree add --prefix cmake-modules cmake-modules-repo master --squash
+```
+To update:
+```
+  git fetch cmake-modules-repo master
+  git subtree pull --prefix cmake-modules cmake-modules-repo master --squash
+```
+To push changes upstream:
+```
+  git subtree push --prefix cmake-modules cmake-modules repo <branch>
+  Open a pull request to merge <branch> to master
+```
+
+
+For more information on subtrees see Atlassian's [Git Subtree Tutorial](http://blogs.atlassian.com/2013/05/alternatives-to-git-submodule-git-subtree/)
+
+
 #### Notes & TODOs 
 
 - Better helpers and handling for modules which may be either SHARED or STATIC.
