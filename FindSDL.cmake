@@ -112,6 +112,7 @@
 #  License text for the above reference.)
 
 #set(_likely_folders SDL SDL12 SDL11 SDL2)
+include(LeapFindModuleHelpers)
 
 function(sdl_parse_version_file filename major minor patch version_string)
   file(STRINGS "${_canidate_version_file}" _major_line REGEX "^#define[ \t]+SDL_MAJOR_VERSION[ \t]+[0-9]+$")
@@ -132,20 +133,14 @@ endfunction()
 
 if(NOT SDL_ROOT_DIR)
 
-  #TODO: put this in a module
   set(_likely_folders "")
   set(_ok_folders "")
 
   #Find any folders in the prefix path matching SDL* and add them to the list of candidates
-  foreach(_path ${CMAKE_PREFIX_PATH})
-    file(GLOB _subdirs RELATIVE ${_path} ${_path}/*)
-    foreach(_subdir ${_subdirs})
-      if(IS_DIRECTORY ${_path}/${_subdir} AND _subdir MATCHES "SDL.*")
-        list(APPEND _likely_folders ${_path}/${_subdir})
-      endif()
-    endforeach()
-  endforeach()
-  
+  find_likely_folders(SDL _likely_folders ${CMAKE_PREFIX_PATH})
+
+  #TODO: create a filter function that takes a function(to determine version given a path)
+  #and filters folders based on the package version & if EXACT has been set.
   foreach(_folder ${_likely_folders})
     find_file(_canidate_version_file
         NAMES include/SDL_version.h
@@ -154,7 +149,6 @@ if(NOT SDL_ROOT_DIR)
         HINTS $ENV{SDLDIR} ${_likely_folders}
     )
     mark_as_advanced(_canidate_version_file)
-    message(candidate = ${_canidate_version_file})
 
     #grab the version number from this one
     if(_canidate_version_file AND EXISTS "${_canidate_version_file}")
@@ -199,34 +193,6 @@ find_path(SDL_INCLUDE_DIR SDL.h
 )
 
 sdl_parse_version_file(${SDL_INCLUDE_DIR}/SDL_version.h SDL_VERSION_MAJOR SDL_VERSION_MINOR SDL_VERSION_PATCH SDL_VERSION_STRING)
-function(find_multitype_library shared_out static_out import_out)
-  list(REMOVE_AT ARGV 0) #remove shared_out
-  list(REMOVE_AT ARGV 0) #remove static_out
-  list(REMOVE_AT ARGV 0) #remove import_out
-  
-  set(_oldlibsuffixes ${CMAKE_FIND_LIBRARY_SUFFIXES})
-  set(CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_SHARED_LIBRARY_SUFFIX})
-  find_library(${shared_out} ${ARGV})
-  set(CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_STATIC_LIBRARY_SUFFIX})
-  find_library(${static_out} ${ARGV})
-  set(CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_IMPORT_LIBRARY_SUFFIX})
-  find_library(${import_out}
-    NAMES
-      SDL SDL-1.1 SDL${SDL_VERSION_MAJOR}
-    HINTS
-      $ENV{SDLDIR} ${SDL_ROOT_DIR}
-    PATH_SUFFIXES 
-      lib ${VC_LIB_PATH_SUFFIX}
-    NO_DEFAULT_PATH
-  )
-  set(CMAKE_FIND_LIBRARY_SUFFIXES ${_oldlibsuffixes})
-
-  #TODO:verify the types of the static & import libraries
-  if(MSVC)
-    #file(READ ${static_out})
-  endif()
-
-endfunction()
 
 find_multitype_library(SDL_SHARED_LIB SDL_STATIC_LIB SDL_IMPORT_LIB
   NAMES 
@@ -238,14 +204,7 @@ find_multitype_library(SDL_SHARED_LIB SDL_STATIC_LIB SDL_IMPORT_LIB
   NO_DEFAULT_PATH
 )
 
-#select the primary library type
-if(SDL_SHARED_LIB AND EXISTS ${SDL_SHARED_LIB})
-  set(SDL_LIBRARIES ${SDL_IMPORT_LIB})
-  set(SDL_LIBRARY ${SDL_SHARED_LIB})
-elseif(SDL_STATIC_LIB AND EXISTS ${SDL_STATIC_LIB})
-  set(SDL_LIBRARIES ${SDL_STATIC_LIB})
-  set(SDL_LIBRARY ${SDL_STATIC_LIB})
-endif()
+select_library_type(SDL)
 
 find_library(SDL_MAIN_LIBRARY
   NAMES
