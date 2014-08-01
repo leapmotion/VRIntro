@@ -22,7 +22,7 @@ To update the copy of cmake-modules in your repository from the latest code in t
 
 To push changes from your repository upstream into the cmake-module repo:
 ```
-  git subtree push --prefix cmake-modules cmake-modules repo <branch>
+  git subtree push --prefix cmake-modules cmake-modules-repo <branch>
   Open a pull request to merge <branch> to master
 ```
 
