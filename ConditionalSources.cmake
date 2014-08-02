@@ -8,31 +8,21 @@
 
 # Specifies a set of source files that are only meant to be incldued given a certain condition,
 # such as WIN32, or MSVC.
+include(VerboseMessage)
+
 function(conditional_sources condition_var ...)
   include(CMakeParseArguments)
   cmake_parse_arguments(conditional_sources "" "GROUP_NAME" "FILES" ${ARGV})
 
   source_group(${conditional_sources_GROUP_NAME} FILES ${conditional_sources_FILES})
 
-  message(STATUS "Setting source group ${conditional_sources_GROUP_NAME} with files ${conditional_sources_FILES}")
-  if(NOT ${condition_var})
+  if(NOT (${condition_var}))
     set_source_files_properties( ${ARGN} PROPERTIES HEADER_FILE_ONLY TRUE)
+    verbose_message("Setting INACTIVE source group \"${conditional_sources_GROUP_NAME}\" with files ${conditional_sources_FILES}")
+  else()
+    verbose_message("Setting source group \"${conditional_sources_GROUP_NAME}\" with files ${conditional_sources_FILES}")
   endif()
 endfunction()
-
-# A small set of convienence functions for common conditions/group names
-function(windows_sources ...)
-  conditional_sources(WIN32 GROUP_NAME "Windows Source" FILES ${ARGV})
-endfunction()
-
-function(mac_sources ...)
-  conditional_sources(WIN32 GROUP_NAME "Mac Source" FILES ${ARGV})
-endfunction()
-
-function(unix_sources ...)
-  conditional_sources(WIN32 GROUP_NAME "Unix Source" FILES ${ARGV})
-endfunction()
-
 
 #as conditional_sources, but also appends the soruces to the source_list_var
 function(add_conditional_sources source_list_var condition_var ...)
@@ -44,20 +34,21 @@ function(add_conditional_sources source_list_var condition_var ...)
   set(${source_list_var} ${${source_list_var}} ${add_conditional_sources_FILES} PARENT_SCOPE)
 endfunction()
 
-function(add_windows_sources source_list_var ...)
-  list(REMOVE_AT ARGV 0)
-  add_conditional_sources(${source_list_var} WIN32 GROUP_NAME "Windows Source" FILES ${ARGV})
-  set(${source_list_var} ${${source_list_var}} PARENT_SCOPE)
-endfunction()
+macro(_add_platform_conditionals platform condition)
+  function(${platform}_sources ...)
+    set(my_argv ARGV)
+    conditional_sources("${condition}" GROUP_NAME "${platform} Source" FILES ${${my_argv}})
+  endfunction()
 
-function(add_mac_sources source_list_var ...)
-  list(REMOVE_AT ARGV 0)
-  add_conditional_sources(${source_list_var} WIN32 GROUP_NAME "Mac Source" FILES ${ARGV})
-  set(${source_list_var} ${${source_list_var}} PARENT_SCOPE)
-endfunction()
+  function(add_${platform}_sources source_list_var ...)
+    set(my_argv ARGV)
 
-function(unix_sources source_list_var ...)
-  list(REMOVE_AT ARGV 0)
-  conditional_sources(${source_list_var} WIN32 GROUP_NAME "Unix Source" FILES ${ARGV})
-  set(${source_list_var} ${${source_list_var}} PARENT_SCOPE)
-endfunction()
+    list(REMOVE_AT ARGV 0)
+    add_conditional_sources(${source_list_var} "${condition}" GROUP_NAME "${platform} Source" FILES ${${my_argv}})
+    set(${source_list_var} ${${source_list_var}} PARENT_SCOPE)
+  endfunction()
+endmacro()
+
+_add_platform_conditionals(Windows WIN32)
+_add_platform_conditionals(Mac APPLE)
+_add_platform_conditionals(Unix "UNIX AND NOT APPLE AND NOT WIN32")

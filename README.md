@@ -11,13 +11,13 @@ First add the cmake-module repo as a remote, so you can more easily reference it
 
 To setup cmake-modules in your repository (only run once as a setup step):
 ```
-  git subtree add --prefix cmake-modules cmake-modules-repo master --squash
+  git subtree add --prefix cmake-modules cmake-modules-repo master
 ```
 
 To update the copy of cmake-modules in your repository from the latest code in the cmake-modules repo:
 ```
   git fetch cmake-modules-repo master
-  git subtree pull --prefix cmake-modules cmake-modules-repo master --squash
+  git subtree pull --prefix cmake-modules cmake-modules-repo master
 ```
 
 To push changes from your repository upstream into the cmake-module repo:
@@ -73,6 +73,7 @@ cmake_minimum_required(VERSION 3.0)
 project(<Your project name>)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules")
 set(CMAKE_CONFIGURATION_TYPES "Release;Debug" CACHE STRING "" FORCE) #Disables MinSizeRel & MaxSpeedRel
+set(CMAKE_INCLUDE_CURRENT_DIR ON) #essentially the same as include_directories(.) in every subdir
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 #Leap-Specific: We package any external libraries we're using in a single place, so add it to the default

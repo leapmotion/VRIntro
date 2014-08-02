@@ -58,7 +58,7 @@ function(target_imported_libraries target)
           message(FATAL_ERROR "No dylib specified for SHARED import target ${_import_lib}")
         endif()
         
-        message(STATUS "Adding copy command for ${_import_lib}: ${_target_expr}")
+        verbose_message("Adding copy command for ${_import_lib}: ${_target_expr}")
 
         if(MSVC)
           add_custom_command(TARGET ${target} POST_BUILD 
@@ -68,7 +68,7 @@ function(target_imported_libraries target)
             COMMAND ${CMAKE_COMMAND} -E copy_if_different \"${_target_expr}\" \"$<TARGET_FILE_DIR:${target}>/../Frameworks\")
           #call install_name_tool and fixup the dylib paths here:
         else()
-          message("Automatic handling of shared libraries is unimplemented on this platform")
+          message(WARNING "Automatic handling of shared libraries is unimplemented on this platform")
         endif()
       endif()
     endif()
