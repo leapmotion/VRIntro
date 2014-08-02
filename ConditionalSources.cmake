@@ -8,15 +8,19 @@
 
 # Specifies a set of source files that are only meant to be incldued given a certain condition,
 # such as WIN32, or MSVC.
+include(VerboseMessage)
+
 function(conditional_sources condition_var ...)
   include(CMakeParseArguments)
   cmake_parse_arguments(conditional_sources "" "GROUP_NAME" "FILES" ${ARGV})
 
   source_group(${conditional_sources_GROUP_NAME} FILES ${conditional_sources_FILES})
 
-  message(STATUS "Setting source group ${conditional_sources_GROUP_NAME} with files ${conditional_sources_FILES}")
   if(NOT (${condition_var}))
     set_source_files_properties( ${ARGN} PROPERTIES HEADER_FILE_ONLY TRUE)
+    verbose_message("Setting INACTIVE source group \"${conditional_sources_GROUP_NAME}\" with files ${conditional_sources_FILES}")
+  else()
+    verbose_message("Setting source group \"${conditional_sources_GROUP_NAME}\" with files ${conditional_sources_FILES}")
   endif()
 endfunction()
 

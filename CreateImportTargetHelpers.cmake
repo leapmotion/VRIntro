@@ -49,13 +49,15 @@
 # and appends any value found to the matching property (<variable>_DEBUG goes to <property>_DEBUG)
 
 include(CMakeParseArguments)
+include(VerboseMessage)
+
 function(map_var_to_prop target property var )
   set(options REQUIRED)
   cmake_parse_arguments(map_var_to_prop ${options} "" "" ${ARGN})
   # message("Searching for ${var}")
   foreach(_config _DEBUG _RELEASE "")
     if(${var}${_config})
-      message(STATUS "Appending to ${target} ${property}${_config}: ${${var}${_config}}")
+      verbose_message("Appending to ${target} ${property}${_config}: ${${var}${_config}}")
       set(_found TRUE)
       #mark_as_advanced(${property}${_config}) #anything that gets passed in here is an advanced variable
       set_property(TARGET ${target} APPEND 
@@ -78,7 +80,7 @@ function(generate_import_target namespace libtype)
   endif()
   
   if(${namespace}_FOUND)
-    message(STATUS "Generating ${libtype} lib: ${_target} with namespace ${namespace}")
+    verbose_message("Generating ${libtype} lib: ${_target} with namespace ${namespace}")
     add_library(${_target} ${libtype} IMPORTED GLOBAL)
     if(MSVC AND ${libtype} STREQUAL SHARED)
       map_var_to_prop(${_target} IMPORTED_IMPLIB ${namespace}_IMPORT_LIB REQUIRED)
