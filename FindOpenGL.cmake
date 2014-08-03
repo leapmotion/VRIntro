@@ -172,13 +172,12 @@ include(${CMAKE_CURRENT_LIST_DIR}/FindPackageHandleStandardArgs.cmake)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(OpenGL REQUIRED_VARS ${_OpenGL_REQUIRED_VARS})
 unset(_OpenGL_REQUIRED_VARS)
 
-# mark_as_advanced(
-#   OPENGL_INCLUDE_DIR
-#   OPENGL_xmesa_INCLUDE_DIR
-#   OPENGL_glu_LIBRARY
-#   OPENGL_gl_LIBRARY
-# )
-
+mark_as_advanced(
+  OPENGL_INCLUDE_DIR
+  OPENGL_xmesa_INCLUDE_DIR
+  OPENGL_glu_LIBRARY
+  OPENGL_gl_LIBRARY
+)
 
 # This is necessary for generate_import_target to work.
 set(OpenGL_INCLUDE_DIR ${OPENGL_INCLUDE_DIR})
