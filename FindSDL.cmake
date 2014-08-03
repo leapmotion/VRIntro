@@ -277,6 +277,7 @@ if(SDL_LIBRARY_TEMP)
 
 endif()
 
+include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(SDL
                                   REQUIRED_VARS SDL_LIBRARIES SDL_CORE_LIB SDL_INCLUDE_DIR
                                   VERSION_VAR SDL_VERSION_STRING)
