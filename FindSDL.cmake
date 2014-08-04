@@ -3,9 +3,14 @@
 # -------
 #
 # Locate SDL library.  Modified by Walter Gray to be compatible with SDL 2.x and
-# provide import library pseudo targets. Untested with SDL 1.x.
+# provide import library pseudo targets. Untested with SDL 1.x.  Then modified
+# by Victor Dods to forget SDL 1.x, and only look for SDL 2.x.  This find module
+# should be renamed to FindSDL2.cmake -- it is useful to note that the developers
+# of SDL have actually changed the name of the library, not just the version.  It
+# is actually "SDL2", not "SDL" anymore.  Thus a fully-qualified lib directory name
+# would be something like "SDL2-2.0.3", and not "SDL-2.0.3" as one would expect.
 #
-# Imported Targets
+# Imported Targets (TODO: change SDL to SDL2)
 # ^^^^^^^^^^^^^^^^
 #   SDL::SDL
 #     Basic import target. Use to build an application
@@ -15,7 +20,7 @@
 #     Advanced import target. contains only SDLMain.lib
 # Result Variables
 # ^^^^^^^^^^^^^^^^
-# This module defines the following variables
+# This module defines the following variables (TODO: change SDL to SDL2)
 #
 #   SDL_ROOT_DIR
 #
@@ -41,7 +46,7 @@
 #   SDL_LIBRARIES
 #     A legacy string - contains a list of all .lib files used by SDL, modified by SDL_BUILDING_LIBRARY.
 #
-# This module responds to the flag:
+# This module responds to the flag: (TODO: change SDL to SDL2)
 #
 # ::
 #
@@ -115,9 +120,9 @@
 include(LeapFindModuleHelpers)
 
 function(sdl_parse_version_file filename major minor patch version_string)
-  file(STRINGS "${_canidate_version_file}" _major_line REGEX "^#define[ \t]+SDL_MAJOR_VERSION[ \t]+[0-9]+$")
-  file(STRINGS "${_canidate_version_file}" _minor_line REGEX "^#define[ \t]+SDL_MINOR_VERSION[ \t]+[0-9]+$")
-  file(STRINGS "${_canidate_version_file}" _patch_line REGEX "^#define[ \t]+SDL_PATCHLEVEL[ \t]+[0-9]+$")
+  file(STRINGS "${filename}" _major_line REGEX "^#define[ \t]+SDL_MAJOR_VERSION[ \t]+[0-9]+$")
+  file(STRINGS "${filename}" _minor_line REGEX "^#define[ \t]+SDL_MINOR_VERSION[ \t]+[0-9]+$")
+  file(STRINGS "${filename}" _patch_line REGEX "^#define[ \t]+SDL_PATCHLEVEL[ \t]+[0-9]+$")
   string(REGEX REPLACE "^#define[ \t]+SDL_MAJOR_VERSION[ \t]+([0-9]+)$" "\\1" sdl_major "${_major_line}")
   string(REGEX REPLACE "^#define[ \t]+SDL_MINOR_VERSION[ \t]+([0-9]+)$" "\\1" sdl_minor "${_minor_line}")
   string(REGEX REPLACE "^#define[ \t]+SDL_PATCHLEVEL[ \t]+([0-9]+)$" "\\1" sdl_patch "${_patch_line}")
@@ -136,16 +141,14 @@ if(NOT SDL_ROOT_DIR)
   set(_likely_folders "")
   set(_ok_folders "")
 
-  #Find any folders in the prefix path matching SDL* and add them to the list of candidates
-  find_likely_folders(SDL _likely_folders ${CMAKE_PREFIX_PATH})
+  #Find any folders in the prefix path matching SDL2* and add them to the list of candidates
+  find_likely_folders(SDL2 _likely_folders "${CMAKE_PREFIX_PATH}")
 
   #TODO: create a filter function that takes a function(to determine version given a path)
   #and filters folders based on the package version & if EXACT has been set.
   foreach(_folder ${_likely_folders})
     find_file(_canidate_version_file
-        NAMES include/SDL_version.h
-              include/SDL/SDL_version.h
-              include/SDL2/SDL_version.h
+        NAMES include/SDL2/SDL_version.h
         HINTS $ENV{SDLDIR} ${_likely_folders}
     )
     mark_as_advanced(_canidate_version_file)
@@ -153,13 +156,13 @@ if(NOT SDL_ROOT_DIR)
     #grab the version number from this one
     if(_canidate_version_file AND EXISTS "${_canidate_version_file}")
       sdl_parse_version_file("${_canidate_version_file}" _major _minor _patch _version_string)
-      
+
       #exact matches in front
-      if(${_version_string} STREQUAL ${SDL_FIND_VERSION} OR 
-          (_major EQUAL SDL_FIND_VERSION_MAJOR AND 
+      if(${_version_string} STREQUAL ${SDL_FIND_VERSION} OR
+          (_major EQUAL SDL_FIND_VERSION_MAJOR AND
            _minor EQUAL SDL_FIND_VERSION_MINOR AND
            _patch EQUAL SDL_FIND_VERSION_PATCH) )
-        list(INSERT _ok_folders 0 "${_folder}") 
+        list(INSERT _ok_folders 0 "${_folder}")
       endif()
 
       if(NOT SDL_FIND_VERSION_EXACT)
@@ -171,12 +174,9 @@ if(NOT SDL_ROOT_DIR)
     endif()
 
   endforeach()
-  message(ok=${_ok_folders})
 
-  find_path(SDL_ROOT_DIR 
-    NAMES include/SDL_version.h
-          include/SDL/SDL_version.h
-          include/SDL2/SDL_version.h
+  find_path(SDL_ROOT_DIR
+    NAMES include/SDL2/SDL_version.h
     HINTS $ENV{SDLDIR} ${_ok_folders}
   )
 endif()
@@ -186,20 +186,20 @@ find_path(SDL_INCLUDE_DIR SDL.h
       $ENV{SDLDIR}
       ${SDL_ROOT_DIR}
     PATH_SUFFIXES
+      include/SDL2
       include
       include/SDL
-      include/SDL2
     NO_DEFAULT_PATH
 )
 
 sdl_parse_version_file(${SDL_INCLUDE_DIR}/SDL_version.h SDL_VERSION_MAJOR SDL_VERSION_MINOR SDL_VERSION_PATCH SDL_VERSION_STRING)
 
 find_multitype_library(SDL_SHARED_LIB SDL_STATIC_LIB SDL_IMPORT_LIB
-  NAMES 
-    SDL SDL-1.1 SDL${SDL_VERSION_MAJOR}
+  NAMES
+    SDL${SDL_VERSION_MAJOR}
   HINTS
     $ENV{SDLDIR} ${SDL_ROOT_DIR}
-  PATH_SUFFIXES 
+  PATH_SUFFIXES
     lib ${VC_LIB_PATH_SUFFIX}
   NO_DEFAULT_PATH
 )
@@ -231,7 +231,7 @@ endif()
 # For OS X, SDL uses Cocoa as a backend so it must link to Cocoa (as
 # well as the dependencies of Cocoa (the frameworks: Carbon, IOKit,
 # and the library: iconv)).  CMake doesn't display the -framework Cocoa
-# string in the UI even though it actually is there if I modify a 
+# string in the UI even though it actually is there if I modify a
 # pre-used variable.  I think it has something to do with the CACHE
 # STRING.  So I use a temporary variable until the end so I can set
 # the "real" variable in one-shot.
@@ -254,16 +254,18 @@ endif()
 # Set the final string here so the GUI reflects the final state.
 list(APPEND SDL_LIBRARIES ${SDL_INTERFACE_LIBS} CACHE STRING "Where the SDL Library can be found")
 
+include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(SDL
                                   REQUIRED_VARS SDL_LIBRARY SDL_MAIN_LIBRARY SDL_INCLUDE_DIR
                                   VERSION_VAR SDL_VERSION_STRING)
 
-mark_as_advanced(SDL_INCLUDE_DIR SDL_LIBRARIES  SDL_MAIN_LIBRARY SDL_IMPORT_LIB SDL_SHARED_LIB SDL_STATIC_LIB)
+mark_as_advanced(SDL_INCLUDE_DIR SDL_LIBRARIES SDL_MAIN_LIBRARY SDL_IMPORT_LIB SDL_SHARED_LIB SDL_STATIC_LIB)
 
 if(SDL_MAIN_LIBRARY AND EXISTS "${SDL_MAIN_LIBRARY}")
   set(SDL_MAIN_FOUND TRUE)
 endif()
 
+include(CreateImportTargetHelpers)
 generate_import_target(SDL_MAIN STATIC TARGET SDL::Main)
 
 include(CreateImportTargetHelpers)

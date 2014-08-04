@@ -5,7 +5,7 @@ function(find_multitype_library shared_out static_out import_out)
   list(REMOVE_AT ARGV 0) #remove shared_out
   list(REMOVE_AT ARGV 0) #remove static_out
   list(REMOVE_AT ARGV 0) #remove import_out
- 
+
   set(_oldlibsuffixes "${CMAKE_FIND_LIBRARY_SUFFIXES}")
     set(CMAKE_FIND_LIBRARY_SUFFIXES "${CMAKE_SHARED_LIBRARY_SUFFIX}")
     find_library(${shared_out} ${ARGV})
@@ -31,7 +31,6 @@ endfunction()
 function(select_library_type namespace)
   #select the primary library type
   if(${namespace}_SHARED_LIB AND EXISTS "${${namespace}_SHARED_LIB}")
-    
     #add either the .lib or the .dylib to the libraries list
     if(${namespace}_IMPORT_LIB AND EXISTS "${${namespace}_IMPORT_LIB}")
       set(${namespace}_LIBRARIES "${${namespace}_LIBRARIES}" "${${namespace}_IMPORT_LIB}" PARENT_SCOPE)
@@ -56,7 +55,7 @@ function(find_likely_folders package folder_list_var path_list )
   foreach(_path ${ARGV})
     file(GLOB _subdirs RELATIVE ${_path} ${_path}/*)
     foreach(_subdir ${_subdirs})
-      if(IS_DIRECTORY ${_path}/${_subdir} AND _subdir MATCHES "${package}.*")
+      if(IS_DIRECTORY ${_path}/${_subdir} AND _subdir MATCHES "${package}*")
         list(APPEND _folders ${_path}/${_subdir})
       endif()
     endforeach()
