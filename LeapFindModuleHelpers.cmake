@@ -5,15 +5,16 @@ function(find_multitype_library shared_out static_out import_out)
   list(REMOVE_AT ARGV 0) #remove shared_out
   list(REMOVE_AT ARGV 0) #remove static_out
   list(REMOVE_AT ARGV 0) #remove import_out
-  
-  set(_oldlibsuffixes ${CMAKE_FIND_LIBRARY_SUFFIXES})
-    set(CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_SHARED_LIBRARY_SUFFIX})
+ 
+  set(_oldlibsuffixes "${CMAKE_FIND_LIBRARY_SUFFIXES}")
+    set(CMAKE_FIND_LIBRARY_SUFFIXES "${CMAKE_SHARED_LIBRARY_SUFFIX}")
     find_library(${shared_out} ${ARGV})
-    set(CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(CMAKE_FIND_LIBRARY_SUFFIXES "${CMAKE_STATIC_LIBRARY_SUFFIX}")
     find_library(${static_out} ${ARGV})
-    set(CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_IMPORT_LIBRARY_SUFFIX})
+    set(CMAKE_FIND_LIBRARY_SUFFIXES "${CMAKE_IMPORT_LIBRARY_SUFFIX}")
     find_library(${import_out} ${ARGV})
-  set(CMAKE_FIND_LIBRARY_SUFFIXES ${_oldlibsuffixes})
+  set(CMAKE_FIND_LIBRARY_SUFFIXES "${_oldlibsuffixes}")
+
 
   #TODO:verify the types of the static & import libraries
   if(MSVC)
