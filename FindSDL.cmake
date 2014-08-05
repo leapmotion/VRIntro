@@ -136,20 +136,21 @@ function(sdl_parse_version_file filename major minor patch version_string)
   set(${version_string} "${sdl_major}.${sdl_minor}.${sdl_patch}" PARENT_SCOPE)
 endfunction()
 
-if(NOT SDL_ROOT_DIR)
+if(NOT EXISTS SDL_ROOT_DIR)
 
   set(_likely_folders "")
   set(_ok_folders "")
 
-  #Find any folders in the prefix path matching SDL2* and add them to the list of candidates
-  find_likely_folders(SDL2 _likely_folders "${CMAKE_PREFIX_PATH}")
+  #Find any folders in the prefix path matching SDL* and add them to the list of candidates
+  find_likely_folders(SDL _likely_folders "${CMAKE_PREFIX_PATH}")
 
   #TODO: create a filter function that takes a function(to determine version given a path)
   #and filters folders based on the package version & if EXACT has been set.
   foreach(_folder ${_likely_folders})
     find_file(_canidate_version_file
-        NAMES include/SDL2/SDL_version.h
+        NAMES SDL_version.h
         HINTS $ENV{SDLDIR} ${_likely_folders}
+        PATH_SUFFIXES include include/SDL2 include/SDL
     )
     mark_as_advanced(_canidate_version_file)
 
@@ -176,9 +177,13 @@ if(NOT SDL_ROOT_DIR)
   endforeach()
 
   find_path(SDL_ROOT_DIR
-    NAMES include/SDL2/SDL_version.h
+    NAMES include/SDL_Version.h 
+          include/SDL${SDL_MAJOR_VERSION}/SDL_Version.h 
+          include/SDL/SDL_version.h 
     HINTS $ENV{SDLDIR} ${_ok_folders}
+    
   )
+  
 endif()
 
 find_path(SDL_INCLUDE_DIR SDL.h
@@ -209,6 +214,7 @@ select_library_type(SDL)
 find_library(SDL_MAIN_LIBRARY
   NAMES
     SDL${SDL_VERSION_MAJOR}main
+    SDLmain
   HINTS
     ENV{SDLDIR} ${SDL_ROOT_DIR}
   PATH_SUFFIXES
@@ -277,8 +283,8 @@ else()
   message(FATAL_ERROR "Unable to determine library type of file ${SDL_LIBRARY}")
 endif()
 
-add_library(SDL::SDL INTERFACE IMPORTED GLOBAL)
-target_link_libraries(SDL::SDL INTERFACE SDL::Library SDL::Main)
+add_library(SDL::SDL INTERFACE IMPORTED)
+set_property(TARGET SDL::SDL APPEND PROPERTY INTERFACE_LINK_LIBRARIES SDL::Library SDL::Main)
 
 #HACK FOR MAC X11 DEPENDENCY
 #TODO - Create a modernized FindX11.cmake module, make SDL depend on it on macs
