@@ -15,7 +15,6 @@ function(find_multitype_library shared_out static_out import_out)
     find_library(${import_out} ${ARGV})
   set(CMAKE_FIND_LIBRARY_SUFFIXES "${_oldlibsuffixes}")
 
-
   #TODO:verify the types of the static & import libraries
   if(MSVC)
     #file(READ ${static_out})
@@ -52,10 +51,12 @@ function(find_likely_folders package folder_list_var path_list )
   list(REMOVE_AT ARGV 0) #pop package name
   list(REMOVE_AT ARGV 0) #pop folder_list_var
 
+  set(_folders ${${folder_list_var}}) #make sure we're appending
+
   foreach(_path ${ARGV})
     file(GLOB _subdirs RELATIVE ${_path} ${_path}/*)
     foreach(_subdir ${_subdirs})
-      if(IS_DIRECTORY ${_path}/${_subdir} AND _subdir MATCHES "${package}*")
+      if(IS_DIRECTORY ${_path}/${_subdir} AND _subdir MATCHES "^${package}*")
         list(APPEND _folders ${_path}/${_subdir})
       endif()
     endforeach()
