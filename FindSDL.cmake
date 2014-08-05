@@ -3,16 +3,24 @@
 # -------
 #
 # Locate SDL library.  Modified by Walter Gray to be compatible with SDL 2.x and
-# provide import library pseudo targets. Untested with SDL 1.x.
+# provide import library pseudo targets. Untested with SDL 1.x.  Then modified
+# by Victor Dods to forget SDL 1.x, and only look for SDL 2.x.  This find module
+# should be renamed to FindSDL2.cmake -- it is useful to note that the developers
+# of SDL have actually changed the name of the library, not just the version.  It
+# is actually "SDL2", not "SDL" anymore.  Thus a fully-qualified lib directory name
+# would be something like "SDL2-2.0.3", and not "SDL-2.0.3" as one would expect.
 #
-# Imported Targets
+# Imported Targets (TODO: change SDL to SDL2)
 # ^^^^^^^^^^^^^^^^
 #   SDL::SDL
-#     Basic import target.
-#
+#     Basic import target. Use to build an application
+#   SDL::Library
+#     Advanced import target. Does not link with SDLmain, for use when building libraries
+#   SDL::Main
+#     Advanced import target. contains only SDLMain.lib
 # Result Variables
 # ^^^^^^^^^^^^^^^^
-# This module defines the following variables
+# This module defines the following variables (TODO: change SDL to SDL2)
 #
 #   SDL_ROOT_DIR
 #
@@ -22,14 +30,23 @@
 #
 #   SDL_LIBRARY
 #     Where to find SDL.dll/dylib if linking dynamically, or .lib/.a statically
+#   SDL_SHARED_LIB
+#     Where to find the SDL.dll/dylib if it exists
+#   SDL_STATIC_LIB
+#     Where to find the SDL.lib/.a if it exists
 #   SDL_IMPORT_LIB
-#     Where to find SDL.lib (Windows only)
-#   SDL_LIBRARIES
-#     Where to find SDLmain.lib
+#     Where to find SDL.lib (Windows only) if it exists
+#   SDL_MAIN_LIBRARY
+#     Where to find SDLmain.lib/.a
+#   SDL_LINK_TYPE
+#     Either STATIC or SHARED depending on if SDL.dll/dylib is found.  If both are available,
+#     defaults to SHARED.  Setting this in the cache will attempt to force one or the other
 #   SDL_VERSION_STRING
 #     A human-readable string containing the version of SDL
+#   SDL_LIBRARIES
+#     A legacy string - contains a list of all .lib files used by SDL, modified by SDL_BUILDING_LIBRARY.
 #
-# This module responds to the flag:
+# This module responds to the flag: (TODO: change SDL to SDL2)
 #
 # ::
 #
@@ -100,56 +117,68 @@
 #  License text for the above reference.)
 
 #set(_likely_folders SDL SDL12 SDL11 SDL2)
-set(_likely_folders )
+include(LeapFindModuleHelpers)
+
+function(sdl_parse_version_file filename major minor patch version_string)
+  file(STRINGS "${filename}" _major_line REGEX "^#define[ \t]+SDL_MAJOR_VERSION[ \t]+[0-9]+$")
+  file(STRINGS "${filename}" _minor_line REGEX "^#define[ \t]+SDL_MINOR_VERSION[ \t]+[0-9]+$")
+  file(STRINGS "${filename}" _patch_line REGEX "^#define[ \t]+SDL_PATCHLEVEL[ \t]+[0-9]+$")
+  string(REGEX REPLACE "^#define[ \t]+SDL_MAJOR_VERSION[ \t]+([0-9]+)$" "\\1" sdl_major "${_major_line}")
+  string(REGEX REPLACE "^#define[ \t]+SDL_MINOR_VERSION[ \t]+([0-9]+)$" "\\1" sdl_minor "${_minor_line}")
+  string(REGEX REPLACE "^#define[ \t]+SDL_PATCHLEVEL[ \t]+([0-9]+)$" "\\1" sdl_patch "${_patch_line}")
+  unset(_major_line)
+  unset(_minor_line)
+  unset(_patch_line)
+
+  set(${major} ${sdl_major} PARENT_SCOPE)
+  set(${minor} ${sdl_minor} PARENT_SCOPE)
+  set(${patch} ${sdl_patch} PARENT_SCOPE)
+  set(${version_string} "${sdl_major}.${sdl_minor}.${sdl_patch}" PARENT_SCOPE)
+endfunction()
 
 if(NOT SDL_ROOT_DIR)
-  set(_major_range RANGE 2 0)
-  set(_minor_range RANGE 4 0)
-  set(_patch_range RANGE 5 0)
 
-  if(${SDL_FIND_VERSION_COUNT} GREATER 0)
-    set(_major_range ${SDL_FIND_VERSION_MAJOR})
-  endif()
+  set(_likely_folders "")
+  set(_ok_folders "")
 
-  if(${SDL_FIND_VERSION_COUNT} GREATER 1)
-    set(_minor_range ${SDL_FIND_VERSION_MINOR})
-  endif()
+  #Find any folders in the prefix path matching SDL2* and add them to the list of candidates
+  find_likely_folders(SDL2 _likely_folders "${CMAKE_PREFIX_PATH}")
 
-  if(${SDL_FIND_VERSION_COUNT} GREATER 2)
-    set(_patch_range ${SDL_FIND_VERSION_PATCH})
-  endif()
+  #TODO: create a filter function that takes a function(to determine version given a path)
+  #and filters folders based on the package version & if EXACT has been set.
+  foreach(_folder ${_likely_folders})
+    find_file(_canidate_version_file
+        NAMES include/SDL2/SDL_version.h
+        HINTS $ENV{SDLDIR} ${_likely_folders}
+    )
+    mark_as_advanced(_canidate_version_file)
 
-  foreach(_major ${_major_range})
-    foreach(_minor ${_minor_range})
-      foreach(_patch ${_patch_range})
-        if(_major GREATER 1)
-          set(_version_suffix ${_major})
+    #grab the version number from this one
+    if(_canidate_version_file AND EXISTS "${_canidate_version_file}")
+      sdl_parse_version_file("${_canidate_version_file}" _major _minor _patch _version_string)
+
+      #exact matches in front
+      if(${_version_string} STREQUAL ${SDL_FIND_VERSION} OR
+          (_major EQUAL SDL_FIND_VERSION_MAJOR AND
+           _minor EQUAL SDL_FIND_VERSION_MINOR AND
+           _patch EQUAL SDL_FIND_VERSION_PATCH) )
+        list(INSERT _ok_folders 0 "${_folder}")
+      endif()
+
+      if(NOT SDL_FIND_VERSION_EXACT)
+        if(_major EQUAL SDL_FIND_VERSION_MAJOR AND
+           _version_string VERSION_GREATER SDL_FIND_VERSION)
+          list(APPEND _ok_folders "${_folder}")
         endif()
-        list(APPEND _likely_folders SDL${_version_suffix}-${_major}.${_minor}.${_patch})
-      endforeach()
-    endforeach()
+      endif()
+    endif()
+
   endforeach()
-  list(APPEND _likely_folders SDL SDL2)
-      
-  find_path(SDL_ROOT_DIR 
-    NAMES include/SDL_version.h
-          include/SDL/SDL_version.h
-          include/SDL2/SDL_version.h
-    HINTS $ENV{SDLDIR}
-    PATH_SUFFIXES ${_likely_folders}
+
+  find_path(SDL_ROOT_DIR
+    NAMES include/SDL2/SDL_version.h
+    HINTS $ENV{SDLDIR} ${_ok_folders}
   )
-
-  if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-    set(VC_LIB_PATH_SUFFIX lib/x64)
-  else()
-    set(VC_LIB_PATH_SUFFIX lib/x86)
-  endif()
-
-else()
-  # temp hack for Mac builds
-  if(NOT MSVC)
-    set(SDL_LIBRARY_TEMP ${SDL_ROOT_DIR}/lib/libSDL2.a)
-  endif()
 endif()
 
 find_path(SDL_INCLUDE_DIR SDL.h
@@ -157,76 +186,39 @@ find_path(SDL_INCLUDE_DIR SDL.h
       $ENV{SDLDIR}
       ${SDL_ROOT_DIR}
     PATH_SUFFIXES
+      include/SDL2
       include
       include/SDL
-      include/SDL2
     NO_DEFAULT_PATH
-    NO_CMAKE_ENVIRONMENT_PATH
-    NO_CMAKE_PATH
-    NO_SYSTEM_ENVIRONMENT_PATH
-    NO_CMAKE_SYSTEM_PATH
-    NO_CMAKE_FIND_ROOT_PATH
 )
-  
-if(SDL_INCLUDE_DIR AND EXISTS "${SDL_INCLUDE_DIR}/SDL_version.h")
-  file(STRINGS "${SDL_INCLUDE_DIR}/SDL_version.h" _major_line REGEX "^#define[ \t]+SDL_MAJOR_VERSION[ \t]+[0-9]+$")
-  file(STRINGS "${SDL_INCLUDE_DIR}/SDL_version.h" _minor_line REGEX "^#define[ \t]+SDL_MINOR_VERSION[ \t]+[0-9]+$")
-  file(STRINGS "${SDL_INCLUDE_DIR}/SDL_version.h" _patch_line REGEX "^#define[ \t]+SDL_PATCHLEVEL[ \t]+[0-9]+$")
-  string(REGEX REPLACE "^#define[ \t]+SDL_MAJOR_VERSION[ \t]+([0-9]+)$" "\\1" SDL_VERSION_MAJOR "${_major_line}")
-  string(REGEX REPLACE "^#define[ \t]+SDL_MINOR_VERSION[ \t]+([0-9]+)$" "\\1" SDL_VERSION_MINOR "${_minor_line}")
-  string(REGEX REPLACE "^#define[ \t]+SDL_PATCHLEVEL[ \t]+([0-9]+)$" "\\1" SDL_VERSION_PATCH "${_patch_line}")
-  set(SDL_VERSION_STRING ${SDL_VERSION_MAJOR}.${SDL_VERSION_MINOR}.${SDL_VERSION_PATCH})
-  unset(_major_line)
-  unset(_minor_line)
-  unset(_patch_line)
-endif()
 
-# SDL-1.1 is the name used by FreeBSD ports...
-# don't confuse it for the version number.
-find_library(SDL_CORE_LIB
-  NAMES SDL SDL-1.1 SDL${SDL_VERSION_MAJOR}
+sdl_parse_version_file(${SDL_INCLUDE_DIR}/SDL_version.h SDL_VERSION_MAJOR SDL_VERSION_MINOR SDL_VERSION_PATCH SDL_VERSION_STRING)
+
+find_multitype_library(SDL_SHARED_LIB SDL_STATIC_LIB SDL_IMPORT_LIB
+  NAMES
+    SDL${SDL_VERSION_MAJOR}
   HINTS
-    $ENV{SDLDIR}
-    ${SDL_ROOT_DIR}
-  PATH_SUFFIXES lib ${VC_LIB_PATH_SUFFIX}
+    $ENV{SDLDIR} ${SDL_ROOT_DIR}
+  PATH_SUFFIXES
+    lib ${VC_LIB_PATH_SUFFIX}
+  NO_DEFAULT_PATH
 )
-set(SDL_LIBRARY_TEMP ${SDL_CORE_LIB})
 
-if(MSVC)
-  set(SDL_IMPORT_LIB ${SDL_CORE_LIB})
-  find_file(SDL_LIBRARY NAMES SDL.dll SDL-1.1.dll SDL2.dll HINTS "${SDL_ROOT_DIR}/lib")
-else()
-  set(SDL_LIBRARY ${SDL_CORE_LIB})
-endif()
+select_library_type(SDL)
+
+find_library(SDL_MAIN_LIBRARY
+  NAMES
+    SDL${SDL_VERSION_MAJOR}main
+  HINTS
+    ENV{SDLDIR} ${SDL_ROOT_DIR}
+  PATH_SUFFIXES
+    lib ${VC_LIB_PATH_SUFFIX}
+  PATHS
+    /sw /opt/local /opt/csw /opt
+)
 
 if(NOT SDL_BUILDING_LIBRARY)
-  if(NOT ${SDL_INCLUDE_DIR} MATCHES ".framework")
-    # Non-OS X framework versions expect you to also dynamically link to
-    # SDLmain. This is mainly for Windows and OS X. Other (Unix) platforms
-    # seem to provide SDLmain for compatibility even though they don't
-    # necessarily need it.
-    find_library(SDL_MAIN_LIBRARY
-      NAMES SDL${SDL_VERSION_MAJOR}main
-      HINTS
-        $ENV{SDLDIR}
-        ${SDL_ROOT_DIR}
-      PATH_SUFFIXES lib ${VC_LIB_PATH_SUFFIX}
-      PATHS
-      /sw
-      /opt/local
-      /opt/csw
-      /opt
-    )
-
-  endif()
-endif()
-
-# SDL may require threads on your system.
-# The Apple build may not need an explicit flag because one of the
-# frameworks may already provide it.
-# But for non-OSX systems, I will use the CMake Threads package.
-if(NOT APPLE)
-  find_package(Threads)
+  list(APPEND SDL_LIBRARIES ${SDL_MAIN_LIBRARY})
 endif()
 
 # MinGW needs an additional library, mwindows
@@ -236,64 +228,57 @@ if(MINGW)
   set(MINGW32_LIBRARY mingw32 CACHE STRING "mwindows for MinGW")
 endif()
 
-if(SDL_LIBRARY_TEMP)
-  # For SDLmain
-  if(SDL_MAIN_LIBRARY AND NOT SDL_BUILDING_LIBRARY)
-    list(FIND SDL_LIBRARY_TEMP "${SDL_MAIN_LIBRARY}" _SDL_MAIN_INDEX)
-    if(_SDL_MAIN_INDEX EQUAL -1)
-      set(SDL_LIBRARY_TEMP "${SDL_MAIN_LIBRARY}" ${SDL_LIBRARY_TEMP})
-    endif()
-    unset(_SDL_MAIN_INDEX)
-  endif()
-
-  set(SDL_INTERFACE_LIBS ${SDL_MAIN_LIBRARY})
-
-  # For OS X, SDL uses Cocoa as a backend so it must link to Cocoa (as
-  # well as the dependencies of Cocoa (the frameworks: Carbon, IOKit,
-  # and the library: iconv)).  CMake doesn't display the -framework Cocoa
-  # string in the UI even though it actually is there if I modify a 
-  # pre-used variable.  I think it has something to do with the CACHE
-  # STRING.  So I use a temporary variable until the end so I can set
-  # the "real" variable in one-shot.
-  if(APPLE)
-    set(SDL_LIBRARY_TEMP ${SDL_LIBRARY_TEMP})
-    set(SDL_INTERFACE_LIBS ${SDL_INTERFACE_LIBS} "-framework Cocoa" "-framework IOKit"  "-framework Carbon" "iconv")
-  endif()
-
-  # For threads, as mentioned Apple doesn't need this.
-  # In fact, there seems to be a problem if I used the Threads package
-  # and try using this line, so I'm just skipping it entirely for OS X.
-  if(NOT APPLE)
-    set(SDL_LIBRARY_TEMP ${SDL_LIBRARY_TEMP} ${CMAKE_THREAD_LIBS_INIT})
-  endif()
-
-  # For MinGW library
-  if(MINGW)
-    set(SDL_LIBRARY_TEMP ${MINGW32_LIBRARY} ${SDL_LIBRARY_TEMP})
-  endif()
-
-  # Set the final string here so the GUI reflects the final state.
-  set(SDL_LIBRARIES ${SDL_LIBRARY_TEMP} CACHE STRING "Where the SDL Library can be found")
-
+# For OS X, SDL uses Cocoa as a backend so it must link to Cocoa (as
+# well as the dependencies of Cocoa (the frameworks: Carbon, IOKit,
+# and the library: iconv)).  CMake doesn't display the -framework Cocoa
+# string in the UI even though it actually is there if I modify a
+# pre-used variable.  I think it has something to do with the CACHE
+# STRING.  So I use a temporary variable until the end so I can set
+# the "real" variable in one-shot.
+if(APPLE)
+  list(APPEND SDL_INTERFACE_LIBS "-framework Cocoa" "-framework IOKit"  "-framework Carbon" "iconv")
 endif()
 
+# For threads, as mentioned Apple doesn't need this.
+# In fact, there seems to be a problem if I used the Threads package
+# and try using this line, so I'm just skipping it entirely for OS X.
+if(NOT APPLE)
+  list(APPEND SDL_INTERFACE_LIBS ${CMAKE_THREAD_LIBS_INIT})
+endif()
+
+# For MinGW library
+if(MINGW)
+  list(APPEND SDL_INTERFACE_LIBS ${MINGW32_LIBRARY})
+endif()
+
+# Set the final string here so the GUI reflects the final state.
+list(APPEND SDL_LIBRARIES ${SDL_INTERFACE_LIBS} CACHE STRING "Where the SDL Library can be found")
+
+include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(SDL
-                                  REQUIRED_VARS SDL_LIBRARIES SDL_CORE_LIB SDL_INCLUDE_DIR
+                                  REQUIRED_VARS SDL_LIBRARY SDL_MAIN_LIBRARY SDL_INCLUDE_DIR
                                   VERSION_VAR SDL_VERSION_STRING)
 
-mark_as_advanced(SDL_LIBRARIES SDL_IMPORT_LIB SDL_INCLUDE_DIR SDL_DYNAMIC_LIB SDL_CORE_LIB)
+mark_as_advanced(SDL_INCLUDE_DIR SDL_LIBRARIES SDL_MAIN_LIBRARY SDL_IMPORT_LIB SDL_SHARED_LIB SDL_STATIC_LIB)
+
+if(SDL_MAIN_LIBRARY AND EXISTS "${SDL_MAIN_LIBRARY}")
+  set(SDL_MAIN_FOUND TRUE)
+endif()
 
 include(CreateImportTargetHelpers)
-string(REGEX MATCH "${CMAKE_STATIC_LIBRARY_SUFFIX}$" _static ${SDL_LIBRARY})
-string(REGEX MATCH "${CMAKE_SHARED_LIBRARY_SUFFIX}$" _shared ${SDL_LIBRARY})
+generate_import_target(SDL_MAIN STATIC TARGET SDL::Main)
 
-if(_static)
-  generate_import_target(SDL STATIC)
-elseif(_shared)
-  generate_import_target(SDL SHARED)
+include(CreateImportTargetHelpers)
+if(SDL_LIBRARY MATCHES "${CMAKE_SHARED_LIBRARY_SUFFIX}$")
+  generate_import_target(SDL SHARED TARGET SDL::Library)
+elseif(SDL_LIBRARY MATCHES "${CMAKE_STATIC_LIBRARY_SUFFIX}$")
+  generate_import_target(SDL STATIC TARGET SDL::Library)
 else()
   message(FATAL_ERROR "Unable to determine library type of file ${SDL_LIBRARY}")
 endif()
+
+add_library(SDL::SDL INTERFACE IMPORTED GLOBAL)
+target_link_libraries(SDL::SDL INTERFACE SDL::Library SDL::Main)
 
 #HACK FOR MAC X11 DEPENDENCY
 #TODO - Create a modernized FindX11.cmake module, make SDL depend on it on macs
