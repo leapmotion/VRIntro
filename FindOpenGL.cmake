@@ -84,6 +84,9 @@ mark_as_advanced(
 include(CreateImportTargetHelpers)
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   generate_import_target(OpenGL INTERFACE)
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+   #technically not true, but we don't have to do anything with the dll so...
+  generate_import_target(OpenGL STATIC)
 else()
   generate_import_target(OpenGL SHARED)
 endif()
