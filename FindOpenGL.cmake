@@ -9,8 +9,11 @@ set(_OpenGL_REQUIRED_VARS "")
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
   list(APPEND _OpenGL_REQUIRED_VARS OpenGL_LIBRARY)
-  set(OpenGL_LIBRARY opengl32 CACHE STRING "OpenGL library for win32")
-  set(OpenGL_INTERFACE_LIBS glu32 CACHE STRING "GLU library for win32")
+
+  #opengl32.lib lives in the windows sdk, which means we can't use find_library since windows
+  #doesn't add the wdk directory to any path variable that I could find.
+  set(OpenGL_LIBRARY opengl32.lib CACHE STRING "OpenGL library for win32")
+  set(OpenGL_INTERFACE_LIBS glu32.lib CACHE STRING "GLU library for win32")
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") # Mac
   list(APPEND _OpenGL_REQUIRED_VARS OpenGL_INCLUDE_DIR)
   find_path(OpenGL_INCLUDE_DIR OpenGL/gl.h DOC "Include for OpenGL on OSX")
@@ -36,6 +39,7 @@ else()
       /opt/graphics/OpenGL/include
       /usr/X11R6/include
   )
+
   find_library(
     OpenGL_LIBRARY
     NAMES
