@@ -283,8 +283,8 @@ else()
   message(FATAL_ERROR "Unable to determine library type of file ${SDL_LIBRARY}")
 endif()
 
-add_library(SDL::SDL INTERFACE IMPORTED GLOBAL)
-target_link_libraries(SDL::SDL INTERFACE SDL::Library SDL::Main)
+add_library(SDL::SDL INTERFACE IMPORTED)
+set_property(TARGET SDL::SDL APPEND PROPERTY INTERFACE_LINK_LIBRARIES SDL::Library SDL::Main)
 
 #HACK FOR MAC X11 DEPENDENCY
 #TODO - Create a modernized FindX11.cmake module, make SDL depend on it on macs
