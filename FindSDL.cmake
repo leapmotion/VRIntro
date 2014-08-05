@@ -130,11 +130,22 @@ if(NOT SDL_ROOT_DIR)
     endforeach()
   endforeach()
   list(APPEND _likely_folders SDL SDL2)
-      
-  find_path(SDL_ROOT_DIR 
-    NAMES include/SDL_version.h
-          include/SDL/SDL_version.h
-          include/SDL2/SDL_version.h
+
+#   find_path(SDL_ROOT_DIR
+#     NAMES include/SDL_version.h
+#           include/SDL/SDL_version.h
+#           include/SDL2/SDL_version.h
+#     HINTS $ENV{SDLDIR}
+#     PATH_SUFFIXES ${_likely_folders}
+#   )
+
+  # NOTE: This is a hack to look only for SDL2, since that's the only one we care about.
+  # I (Victor) talked with Walter, and we agreed that probably we just want to forget
+  # about SDL 1, and only look for SDL2.  The reason this is complicated is because SDL2
+  # actually incorporates the version number into the library name, which causes headaches.
+  find_path(SDL_ROOT_DIR
+    NAMES lib/libSDL2.a
+          lib/SDL2.lib
     HINTS $ENV{SDLDIR}
     PATH_SUFFIXES ${_likely_folders}
   )
@@ -184,10 +195,9 @@ endif()
 # SDL-1.1 is the name used by FreeBSD ports...
 # don't confuse it for the version number.
 find_library(SDL_CORE_LIB
-  NAMES SDL SDL-1.1 SDL${SDL_VERSION_MAJOR}
-  HINTS
-    $ENV{SDLDIR}
-    ${SDL_ROOT_DIR}
+  NAMES libSDL2.a # SDL2
+  HINTS $ENV{SDLDIR}
+        ${SDL_ROOT_DIR}
   PATH_SUFFIXES lib ${VC_LIB_PATH_SUFFIX}
 )
 set(SDL_LIBRARY_TEMP ${SDL_CORE_LIB})
