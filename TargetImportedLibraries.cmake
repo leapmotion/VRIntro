@@ -20,12 +20,14 @@
 #   linking to as the first parameter.  Upon successfully finding the package, it
 #   attempts to call TARGET_IMPORTED_LIBRARIES(<target> <package>::<package>)
 
-function(target_imported_libraries target link_type)
+include(CMakeParseArguments)
+function(target_imported_libraries target)
+  cmake_parse_arguments(target_imported_libraries "" "LINK_TYPE" "" ${ARGV})
   list(REMOVE_AT ARGV 0) #pop the target
   
   foreach(_import_lib ${ARGV})
     if(TARGET ${_import_lib})
-      target_link_libraries(${target} ${link_type} ${_import_lib})
+      target_link_libraries(${target} ${target_imported_libraries_LINK_TYPE} ${_import_lib})
       
       get_target_property(_type ${_import_lib} TYPE)
       get_target_property(_imported ${_import_lib} IMPORTED)
@@ -77,8 +79,15 @@ function(target_imported_libraries target link_type)
 endfunction()
 
 #This function wraps find_package, then calls target_imported_libraries on the generated package)
-function(target_package target package)
+function(target_package target package )
   list(REMOVE_AT ARGV 0) # pop the target
-  find_package(${ARGV})
-  target_imported_libraries(${target} PUBLIC ${package}::${package})
+  cmake_parse_arguments(target_package "" "LINK_TYPE" "" ${ARGV})
+
+  if(TARGET ${package}::${package})
+    verbose_message("${package}::${package} already exists, skipping find op")
+  else()
+    find_package(${target_package_UNPARSED_ARGUMENTS})
+  endif()
+
+  target_imported_libraries(${target} ${package}::${package} LINK_TYPE ${target_package_LINK_TYPE})
 endfunction()
