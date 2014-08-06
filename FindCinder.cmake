@@ -89,6 +89,6 @@ foreach(_component ${_boost_components})
 endforeach()
 
 generate_import_target(Cinder STATIC TARGET Cinder::Core)
-add_library(Cinder::Cinder INTERFACE IMPORTED GLOBAL)
+add_library(Cinder::Cinder INTERFACE IMPORTED)
 target_link_libraries(Cinder::Cinder INTERFACE Boost::Boost Cinder::Core)
 
