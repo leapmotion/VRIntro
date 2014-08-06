@@ -31,6 +31,10 @@ set(FbxSdk_INCLUDE_DIR "${FbxSdk_ROOT_DIR}/include")
 if(MSVC)
   find_library(FbxSdk_LIBRARY_RELEASE "libfbxsdk-md.lib" HINTS "${FbxSdk_ROOT_DIR}/lib/vs2010/x86/release" "${FbxSdk_ROOT_DIR}/lib/vs2013/x86/release")
   find_library(FbxSdk_LIBRARY_DEBUG "libfbxsdk-md.lib" HINTS "${FbxSdk_ROOT_DIR}/lib/vs2010/x86/debug" "${FbxSdk_ROOT_DIR}/lib/vs2013/x86/debug")
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux") # This is the correct way to detect Linux operating system -- see http://www.openguru.com/2009/04/cmake-detecting-platformoperating.html
+  # TODO: somehow appropriately pick x86 or x64
+  find_library(FbxSdk_LIBRARY_RELEASE "libfbxsdk.a" HINTS "${FbxSdk_ROOT_DIR}/lib/gcc4/x64/release")
+  find_library(FbxSdk_LIBRARY_DEBUG "libfbxsdk.a" HINTS "${FbxSdk_ROOT_DIR}/lib/gcc4/x64/debug")
 else()
   find_library(FbxSdk_LIBRARY_RELEASE "libfbxsdk.a" HINTS "${FbxSdk_ROOT_DIR}/lib/clang/ub/release")
   find_library(FbxSdk_LIBRARY_DEBUG "libfbxsdk.a" HINTS "${FbxSdk_ROOT_DIR}/lib/clang/ub/debug")

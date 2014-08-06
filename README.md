@@ -11,19 +11,19 @@ First add the cmake-module repo as a remote, so you can more easily reference it
 
 To setup cmake-modules in your repository (only run once as a setup step):
 ```
-  git subtree add --prefix cmake-modules cmake-modules-repo master
+  git subtree add --prefix cmake-modules cmake-modules-repo develop
 ```
 
 To update the copy of cmake-modules in your repository from the latest code in the cmake-modules repo:
 ```
-  git fetch cmake-modules-repo master
-  git subtree pull --prefix cmake-modules cmake-modules-repo master
+  git fetch cmake-modules-repo develop
+  git subtree pull --prefix cmake-modules cmake-modules-repo develop
 ```
 
 To push changes from your repository upstream into the cmake-module repo:
 ```
   git subtree push --prefix cmake-modules cmake-modules-repo <branch>
-  Open a pull request to merge <branch> to master
+  Open a pull request to merge <branch> to develop
 ```
 
 
