@@ -34,13 +34,27 @@
 # Output
 # ------
 #
-# This script defines the following variables:
+# This script defines the following interface targets:
+#   SFML::
+#           SFML - Meta-target.  Links to all targets below.
+#           Main - The minimum required core target.
+#           Audio
+#           Graphics
+#           Network
+#           System
+#           Window
+#           
+#   Targets for different components will only defined for modules in the COMPONENTS list passed to find_package.
+#   If no components are listed, it is assumed that all components are requested.
+#
+# This script also defines the following variables:
 # - For each specified module XXX (system, window, graphics, network, audio, main):
 #   - SFML_XXX_LIBRARY_DEBUG:   the name of the debug library of the xxx module (set to SFML_XXX_LIBRARY_RELEASE is no debug version is found)
 #   - SFML_XXX_LIBRARY_RELEASE: the name of the release library of the xxx module (set to SFML_XXX_LIBRARY_DEBUG is no release version is found)
 #   - SFML_XXX_LIBRARY:         the name of the library to link to for the xxx module (includes both debug and optimized names if necessary)
 #   - SFML_XXX_FOUND:           true if either the debug or release library of the xxx module is found
 # - SFML_LIBRARIES:   the list of all libraries corresponding to the required modules
+# - SFML_DEFINITIONS:     thie list of compiler flags required.
 # - SFML_FOUND:       true if all the required modules are found
 # - SFML_INCLUDE_DIR: the path where SFML headers are located (the directory containing the SFML/Config.hpp file)
 #
@@ -51,8 +65,10 @@
 #   target_link_libraries(myapp ${SFML_LIBRARIES})
 
 # define the SFML_STATIC macro if static build was chosen
+set(SFML_DEFINITIONS "")
+
 if(SFML_STATIC_LIBRARIES)
-    add_definitions(-DSFML_STATIC)
+    set(SFML_DEFINITIONS -DSFML_STATIC)
 endif()
 
 find_path(SFML_ROOT_DIR
@@ -137,7 +153,7 @@ set(FIND_SFML_LIB_PATHS
 
 if(NOT SFML_FIND_COMPONENTS)
 
-  set(SFML_FIND_COMPONENTS audio graphics network system window)
+  set(SFML_FIND_COMPONENTS main audio graphics network system window)
 endif()
 
 foreach(FIND_SFML_COMPONENT ${SFML_FIND_COMPONENTS})
@@ -162,6 +178,26 @@ foreach(FIND_SFML_COMPONENT ${SFML_FIND_COMPONENTS})
                  PATH_SUFFIXES lib64 lib
                  PATHS ${FIND_SFML_LIB_PATHS})
 
+    if(NOT SFML_STATIC_LIBRARIES)
+      set(SFML_${FIND_SFML_COMPONENT_UPPER}_IMPORT_LIB_DEBUG ${SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_DEBUG})
+      set(SFML_${FIND_SFML_COMPONENT_UPPER}_IMPORT_LIB_RELEASE ${SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_RELEASE})
+
+      set(_old_suffixes ${CMAKE_FIND_LIBRARY_SUFFIXES})
+      set(CMAKE_FIND_LIBRARY_SUFFIXES "${CMAKE_SHARED_LIBRARY_SUFFIX}")
+      find_library(SFML_${FIND_SFML_COMPONENT_UPPER}_SHARED_LIB_DEBUG
+                   NAMES ${FIND_SFML_COMPONENT_NAME}-d ${FIND_SFML_COMPONENT_NAME}-d-2
+                   PATH_SUFFIXES bin64 bin
+                   PATHS ${FIND_SFML_LIB_PATHS})
+
+      find_library(SFML_${FIND_SFML_COMPONENT_UPPER}_SHARED_LIB_RELEASE
+                   NAMES ${FIND_SFML_COMPONENT_NAME} ${FIND_SFML_COMPONENT_NAME}-2
+                   PATH_SUFFIXES bin64 bin
+                   PATHS ${FIND_SFML_LIB_PATHS})
+
+      set(CMAKE_FIND_LIBRARY_SUFFIXES ${_old_suffixes})
+      mark_as_advanced(SFML_${FIND_SFML_COMPONENT_UPPER}_SHARED_LIB_DEBUG SFML_${FIND_SFML_COMPONENT_UPPER}_SHARED_LIB_RELEASE)
+    endif()
+
     if (SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_DEBUG OR SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_RELEASE)
         # library found
         set(SFML_${FIND_SFML_COMPONENT_UPPER}_FOUND TRUE)
@@ -183,6 +219,7 @@ foreach(FIND_SFML_COMPONENT ${SFML_FIND_COMPONENTS})
             set(SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_DEBUG ${SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_RELEASE})
             set(SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY       ${SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_RELEASE})
         endif()
+
     else()
         # library not found
         set(SFML_FOUND FALSE)
@@ -220,11 +257,31 @@ if (NOT SFML_FOUND)
 endif()
 
 # handle success
-if(SFML_FOUND)
-    message(STATUS "Found SFML ${SFML_VERSION_MAJOR}.${SFML_VERSION_MINOR} in ${SFML_INCLUDE_DIR}")
-endif()
+#if(SFML_FOUND)
+    #message(STATUS "Found SFML ${SFML_VERSION_MAJOR}.${SFML_VERSION_MINOR} in ${SFML_INCLUDE_DIR}")
+#endif()
 
 include(CreateImportTargetHelpers)
-foreach(FIND_SFML_COMPONENT ${SFML_FIND_COMPONENTS})
-  #message(${FIND_SFML_COMPONENT})
+
+set(_libtype SHARED)
+if(SFML_STATIC_LIBRARIES)
+  set(_libtype STATIC)
+endif()
+
+add_library(SFML::SFML INTERFACE IMPORTED)
+
+foreach(_component ${SFML_FIND_COMPONENTS})
+  string(TOUPPER ${_component} _componentUPPER)
+  string(TOLOWER ${_component} _componentLOWER)
+
+  string(SUBSTRING ${_componentLOWER} 0 1 _first_letter)
+  string(TOUPPER ${_first_letter} _first_letter)
+  string(REGEX REPLACE "^.(.*)" "${_first_letter}\\1" _componentCap "${_componentLOWER}")
+
+  if(_componentLOWER STREQUAL "main") #main is always a static lib
+    generate_import_target(SFML_MAIN STATIC TARGET SFML::Main)
+  else()
+    generate_import_target(SFML_${_componentUPPER} ${_libtype} TARGET SFML::${_componentCap})
+  endif()
+  set_property(TARGET SFML::SFML APPEND PROPERTY INTERFACE_LINK_LIBRARIES SFML::${_componentCap})
 endforeach()
