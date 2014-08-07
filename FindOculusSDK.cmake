@@ -1,59 +1,40 @@
-# - Find OculusSDK
-# Find the native OculusSDK headers and libraries.
+#.rst
+# FindOculusSDK
+# ------------
 #
-#  OCULUS_SDK_INCLUDE_DIRS - where to find OVR.h, etc.
-#  OCULUS_SDK_LIBRARIES    - List of libraries when using OculusSDK.
-#  OCULUS_SDK_FOUND        - True if OculusSDK found.
+# Locate and configure Oculus
+#
+# Interface Targets
+# ^^^^^^^^^^^^^^^^^
+#   FindOculusSDK::FindOculusSDK
+#
+# Variables
+# ^^^^^^^^^
+#   Oculus_ROOT_DIR
+#   Oculus_FOUND
+#   Oculus_INCLUDE_DIR
+#   Oculus_LIBRARIES
+#
 
-IF (DEFINED ENV{OCULUS_SDK_ROOT_DIR})
-    SET(OCULUS_SDK_ROOT_DIR "$ENV{OCULUS_SDK_ROOT_DIR}")
-ENDIF()
-SET(OCULUS_SDK_ROOT_DIR
-    "${OCULUS_SDK_ROOT_DIR}"
-    CACHE
-    PATH
-    "Root directory to search for OculusSDK")
 
-# Look for the header file.
-FIND_PATH(OCULUS_SDK_INCLUDE_DIRS NAMES OVR.h HINTS 
-	${OCULUS_SDK_ROOT_DIR}/LibOVR/Include )
+find_path(OculusSDK_ROOT_DIR NAMES "LibOVR/Include/OVR.h" PATH_SUFFIXES OculusSDK)
 
-# Determine architecture
-IF(CMAKE_SIZEOF_VOID_P MATCHES "8")
-    SET(OCULUS_SDK_LIB_ARCH "x86_64" CACHE STRING "library location")
-ELSE()
-    SET(OCULUS_SDK_LIB_ARCH "i386" CACHE STRING "library location")
-ENDIF()
+set(OculusSDK_INCLUDE_DIR ${OculusSDK_ROOT_DIR}/LibOVR/Include)
 
-MARK_AS_ADVANCED(OCULUS_SDK_LIB_ARCH)
+if(MSVC)
+  find_library(OculusSDK_LIBRARY_RELEASE "libovr.lib" HINTS "${OculusSDK_ROOT_DIR}/LibOVR/Lib/Win32/VS2013" PATH_SUFFIXES lib)
+  find_library(OculusSDK_LIBRARY_DEBUG "libovrd.lib" HINTS "${OculusSDK_ROOT_DIR}/LibOVR/Lib/Win32/VS2013" PATH_SUFFIXES lib)
+else()
+  # Linux's oculus-1.9.0 package's libs are in lib64
+  find_library(OculusSDK_LIBRARY_RELEASE "libOCULUS.a" HINTS "${OculusSDK_ROOT_DIR}" PATH_SUFFIXES lib lib64)
+  find_library(OculusSDK_LIBRARY_DEBUG "libOCULUS.a" HINTS "${OculusSDK_ROOT_DIR}" PATH_SUFFIXES lib lib64)
+endif()
+include(SelectConfigurations)
+select_configurations(OculusSDK LIBRARY LIBRARIES)
 
-# Append "d" to debug libs on windows platform
-IF (WIN32)
-	SET(CMAKE_DEBUG_POSTFIX d)
-ENDIF()
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(OculusSDK DEFAULT_MSG OculusSDK_ROOT_DIR OculusSDK_INCLUDE_DIR OculusSDK_LIBRARY_RELEASE OculusSDK_LIBRARY_DEBUG)
 
-# Look for the library.
-FIND_LIBRARY(OCULUS_SDK_LIBRARY NAMES libovr ovr HINTS ${OCULUS_SDK_ROOT_DIR} 
-                                                      ${OCULUS_SDK_ROOT_DIR}/LibOVR/Lib/Win32
-                                                      ${OCULUS_SDK_ROOT_DIR}/LibOVR/Lib/Linux/Release/${OCULUS_SDK_LIB_ARCH}
-                                                    )
+include(CreateImportTargetHelpers)
 
-# This will find release lib on Linux if no debug is available - on Linux this is no problem and avoids 
-# having to compile in debug when not needed
-#FIND_LIBRARY(OCULUS_SDK_LIBRARY_DEBUG NAMES libovr${CMAKE_DEBUG_POSTFIX} ovr${CMAKE_DEBUG_POSTFIX} ovr HINTS 
-#                                                      ${OCULUS_SDK_ROOT_DIR}/LibOVR/Lib/Win32
-#                                                      ${OCULUS_SDK_ROOT_DIR}/LibOVR/Lib/Linux/Debug/${OCULUS_SDK_LIB_ARCH}
-#                                                      ${OCULUS_SDK_ROOT_DIR}/LibOVR/Lib/Linux/Release/${OCULUS_SDK_LIB_ARCH}
-#                                                    )
-    
-MARK_AS_ADVANCED(OCULUS_SDK_LIBRARY)
-MARK_AS_ADVANCED(OCULUS_SDK_LIBRARY_DEBUG)
-
-SET(OCULUS_SDK_LIBRARIES optimized ${OCULUS_SDK_LIBRARY} debug ${OCULUS_SDK_LIBRARY_DEBUG})
-
-# handle the QUIETLY and REQUIRED arguments and set OCULUS_SDK_FOUND to TRUE if
-# all listed variables are TRUE
-INCLUDE(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(OculusSDK DEFAULT_MSG OCULUS_SDK_LIBRARIES OCULUS_SDK_INCLUDE_DIRS)
-
-MARK_AS_ADVANCED(OCULUS_SDK_LIBRARIES OCULUS_SDK_INCLUDE_DIRS)
+generate_import_target(OculusSDK STATIC)
