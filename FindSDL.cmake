@@ -1,5 +1,5 @@
 #.rst:
-# FindSDL2
+# FindSDL
 # -------
 #
 # Locate SDL library.  Modified by Walter Gray to be compatible with SDL 2.x and
