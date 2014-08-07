@@ -152,7 +152,6 @@ set(FIND_SFML_LIB_PATHS
     /opt)
 
 if(NOT SFML_FIND_COMPONENTS)
-
   set(SFML_FIND_COMPONENTS main audio graphics network system window)
 endif()
 
@@ -280,10 +279,14 @@ foreach(_component ${SFML_FIND_COMPONENTS})
 
   if(_componentLOWER STREQUAL "main") #main is always a static lib
     generate_import_target(SFML_MAIN STATIC TARGET SFML::Main)
-    map_var_to_prop(SFML::Main INTERFACE_COMPILE_DEFINITIONS SFML_DEFINITIONS)
-    map_var_to_prop(SFML::Main INTERFACE_INCLUDE_DIRECTORIES SFML_INCLUDE_DIR REQUIRED)
+    
   else()
     generate_import_target(SFML_${_componentUPPER} ${_libtype} TARGET SFML::${_componentCap})
+  endif()
+
+  if(_componentLOWER STREQUAL "main")
+    map_var_to_prop(SFML::Main INTERFACE_COMPILE_DEFINITIONS SFML_DEFINITIONS)
+    map_var_to_prop(SFML::Main INTERFACE_INCLUDE_DIRECTORIES SFML_INCLUDE_DIR REQUIRED)
   endif()
 
   set_property(TARGET SFML::SFML APPEND PROPERTY INTERFACE_LINK_LIBRARIES SFML::${_componentCap})
