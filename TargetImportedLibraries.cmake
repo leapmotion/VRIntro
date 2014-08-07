@@ -7,24 +7,25 @@
 # modules compatible with this approach.
 #
 # ========================
-# TARGET_IMPORTED_LIBRARIES(<target> <import_target>)
+# TARGET_IMPORTED_LIBRARIES(<target> <link_type> <import_target>)
 #   Takes the same arguments as target_link_libraries, but for any listed library where
 #   <import_target> is a valid target with a TYPE property of SHARED_LIBRARY, it will
 #   read from the IMPORTED_LOCATION and IMPORTED_LOCATION_<CONFIG> parameters and generate
 #   a custom post-build step to copy the shared library files to the appropriate location.
-#   On windows, this is the TARGET_FILE_DIR of <target>
+#   On windows, this is the TARGET_FILE_DIR of <target>.  link_type should be one of
+#   PUBLIC, PRIVATE, or INTERFACE
 #
 #  TARGET_PACKAGE(<target> <package> ...)
 #   Takes the same arguments as find_package, with the addition of the target you're
 #   linking to as the first parameter.  Upon successfully finding the package, it
 #   attempts to call TARGET_IMPORTED_LIBRARIES(<target> <package>::<package>)
 
-function(target_imported_libraries target)
+function(target_imported_libraries target link_type)
   list(REMOVE_AT ARGV 0) #pop the target
   
   foreach(_import_lib ${ARGV})
     if(TARGET ${_import_lib})
-      target_link_libraries(${target} ${_import_lib})
+      target_link_libraries(${target} ${link_type} ${_import_lib})
       
       get_target_property(_type ${_import_lib} TYPE)
       get_target_property(_imported ${_import_lib} IMPORTED)
@@ -79,5 +80,5 @@ endfunction()
 function(target_package target package)
   list(REMOVE_AT ARGV 0) # pop the target
   find_package(${ARGV})
-  target_imported_libraries(${target} ${package}::${package})
+  target_imported_libraries(${target} PUBLIC ${package}::${package})
 endfunction()
