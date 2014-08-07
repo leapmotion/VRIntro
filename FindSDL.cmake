@@ -116,6 +116,8 @@
 # (To distribute this file outside of CMake, substitute the full
 #  License text for the above reference.)
 
+include(VerboseMessage)
+
 function(find_multitype_library shared_out static_out import_out)
   list(REMOVE_AT ARGV 0) #remove shared_out
   list(REMOVE_AT ARGV 0) #remove static_out
