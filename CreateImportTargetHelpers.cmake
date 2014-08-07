@@ -95,7 +95,7 @@ function(generate_import_target namespace libtype)
     endif()        
     
     if(NOT ${libtype} STREQUAL INTERFACE)
-      if(${namespace}_SHARED_LIB OR (${namespace}_SHARED_LIB_DEBUG AND ${namespace}_SHARED_LIB_RELEASE))
+      if(${libtype} STREQUAL SHARED AND (${namespace}_SHARED_LIB OR (${namespace}_SHARED_LIB_DEBUG AND ${namespace}_SHARED_LIB_RELEASE)))
         map_var_to_prop(${_target} IMPORTED_LOCATION ${namespace}_SHARED_LIB REQUIRED)
       else()
         map_var_to_prop(${_target} IMPORTED_LOCATION ${namespace}_LIBRARY REQUIRED)
