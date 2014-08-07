@@ -181,13 +181,9 @@ function(find_likely_dirs package dir_list_var path_list )
 endfunction()
 
 function(sdl_parse_version_file filename major minor patch version_string)
-  message("sdl_parse_version_file on filename = ${filename}")
   file(STRINGS "${filename}" _major_line REGEX "^#define[ \t]+SDL_MAJOR_VERSION[ \t]+[0-9]+$")
   file(STRINGS "${filename}" _minor_line REGEX "^#define[ \t]+SDL_MINOR_VERSION[ \t]+[0-9]+$")
   file(STRINGS "${filename}" _patch_line REGEX "^#define[ \t]+SDL_PATCHLEVEL[ \t]+[0-9]+$")
-  message("_major_line = ${_major_line}")
-  message("_minor_line = ${_minor_line}")
-  message("_patch_line = ${_patch_line}")
   string(REGEX REPLACE "^#define[ \t]+SDL_MAJOR_VERSION[ \t]+([0-9]+)$" "\\1" sdl_major "${_major_line}")
   string(REGEX REPLACE "^#define[ \t]+SDL_MINOR_VERSION[ \t]+([0-9]+)$" "\\1" sdl_minor "${_minor_line}")
   string(REGEX REPLACE "^#define[ \t]+SDL_PATCHLEVEL[ \t]+([0-9]+)$" "\\1" sdl_patch "${_patch_line}")
@@ -214,14 +210,12 @@ if(NOT EXISTS SDL_ROOT_DIR)
   
   #Find any dirs in the prefix path matching SDL* and add them to the list of candidates
   find_likely_dirs(SDL _likely_dirs "${CMAKE_PREFIX_PATH}")
-  message("_likely_dirs = ${_likely_dirs}, CMAKE_PREFIX_PATH = ${CMAKE_PREFIX_PATH}")
 
   set(_best_version "")
   
   #TODO: create a filter function that takes a function(to determine version given a path)
   #and filters dirs based on the package version & if EXACT has been set.
   foreach(_dir ${_likely_dirs})
-    message("    looking in dir ${_dir}")
     find_path(
       _candidate_sdl2_root_dir
       NAMES include/SDL_version.h
@@ -237,9 +231,10 @@ if(NOT EXISTS SDL_ROOT_DIR)
         PATH_SUFFIXES include include/SDL2 include/SDL
         NO_DEFAULT_PATH
       )
+      verbose_message("found SDL_version.h file in dir ${_candidate_sdl2_root_dir}")
       if(_version_file AND EXISTS ${_version_file})
         sdl_parse_version_file("${_version_file}" _major _minor _patch _version_string)
-        message("version string = ${_version_string}")
+        verbose_message("    version string = ${_version_string}")
 
         #exact matches in front
         set(_version_matches FALSE)
@@ -258,9 +253,9 @@ if(NOT EXISTS SDL_ROOT_DIR)
         endif()
 
         if(_version_matches)
-          message("version ${_version_string} matches")
+          verbose_message("    version ${_version_string} matches")
           if(NOT _best_version OR _version_string VERSION_GREATER _best_version)
-            message("   setting best version")
+            verbose_message("    setting best version")
             set(_best_version ${_version_string})
             set(SDL_ROOT_DIR ${_candidate_sdl2_root_dir})
             set(SDL_VERSION_STRING ${_version_string})
@@ -270,13 +265,15 @@ if(NOT EXISTS SDL_ROOT_DIR)
           endif()
         endif()
       endif()
+      unset(_version_file)
     endif()
+    unset(_candidate_sdl2_root_dir)
   endforeach()
-  message("SDL_ROOT_DIR = ${SDL_ROOT_DIR}")
-  message("SDL_VERSION_STRING = ${SDL_VERSION_STRING}")
-  message("SDL_VERSION_MAJOR = ${SDL_VERSION_MAJOR}")
-  message("SDL_VERSION_MINOR = ${SDL_VERSION_MINOR}")
-  message("SDL_VERSION_PATCH = ${SDL_VERSION_PATCH}")
+  verbose_message("SDL_ROOT_DIR = ${SDL_ROOT_DIR}")
+  verbose_message("SDL_VERSION_STRING = ${SDL_VERSION_STRING}")
+  verbose_message("SDL_VERSION_MAJOR = ${SDL_VERSION_MAJOR}")
+  verbose_message("SDL_VERSION_MINOR = ${SDL_VERSION_MINOR}")
+  verbose_message("SDL_VERSION_PATCH = ${SDL_VERSION_PATCH}")
 endif()
 
 # A find_path command analogous to the one used to derived SDL_ROOT_DIR is used here.
@@ -290,9 +287,7 @@ find_path(
         include/SDL
     NO_DEFAULT_PATH
 )
-message("SDL_INCLUDE_DIR = ${SDL_INCLUDE_DIR}")
-
-# sdl_parse_version_file(${SDL_INCLUDE_DIR}/SDL_version.h SDL_VERSION_MAJOR SDL_VERSION_MINOR SDL_VERSION_PATCH SDL_VERSION_STRING)
+verbose_message("SDL_INCLUDE_DIR = ${SDL_INCLUDE_DIR}")
 
 find_multitype_library(
   SDL_SHARED_LIB
