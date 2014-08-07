@@ -280,13 +280,11 @@ foreach(_component ${SFML_FIND_COMPONENTS})
 
   if(_componentLOWER STREQUAL "main") #main is always a static lib
     generate_import_target(SFML_MAIN STATIC TARGET SFML::Main)
-    set_property(TARGET SFML::Main APPEND PROPERTY INTERFACE_COMPILE_DEFINITIONS ${SFML_DEFINITIONS})
-    set_property(TARGET SFML::Main APPEND PROPERTY INTEFACE_INCLUDE_DIRECTORIES ${SFML_INCLUDE_DIR})
-  
+    map_var_to_prop(SFML::Main INTERFACE_COMPILE_DEFINITIONS SFML_DEFINITIONS)
+    map_var_to_prop(SFML::Main INTERFACE_INCLUDE_DIRECTORIES SFML_INCLUDE_DIR REQUIRED)
   else()
     generate_import_target(SFML_${_componentUPPER} ${_libtype} TARGET SFML::${_componentCap})
   endif()
 
   set_property(TARGET SFML::SFML APPEND PROPERTY INTERFACE_LINK_LIBRARIES SFML::${_componentCap})
 endforeach()
-
