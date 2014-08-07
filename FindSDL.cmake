@@ -1,5 +1,5 @@
 #.rst:
-# FindSDL
+# FindSDL2
 # -------
 #
 # Locate SDL library.  Modified by Walter Gray to be compatible with SDL 2.x and
@@ -10,7 +10,7 @@
 # is actually "SDL2", not "SDL" anymore.  Thus a fully-qualified lib directory name
 # would be something like "SDL2-2.0.3", and not "SDL-2.0.3" as one would expect.
 #
-# Imported Targets (TODO: change SDL to SDL2)
+# Imported Targets
 # ^^^^^^^^^^^^^^^^
 #   SDL::SDL
 #     Basic import target. Use to build an application
@@ -20,7 +20,7 @@
 #     Advanced import target. contains only SDLMain.lib
 # Result Variables
 # ^^^^^^^^^^^^^^^^
-# This module defines the following variables (TODO: change SDL to SDL2)
+# This module defines the following variables
 #
 #   SDL_ROOT_DIR
 #
@@ -46,7 +46,7 @@
 #   SDL_LIBRARIES
 #     A legacy string - contains a list of all .lib files used by SDL, modified by SDL_BUILDING_LIBRARY.
 #
-# This module responds to the flag: (TODO: change SDL to SDL2)
+# This module responds to the flag:
 #
 # ::
 #
@@ -162,28 +162,32 @@ function(select_library_type namespace)
 
 endfunction()
 
-function(find_likely_folders package folder_list_var path_list )
+function(find_likely_dirs package dir_list_var path_list )
   list(REMOVE_AT ARGV 0) #pop package name
-  list(REMOVE_AT ARGV 0) #pop folder_list_var
+  list(REMOVE_AT ARGV 0) #pop dir_list_var
 
-  set(_folders ${${folder_list_var}}) #make sure we're appending
+  set(_dirs ${${dir_list_var}}) #make sure we're appending
 
   foreach(_path ${ARGV})
     file(GLOB _subdirs RELATIVE ${_path} ${_path}/*)
     foreach(_subdir ${_subdirs})
       if(IS_DIRECTORY ${_path}/${_subdir} AND _subdir MATCHES "^${package}*")
-        list(APPEND _folders ${_path}/${_subdir})
+        list(APPEND _dirs ${_path}/${_subdir})
       endif()
     endforeach()
   endforeach()
 
-  set(${folder_list_var} "${_folders}" PARENT_SCOPE)
+  set(${dir_list_var} "${_dirs}" PARENT_SCOPE)
 endfunction()
 
 function(sdl_parse_version_file filename major minor patch version_string)
+  message("sdl_parse_version_file on filename = ${filename}")
   file(STRINGS "${filename}" _major_line REGEX "^#define[ \t]+SDL_MAJOR_VERSION[ \t]+[0-9]+$")
   file(STRINGS "${filename}" _minor_line REGEX "^#define[ \t]+SDL_MINOR_VERSION[ \t]+[0-9]+$")
   file(STRINGS "${filename}" _patch_line REGEX "^#define[ \t]+SDL_PATCHLEVEL[ \t]+[0-9]+$")
+  message("_major_line = ${_major_line}")
+  message("_minor_line = ${_minor_line}")
+  message("_patch_line = ${_patch_line}")
   string(REGEX REPLACE "^#define[ \t]+SDL_MAJOR_VERSION[ \t]+([0-9]+)$" "\\1" sdl_major "${_major_line}")
   string(REGEX REPLACE "^#define[ \t]+SDL_MINOR_VERSION[ \t]+([0-9]+)$" "\\1" sdl_minor "${_minor_line}")
   string(REGEX REPLACE "^#define[ \t]+SDL_PATCHLEVEL[ \t]+([0-9]+)$" "\\1" sdl_patch "${_patch_line}")
@@ -202,67 +206,98 @@ endfunction()
 #############################
 if(NOT EXISTS SDL_ROOT_DIR)
 
-  set(_likely_folders "")
-  set(_ok_folders "")
+  set(_likely_dirs "")
 
-  #Find any folders in the prefix path matching SDL* and add them to the list of candidates
-  find_likely_folders(SDL _likely_folders "${CMAKE_PREFIX_PATH}")
+  # NOTE: this could be done much more cleanly if we write a multiple-return-value find_file and find_path.
+  # As it stands, cmake's find_file and find_path functions return at most one value, even if there are
+  # multiple matches, and which one it returns depends on a rather complicated prioritized list of dirs.
+  
+  #Find any dirs in the prefix path matching SDL* and add them to the list of candidates
+  find_likely_dirs(SDL _likely_dirs "${CMAKE_PREFIX_PATH}")
+  message("_likely_dirs = ${_likely_dirs}, CMAKE_PREFIX_PATH = ${CMAKE_PREFIX_PATH}")
 
+  set(_best_version "")
+  
   #TODO: create a filter function that takes a function(to determine version given a path)
-  #and filters folders based on the package version & if EXACT has been set.
-  foreach(_folder ${_likely_folders})
-    find_file(_canidate_version_file
-        NAMES SDL_version.h
-        HINTS $ENV{SDLDIR} ${_likely_folders}
-        PATH_SUFFIXES include include/SDL2 include/SDL
+  #and filters dirs based on the package version & if EXACT has been set.
+  foreach(_dir ${_likely_dirs})
+    message("    looking in dir ${_dir}")
+    find_path(
+      _candidate_sdl2_root_dir
+      NAMES include/SDL_version.h
+            include/SDL2/SDL_version.h
+            include/SDL/SDL_version.h
+      HINTS $ENV{SDLDIR} ${_likely_dirs}
     )
-    mark_as_advanced(_canidate_version_file)
+    if(_candidate_sdl2_root_dir AND EXISTS ${_candidate_sdl2_root_dir})
+      find_file(
+        _version_file
+        NAMES SDL_version.h
+        PATHS ${_candidate_sdl2_root_dir}
+        PATH_SUFFIXES include include/SDL2 include/SDL
+        NO_DEFAULT_PATH
+      )
+      if(_version_file AND EXISTS ${_version_file})
+        sdl_parse_version_file("${_version_file}" _major _minor _patch _version_string)
+        message("version string = ${_version_string}")
 
-    #grab the version number from this one
-    if(_canidate_version_file AND EXISTS "${_canidate_version_file}")
-      sdl_parse_version_file("${_canidate_version_file}" _major _minor _patch _version_string)
-
-      #exact matches in front
-      if(${_version_string} STREQUAL ${SDL_FIND_VERSION} OR
-          (_major EQUAL SDL_FIND_VERSION_MAJOR AND
-           _minor EQUAL SDL_FIND_VERSION_MINOR AND
-           _patch EQUAL SDL_FIND_VERSION_PATCH) )
-        list(INSERT _ok_folders 0 "${_folder}")
-      endif()
-
-      if(NOT SDL_FIND_VERSION_EXACT)
+        #exact matches in front
+        set(_version_matches FALSE)
+        if(_version_string STREQUAL SDL_FIND_VERSION)
+          set(_version_matches TRUE)
+        endif()
         if(_major EQUAL SDL_FIND_VERSION_MAJOR AND
+           _minor EQUAL SDL_FIND_VERSION_MINOR AND
+           _patch EQUAL SDL_FIND_VERSION_PATCH)
+          set(_version_matches TRUE)
+        endif()
+        if(NOT SDL_FIND_VERSION_EXACT AND
+           _major EQUAL SDL_FIND_VERSION_MAJOR AND
            _version_string VERSION_GREATER SDL_FIND_VERSION)
-          list(APPEND _ok_folders "${_folder}")
+          set(_version_matches TRUE)
+        endif()
+
+        if(_version_matches)
+          message("version ${_version_string} matches")
+          if(NOT _best_version OR _version_string VERSION_GREATER _best_version)
+            message("   setting best version")
+            set(_best_version ${_version_string})
+            set(SDL_ROOT_DIR ${_candidate_sdl2_root_dir})
+            set(SDL_VERSION_STRING ${_version_string})
+            set(SDL_VERSION_MAJOR ${_major})
+            set(SDL_VERSION_MINOR ${_minor})
+            set(SDL_VERSION_PATCH ${_patch})
+          endif()
         endif()
       endif()
     endif()
-
   endforeach()
-
-  find_path(SDL_ROOT_DIR
-    NAMES include/SDL_Version.h 
-          include/SDL2/SDL_Version.h 
-          include/SDL/SDL_version.h 
-    HINTS $ENV{SDLDIR} ${_ok_folders}
-  )
-  
+  message("SDL_ROOT_DIR = ${SDL_ROOT_DIR}")
+  message("SDL_VERSION_STRING = ${SDL_VERSION_STRING}")
+  message("SDL_VERSION_MAJOR = ${SDL_VERSION_MAJOR}")
+  message("SDL_VERSION_MINOR = ${SDL_VERSION_MINOR}")
+  message("SDL_VERSION_PATCH = ${SDL_VERSION_PATCH}")
 endif()
 
-find_path(SDL_INCLUDE_DIR SDL.h
-    HINTS
-      $ENV{SDLDIR}
-      ${SDL_ROOT_DIR}
+# A find_path command analogous to the one used to derived SDL_ROOT_DIR is used here.
+find_path(
+    SDL_INCLUDE_DIR
+    NAMES SDL_version.h
+    HINTS ${SDL_ROOT_DIR}
     PATH_SUFFIXES
-      include/SDL2
-      include
-      include/SDL
+        include/SDL2
+        include
+        include/SDL
     NO_DEFAULT_PATH
 )
+message("SDL_INCLUDE_DIR = ${SDL_INCLUDE_DIR}")
 
-sdl_parse_version_file(${SDL_INCLUDE_DIR}/SDL_version.h SDL_VERSION_MAJOR SDL_VERSION_MINOR SDL_VERSION_PATCH SDL_VERSION_STRING)
+# sdl_parse_version_file(${SDL_INCLUDE_DIR}/SDL_version.h SDL_VERSION_MAJOR SDL_VERSION_MINOR SDL_VERSION_PATCH SDL_VERSION_STRING)
 
-find_multitype_library(SDL_SHARED_LIB SDL_STATIC_LIB SDL_IMPORT_LIB
+find_multitype_library(
+  SDL_SHARED_LIB
+  SDL_STATIC_LIB
+  SDL_IMPORT_LIB
   NAMES
     SDL${SDL_VERSION_MAJOR}
   HINTS
