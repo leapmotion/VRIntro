@@ -68,7 +68,7 @@
 set(SFML_DEFINITIONS "")
 
 if(SFML_STATIC_LIBRARIES)
-    set(SFML_DEFINITIONS -DSFML_STATIC)
+    set(SFML_DEFINITIONS SFML_STATIC)
 endif()
 
 find_path(SFML_ROOT_DIR
@@ -152,7 +152,10 @@ set(FIND_SFML_LIB_PATHS
     /opt)
 
 if(NOT SFML_FIND_COMPONENTS)
-  set(SFML_FIND_COMPONENTS main audio graphics network system window)
+  set(SFML_FIND_COMPONENTS audio graphics network system window)
+  if(WIN32)
+    list(APPEND SFML_FIND_COMPONENTS main)
+  endif()
 endif()
 
 foreach(FIND_SFML_COMPONENT ${SFML_FIND_COMPONENTS})
@@ -269,6 +272,18 @@ endif()
 
 add_library(SFML::SFML INTERFACE IMPORTED)
 
+if(APPLE)
+  find_library(SFML_GLEW
+               NAMES GLEW
+               PATH_SUFFIXES lib64 lib
+               PATHS ${FIND_SFML_LIB_PATHS})
+
+  find_library(SFML_JPEG
+               NAMES jpeg
+               PATH_SUFFIXES lib64 lib
+               PATHS ${FIND_SFML_LIB_PATHS})
+endif()
+
 foreach(_component ${SFML_FIND_COMPONENTS})
   string(TOUPPER ${_component} _componentUPPER)
   string(TOLOWER ${_component} _componentLOWER)
@@ -284,9 +299,18 @@ foreach(_component ${SFML_FIND_COMPONENTS})
     generate_import_target(SFML_${_componentUPPER} ${_libtype} TARGET SFML::${_componentCap})
   endif()
 
-  if(_componentLOWER STREQUAL "main")
-    map_var_to_prop(SFML::Main INTERFACE_COMPILE_DEFINITIONS SFML_DEFINITIONS)
-    map_var_to_prop(SFML::Main INTERFACE_INCLUDE_DIRECTORIES SFML_INCLUDE_DIR REQUIRED)
+  map_var_to_prop(SFML::${_componentCap} INTERFACE_COMPILE_DEFINITIONS SFML_DEFINITIONS)
+  map_var_to_prop(SFML::${_componentCap} INTERFACE_INCLUDE_DIRECTORIES SFML_INCLUDE_DIR REQUIRED)
+
+  if(APPLE)
+    if(_componentLOWER STREQUAL "audio")
+      set_property(TARGET SFML::${_componentCap} APPEND PROPERTY INTERFACE_LINK_LIBRARIES "-framework OpenAL")
+    endif()
+    if(_componentLOWER STREQUAL "graphics")
+      set_property(TARGET SFML::${_componentCap} APPEND PROPERTY
+        INTERFACE_LINK_LIBRARIES "-framework OpenGL" "-framework AppKit" "-framework IOKit" "-framework Carbon"
+                                 "${SFML_GLEW}" "${SFML_JPEG}")
+    endif()
   endif()
 
   set_property(TARGET SFML::SFML APPEND PROPERTY INTERFACE_LINK_LIBRARIES SFML::${_componentCap})
