@@ -67,9 +67,14 @@ function(target_imported_libraries target)
           add_custom_command(TARGET ${target} POST_BUILD 
             COMMAND ${CMAKE_COMMAND} -E copy_if_different \"${_target_expr}\" \"$<TARGET_FILE_DIR:${target}>\")
         elseif(APPLE)
-          add_custom_command(TARGET ${target} POST_BUILD 
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different \"${_target_expr}\" \"$<TARGET_FILE_DIR:${target}>/../Frameworks\")
-          #call install_name_tool and fixup the dylib paths here:
+          get_target_property(_is_bundle ${target} MACOSX_BUNDLE)
+          if(_is_bundle)
+            add_custom_command(TARGET ${target} POST_BUILD
+              COMMAND ${CMAKE_COMMAND} -E make_directory \"$<TARGET_FILE_DIR:${target}>/../Frameworks/\"
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different \"${_target_expr}\" \"$<TARGET_FILE_DIR:${target}>/../Frameworks/\"
+              COMMAND install_name_tool -change @loader_path/libLeap.dylib @loader_path/../Frameworks/libLeap.dylib "$<TARGET_FILE:${target}>")
+            #call install_name_tool and fixup the dylib paths here:
+          endif()
         else()
           message(WARNING "Automatic handling of shared libraries is unimplemented on this platform")
         endif()
