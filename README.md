@@ -142,3 +142,8 @@ all components specified as arguments to find_package. Private import targets sh
 
 - The organization of the Components (with its component and library dependencies) should
   be implemented using a cmake module, so little redundant boilerplate is necessary.
+
+- Write variants of find_file and find_path which actually return ALL matches, instead of
+  an ill-defined single match.  This functionality is distinctly lacking in cmake, and
+  causes nontrivial problems when trying to find files/paths.
+
