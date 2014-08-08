@@ -306,13 +306,15 @@ foreach(_component ${SFML_FIND_COMPONENTS})
   map_var_to_prop(SFML::${_componentCap} INTERFACE_INCLUDE_DIRECTORIES SFML_INCLUDE_DIR REQUIRED)
 
   if(APPLE)
-    if(_componentLOWER STREQUAL "audio")
-      set_property(TARGET SFML::${_componentCap} APPEND PROPERTY INTERFACE_LINK_LIBRARIES "-framework OpenAL")
-    endif()
-    if(_componentLOWER STREQUAL "graphics")
-      set_property(TARGET SFML::${_componentCap} APPEND PROPERTY
-        INTERFACE_LINK_LIBRARIES "-framework OpenGL" "-framework AppKit" "-framework IOKit" "-framework Carbon"
-                                 "${SFML_GLEW}" "${SFML_JPEG}")
+    if(SFML_STATIC_LIBRARIES)
+      if(_componentLOWER STREQUAL "audio")
+        set_property(TARGET SFML::${_componentCap} APPEND PROPERTY INTERFACE_LINK_LIBRARIES "-framework OpenAL")
+      endif()
+      if(_componentLOWER STREQUAL "graphics")
+        set_property(TARGET SFML::${_componentCap} APPEND PROPERTY
+          INTERFACE_LINK_LIBRARIES "-framework OpenGL" "-framework AppKit" "-framework IOKit" "-framework Carbon"
+                                   "${SFML_GLEW}" "${SFML_JPEG}")
+      endif()
     endif()
   endif()
 
