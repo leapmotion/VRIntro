@@ -100,6 +100,7 @@ find_path(SFML_INCLUDE_DIR SFML/Config.hpp
           /opt/local/  # DarwinPorts
           /opt/csw/    # Blastwave
           /opt/)
+mark_as_advanced(SFML_INCLUDE_DIR)
 
 # check the version number
 set(SFML_VERSION_OK TRUE)
@@ -276,12 +277,14 @@ if(APPLE)
   find_library(SFML_GLEW
                NAMES GLEW
                PATH_SUFFIXES lib64 lib
-               PATHS ${FIND_SFML_LIB_PATHS})
-
+               PATHS ${FIND_SFML_LIB_PATHS}
+               NO_DEFAULT_PATH)
   find_library(SFML_JPEG
                NAMES jpeg
                PATH_SUFFIXES lib64 lib
-               PATHS ${FIND_SFML_LIB_PATHS})
+               PATHS ${FIND_SFML_LIB_PATHS}
+               NO_DEFAULT_PATH)
+  mark_as_advanced(SFML_GLEW SFML_JPEG)
 endif()
 
 foreach(_component ${SFML_FIND_COMPONENTS})
