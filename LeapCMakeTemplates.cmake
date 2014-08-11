@@ -10,7 +10,7 @@ macro(leap_find_external_libraries pc_variant)
       "$ENV{PATH}"
       "/opt/local/Libraries"
   )
-    
+
   list(INSERT CMAKE_PREFIX_PATH 0 "${EXTERNAL_LIBRARY_DIR}")
 endmacro()
 
@@ -23,7 +23,7 @@ macro(leap_use_standard_platform_settings)
   # Disable MinSizeRel & MaxSpeedRel
   set(CMAKE_CONFIGURATION_TYPES "Release;Debug" CACHE STRING "" FORCE)
   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-  
+
   if(APPLE)
     if(NOT CMAKE_OSX_ARCHITECTURES)
       set(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE STRING "Mac OS X build architectures" FORCE)
@@ -36,6 +36,8 @@ macro(leap_use_standard_platform_settings)
     mark_as_advanced(CMAKE_OSX_DEPLOYMENT_TARGET)
     set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++11")
     set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++")
+    set(USE_LIBCXX ON)
   endif()
 
 endmacro()
