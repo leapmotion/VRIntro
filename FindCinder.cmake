@@ -81,14 +81,15 @@ find_package_handle_standard_args(Cinder DEFAULT_MSG Cinder_ROOT_DIR Cinder_LIBR
 #BEFORE linking in the actual cinder import target
 include(CreateImportTargetHelpers)
 
-generate_import_target(Boost INTERFACE)
-foreach(_component ${_boost_components})
-  string(TOUPPER ${_component} _componentUPPER)
-  generate_import_target(Boost_${_componentUPPER} STATIC TARGET Boost::${_component})
-  target_link_libraries(Boost::Boost INTERFACE Boost::${_component})
-endforeach()
+if(Cinder_FOUND AND NOT TARGET Cinder::Cinder)
+  generate_import_target(Boost INTERFACE)
+  foreach(_component ${_boost_components})
+    string(TOUPPER ${_component} _componentUPPER)
+    generate_import_target(Boost_${_componentUPPER} STATIC TARGET Boost::${_component})
+    target_link_libraries(Boost::Boost INTERFACE Boost::${_component})
+  endforeach()
 
-generate_import_target(Cinder STATIC TARGET Cinder::Core)
-add_library(Cinder::Cinder INTERFACE IMPORTED)
-target_link_libraries(Cinder::Cinder INTERFACE Boost::Boost Cinder::Core)
-
+  generate_import_target(Cinder STATIC TARGET Cinder::Core)
+  add_library(Cinder::Cinder INTERFACE IMPORTED GLOBAL)
+  target_link_libraries(Cinder::Cinder INTERFACE Boost::Boost Cinder::Core)
+endif()

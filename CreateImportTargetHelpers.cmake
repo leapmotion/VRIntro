@@ -76,7 +76,7 @@ endfunction()
 #acceptable libtypes are SHARED, STATIC, INTERFACE, and UNKNOWN
 function(generate_import_target namespace libtype)
   set(_target ${namespace}::${namespace})
-  cmake_parse_arguments(generate_import_target "GLOBAL" "TARGET" "" ${ARGN})
+  cmake_parse_arguments(generate_import_target "LOCAL" "TARGET" "" ${ARGN})
   
   if(generate_import_target_TARGET)
     set(_target ${generate_import_target_TARGET})
@@ -85,9 +85,11 @@ function(generate_import_target namespace libtype)
   if(${namespace}_FOUND)
     verbose_message("Generating ${libtype} lib: ${_target} with namespace ${namespace}")
     
-    if(generate_import_target_GLOBAL)
-      set(_global GLOBAL)
+    set(_global GLOBAL)
+    if(generate_import_target_LOCAL)
+      unset(_global)
     endif()
+    
     add_library(${_target} ${libtype} IMPORTED ${_global})
 
     if(MSVC AND ${libtype} STREQUAL SHARED)
