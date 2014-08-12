@@ -9,7 +9,7 @@ get_filename_component(wdkpath80 ${wdkregpath80} ABSOLUTE)
 set(wdkregpath81 "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots;KitsRoot81]")
 get_filename_component(wdkpath81 ${wdkregpath81} ABSOLUTE)
 
-if(CMAKE_SIZE_OF_VOID_P EQUAL 8)
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
  set(WDK_ARCH "x64")
 else()
  set(WDK_ARCH "x86")
