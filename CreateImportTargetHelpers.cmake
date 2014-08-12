@@ -27,6 +27,9 @@
 #   The file to use as the IMPORTED_LOCATION.  If <type> is SHARED, this should
 #   be a .dll, .dylib, or .so.  If <type> is STATIC or UNKNOWN, this should be 
 #   a .lib, or .a file.  This is unused for INTERFACE libraries
+# <namespace>_SHARED_LIB<_DEBUG/_RELEASE>
+#   The file to use as the IMPORTED_LOCATION if <type> is SHARED.  This is helpful
+#   for backwards compatilbility where projects expect _LIBRARY to be the import_lib.
 # <namespace>_IMPORT_LIB<_DEBUG/_RELEASE>
 #   The import library corresponding to the .dll.  Only used on Windows. 
 #   This may not use generator expressions.
@@ -92,7 +95,11 @@ function(generate_import_target namespace libtype)
     endif()        
     
     if(NOT ${libtype} STREQUAL INTERFACE)
-      map_var_to_prop(${_target} IMPORTED_LOCATION ${namespace}_LIBRARY REQUIRED)
+      if(${libtype} STREQUAL SHARED AND (${namespace}_SHARED_LIB OR (${namespace}_SHARED_LIB_DEBUG AND ${namespace}_SHARED_LIB_RELEASE)))
+        map_var_to_prop(${_target} IMPORTED_LOCATION ${namespace}_SHARED_LIB REQUIRED)
+      else()
+        map_var_to_prop(${_target} IMPORTED_LOCATION ${namespace}_LIBRARY REQUIRED)
+      endif()
     endif()
     
     map_var_to_prop(${_target} INTERFACE_LINK_LIBRARIES ${namespace}_INTERFACE_LIBS) 
