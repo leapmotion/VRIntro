@@ -3,7 +3,7 @@
 #---------
 # A FindBoost wrapper that creates import targets
 
-list(APPEND CMAKE_FIND_LIBRARY_PREFIXES "lib")
+list(APPEND CMAKE_FIND_LIBRARY_PREFIXES "lib" "")
 list(REMOVE_DUPLICATES CMAKE_FIND_LIBRARY_PREFIXES)
 
 if(Boost_FIND_VERSION_EXACT)
