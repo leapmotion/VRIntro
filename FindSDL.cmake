@@ -367,23 +367,26 @@ if(SDL_MAIN_LIBRARY AND EXISTS "${SDL_MAIN_LIBRARY}")
 endif()
 
 include(CreateImportTargetHelpers)
-generate_import_target(SDL_MAIN STATIC TARGET SDL::Main)
 
-include(CreateImportTargetHelpers)
-if(SDL_LIBRARY MATCHES "${CMAKE_SHARED_LIBRARY_SUFFIX}$")
-  generate_import_target(SDL SHARED TARGET SDL::Library)
-elseif(SDL_LIBRARY MATCHES "${CMAKE_STATIC_LIBRARY_SUFFIX}$")
-  generate_import_target(SDL STATIC TARGET SDL::Library)
-else()
-  message(FATAL_ERROR "Unable to determine library type of file ${SDL_LIBRARY}")
-endif()
+if(SDL_FOUND AND NOT TARGET SDL::SDL)
+  generate_import_target(SDL_MAIN STATIC TARGET SDL::Main)
 
-add_library(SDL::SDL INTERFACE IMPORTED)
-set_property(TARGET SDL::SDL APPEND PROPERTY INTERFACE_LINK_LIBRARIES SDL::Library SDL::Main)
+  include(CreateImportTargetHelpers)
+  if(SDL_LIBRARY MATCHES "${CMAKE_SHARED_LIBRARY_SUFFIX}$")
+    generate_import_target(SDL SHARED TARGET SDL::Library)
+  elseif(SDL_LIBRARY MATCHES "${CMAKE_STATIC_LIBRARY_SUFFIX}$")
+    generate_import_target(SDL STATIC TARGET SDL::Library)
+  else()
+    message(FATAL_ERROR "Unable to determine library type of file ${SDL_LIBRARY}")
+  endif()
 
-#HACK FOR MAC X11 DEPENDENCY
-#TODO - Create a modernized FindX11.cmake module, make SDL depend on it on macs
-if(APPLE)
-  find_package(X11 REQUIRED)
-  set_property(TARGET SDL::SDL APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${X11_INCLUDE_DIR})
+  add_library(SDL::SDL INTERFACE IMPORTED GLOBAL)
+  set_property(TARGET SDL::SDL APPEND PROPERTY INTERFACE_LINK_LIBRARIES SDL::Library SDL::Main)
+
+  #HACK FOR MAC X11 DEPENDENCY
+  #TODO - Create a modernized FindX11.cmake module, make SDL depend on it on macs
+  if(APPLE)
+    find_package(X11 REQUIRED)
+    set_property(TARGET SDL::SDL APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${X11_INCLUDE_DIR})
+  endif()
 endif()
