@@ -1,4 +1,7 @@
 # - Try to find WDK
+# This module takes as inputs
+#  WDK_ROOT_ALTERNATE - An alternate possible location for the wdk
+#
 # Once done this will define
 #  WDK_FOUND - System has WDK
 #  WDK_INCLUDE_DIRS - The WDK include directory
@@ -11,7 +14,7 @@ get_filename_component(wdkpath80 ${wdkregpath80} ABSOLUTE)
 set(wdkregpath81 "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots;KitsRoot81]")
 get_filename_component(wdkpath81 ${wdkregpath81} ABSOLUTE)
 
-if(CMAKE_SIZE_OF_VOID_P EQUAL 8)
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
  set(WDK_ARCH "x64")
 else()
  set(WDK_ARCH "x86")
@@ -37,7 +40,7 @@ foreach(COMPONENT ${WDK_FIND_COMPONENTS})
   string(TOUPPER ${COMPONENT} UPPERCOMPONENT)
   
   find_library(
-    WDK_${UPPERCOMPONENT} winusb
+    WDK_${UPPERCOMPONENT} ${COMPONENT}
     PATHS ${WDK_ROOT_DIR}
     PATH_SUFFIXES /Lib/win8/um/${WDK_ARCH} /Lib/winv6.3/um/${WDK_ARCH}
   )

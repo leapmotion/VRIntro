@@ -266,57 +266,61 @@ endif()
 
 include(CreateImportTargetHelpers)
 
-set(_libtype SHARED)
-if(SFML_STATIC_LIBRARIES)
-  set(_libtype STATIC)
-endif()
+if( SFML_FOUND AND NOT TARGET SFML::SFML)
 
-add_library(SFML::SFML INTERFACE IMPORTED)
-
-if(APPLE)
-  find_library(SFML_GLEW
-               NAMES GLEW
-               PATH_SUFFIXES lib64 lib
-               PATHS ${FIND_SFML_LIB_PATHS}
-               NO_DEFAULT_PATH)
-  find_library(SFML_JPEG
-               NAMES jpeg
-               PATH_SUFFIXES lib64 lib
-               PATHS ${FIND_SFML_LIB_PATHS}
-               NO_DEFAULT_PATH)
-  mark_as_advanced(SFML_GLEW SFML_JPEG)
-endif()
-
-foreach(_component ${SFML_FIND_COMPONENTS})
-  string(TOUPPER ${_component} _componentUPPER)
-  string(TOLOWER ${_component} _componentLOWER)
-
-  string(SUBSTRING ${_componentLOWER} 0 1 _first_letter)
-  string(TOUPPER ${_first_letter} _first_letter)
-  string(REGEX REPLACE "^.(.*)" "${_first_letter}\\1" _componentCap "${_componentLOWER}")
-
-  if(_componentLOWER STREQUAL "main") #main is always a static lib
-    generate_import_target(SFML_MAIN STATIC TARGET SFML::Main)
-    
-  else()
-    generate_import_target(SFML_${_componentUPPER} ${_libtype} TARGET SFML::${_componentCap})
+  set(_libtype SHARED)
+  if(SFML_STATIC_LIBRARIES)
+    set(_libtype STATIC)
   endif()
 
-  map_var_to_prop(SFML::${_componentCap} INTERFACE_COMPILE_DEFINITIONS SFML_DEFINITIONS)
-  map_var_to_prop(SFML::${_componentCap} INTERFACE_INCLUDE_DIRECTORIES SFML_INCLUDE_DIR REQUIRED)
+
+  add_library(SFML::SFML INTERFACE IMPORTED GLOBAL)
 
   if(APPLE)
-    if(SFML_STATIC_LIBRARIES)
-      if(_componentLOWER STREQUAL "audio")
-        set_property(TARGET SFML::${_componentCap} APPEND PROPERTY INTERFACE_LINK_LIBRARIES "-framework OpenAL")
-      endif()
-      if(_componentLOWER STREQUAL "graphics")
-        set_property(TARGET SFML::${_componentCap} APPEND PROPERTY
-          INTERFACE_LINK_LIBRARIES "-framework OpenGL" "-framework AppKit" "-framework IOKit" "-framework Carbon"
-                                   "${SFML_GLEW}" "${SFML_JPEG}")
-      endif()
-    endif()
+    find_library(SFML_GLEW
+                 NAMES GLEW
+                 PATH_SUFFIXES lib64 lib
+                 PATHS ${FIND_SFML_LIB_PATHS}
+                 NO_DEFAULT_PATH)
+    find_library(SFML_JPEG
+                 NAMES jpeg
+                 PATH_SUFFIXES lib64 lib
+                 PATHS ${FIND_SFML_LIB_PATHS}
+                 NO_DEFAULT_PATH)
+    mark_as_advanced(SFML_GLEW SFML_JPEG)
   endif()
 
-  set_property(TARGET SFML::SFML APPEND PROPERTY INTERFACE_LINK_LIBRARIES SFML::${_componentCap})
-endforeach()
+  foreach(_component ${SFML_FIND_COMPONENTS})
+    string(TOUPPER ${_component} _componentUPPER)
+    string(TOLOWER ${_component} _componentLOWER)
+
+    string(SUBSTRING ${_componentLOWER} 0 1 _first_letter)
+    string(TOUPPER ${_first_letter} _first_letter)
+    string(REGEX REPLACE "^.(.*)" "${_first_letter}\\1" _componentCap "${_componentLOWER}")
+
+    if(_componentLOWER STREQUAL "main") #main is always a static lib
+      generate_import_target(SFML_MAIN STATIC TARGET SFML::Main)
+      
+    else()
+      generate_import_target(SFML_${_componentUPPER} ${_libtype} TARGET SFML::${_componentCap})
+    endif()
+
+    map_var_to_prop(SFML::${_componentCap} INTERFACE_COMPILE_DEFINITIONS SFML_DEFINITIONS)
+    map_var_to_prop(SFML::${_componentCap} INTERFACE_INCLUDE_DIRECTORIES SFML_INCLUDE_DIR REQUIRED)
+
+    if(APPLE)
+      if(SFML_STATIC_LIBRARIES)
+        if(_componentLOWER STREQUAL "audio")
+          set_property(TARGET SFML::${_componentCap} APPEND PROPERTY INTERFACE_LINK_LIBRARIES "-framework OpenAL")
+        endif()
+        if(_componentLOWER STREQUAL "graphics")
+          set_property(TARGET SFML::${_componentCap} APPEND PROPERTY
+            INTERFACE_LINK_LIBRARIES "-framework OpenGL" "-framework AppKit" "-framework IOKit" "-framework Carbon"
+                                     "${SFML_GLEW}" "${SFML_JPEG}")
+        endif()
+      endif()
+    endif()
+
+    set_property(TARGET SFML::SFML APPEND PROPERTY INTERFACE_LINK_LIBRARIES SFML::${_componentCap})
+  endforeach()
+endif()
