@@ -383,10 +383,14 @@ if(SDL_FOUND AND NOT TARGET SDL::SDL)
   add_library(SDL::SDL INTERFACE IMPORTED GLOBAL)
   set_property(TARGET SDL::SDL APPEND PROPERTY INTERFACE_LINK_LIBRARIES SDL::Library SDL::Main)
 
-  #HACK FOR MAC X11 DEPENDENCY
-  #TODO - Create a modernized FindX11.cmake module, make SDL depend on it on macs
-  if(APPLE)
-    find_package(X11 REQUIRED)
-    set_property(TARGET SDL::SDL APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${X11_INCLUDE_DIR})
-  endif()
+  # NOTE: this is commented out because SDL does not in principle need to depend
+  # on X11 (it should be using Cocoa), and thus the SDL library we use should be
+  # configured to not use X11.  Jon has rolled an SDL build with X11 disabled, and
+  # that build should be making it into our external libraries.
+  # # HACK FOR MAC X11 DEPENDENCY
+  # # TODO - Create a modernized FindX11.cmake module, make SDL depend on it on macs
+  # if(APPLE)
+  #   find_package(X11 REQUIRED)
+  #   set_property(TARGET SDL::SDL APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${X11_INCLUDE_DIR})
+  # endif()
 endif()
