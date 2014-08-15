@@ -58,6 +58,10 @@ foreach(_boost_VER ${_boost_TEST_VERSIONS})
         _boost_BOOSTIFIED_VERSION ${_boost_VER})
   endif()
 
+  if(APPLE)
+    set(_boost_BOOSTIFIED_VERSION "${_boost_BOOSTIFIED_VERSION}-libc++")
+  endif()
+
   list(APPEND _boost_PATH_SUFFIXES
     "boost-${_boost_BOOSTIFIED_VERSION}"
     "boost_${_boost_BOOSTIFIED_VERSION}"
