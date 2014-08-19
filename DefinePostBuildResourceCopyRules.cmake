@@ -33,7 +33,8 @@ function(define_post_build_resource_copy_rules)
             # CMAKE_BUILD_TYPE will be one of Release, Debug, etc.
             set(ACTUAL_BUILD_DIR "${ACTUAL_BUILD_DIR}/${CMAKE_BUILD_TYPE}")
         endif()
-        set(_resources_dir "${ACTUAL_BUILD_DIR}/Stub.app/Contents/Resources")
+        # This assumes that the Mac bundle name is the same as the target name.
+        set(_resources_dir "${ACTUAL_BUILD_DIR}/${_arg_TARGET}.app/Contents/Resources")
     elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
         set(_resources_dir "${PROJECT_BINARY_DIR}")
     elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
