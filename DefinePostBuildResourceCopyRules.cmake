@@ -38,8 +38,8 @@ function(define_post_build_resource_copy_rules)
     elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
         set(_resources_dir "${PROJECT_BINARY_DIR}")
     elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-            # CMAKE_BUILD_TYPE will be one of Release, Debug, etc.
-        set(_resources_dir "${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}")
+            # CMAKE_CFG_INTDIR  will be one of Release, Debug, etc.
+        set(_resources_dir "${PROJECT_BINARY_DIR}/${CMAKE_CFG_INTDIR}")
     endif()
 
     # Add post-build rules for copying the resources into the correct place.
