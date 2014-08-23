@@ -13,7 +13,8 @@ function(define_post_build_resource_copy_rules)
         TARGET
     )
     set(_multi_value_args
-        RESOURCES
+        RELATIVE_PATH_RESOURCES
+        ABSOLUTE_PATH_RESOURCES
         TARGETS
     )
     cmake_parse_arguments(_arg "${_options}" "${_one_value_args}" "${_multi_value_args}" ${ARGN})
@@ -44,12 +45,21 @@ function(define_post_build_resource_copy_rules)
 
     # Add post-build rules for copying the resources into the correct place.
     # This should happen at the end of the build.
-    foreach(_resource ${_arg_RESOURCES})
+    foreach(_resource ${_arg_RELATIVE_PATH_RESOURCES})
         # Add the post-build command for copying files (if different)
         add_custom_command(
             TARGET ${_arg_TARGET}
             POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/${_resource}" "${_resources_dir}/${_resource}"
+        )
+    endforeach()
+    foreach(_resource ${_arg_ABSOLUTE_PATH_RESOURCES})
+        # Add the post-build command for copying files (if different)
+        get_filename_component(_resource_filename_component "${_resource}" NAME)
+        add_custom_command(
+            TARGET ${_arg_TARGET}
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_resource}" "${_resources_dir}/${_resource_filename_component}"
         )
     endforeach()
 
