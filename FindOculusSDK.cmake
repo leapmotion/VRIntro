@@ -29,10 +29,11 @@ include_directories(
 if(MSVC)
   find_library(OculusSDK_LIBRARY_RELEASE "libovr.lib" HINTS "${OculusSDK_ROOT_DIR}/LibOVR/Lib/Win32/VS2013" PATH_SUFFIXES lib)
   find_library(OculusSDK_LIBRARY_DEBUG "libovrd.lib" HINTS "${OculusSDK_ROOT_DIR}/LibOVR/Lib/Win32/VS2013" PATH_SUFFIXES lib)
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") # Mac
+  find_library(OculusSDK_LIBRARY_RELEASE "libovr.a" HINTS "${OculusSDK_ROOT_DIR}/LibOVR/Lib/Mac/Release" PATH_SUFFIXES lib)
+  find_library(OculusSDK_LIBRARY_DEBUG "libovr.a" HINTS "${OculusSDK_ROOT_DIR}/LibOVR/Lib/Mac/Debug" PATH_SUFFIXES lib)
 else()
-  # Linux's oculus-1.9.0 package's libs are in lib64
-  find_library(OculusSDK_LIBRARY_RELEASE "libOCULUS.a" HINTS "${OculusSDK_ROOT_DIR}" PATH_SUFFIXES lib lib64)
-  find_library(OculusSDK_LIBRARY_DEBUG "libOCULUS.a" HINTS "${OculusSDK_ROOT_DIR}" PATH_SUFFIXES lib lib64)
+  # No linux support from Oculus Rift!
 endif()
 include(SelectConfigurations)
 select_configurations(OculusSDK LIBRARY LIBRARIES)
