@@ -24,6 +24,7 @@ find_path(FbxSdk_ROOT_DIR
                         # NOTE: 2014.2 does not compile with VS2012
                         # fbx-sdk/2014.2
                         # TODO: we should make this folder structure more consistent, most likely fbx-sdk/2015.1
+                        fbx-sdk/2015.1
                         fbx2015/2015.1)
 
 set(FbxSdk_INCLUDE_DIR "${FbxSdk_ROOT_DIR}/include")
@@ -52,3 +53,4 @@ find_package_handle_standard_args(FbxSdk DEFAULT_MSG FbxSdk_INCLUDE_DIR FbxSdk_L
 
 include(CreateImportTargetHelpers)
 generate_import_target(FbxSdk STATIC)
+
