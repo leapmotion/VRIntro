@@ -24,17 +24,23 @@ find_path(FbxSdk_ROOT_DIR
                         # NOTE: 2014.2 does not compile with VS2012
                         # fbx-sdk/2014.2
                         # TODO: we should make this folder structure more consistent, most likely fbx-sdk/2015.1
+                        fbx-sdk/2015.1
                         fbx2015/2015.1)
 
 set(FbxSdk_INCLUDE_DIR "${FbxSdk_ROOT_DIR}/include")
 
+if (CMAKE_SIZEOF_VOID_P EQUAL 8) # 64bit
+  set(BUILD_BIT_TYPE "x64")
+else() # 32bit
+  set(BUILD_BIT_TYPE "x86")
+endif()
+
 if(MSVC)
-  find_library(FbxSdk_LIBRARY_RELEASE "libfbxsdk-md.lib" HINTS "${FbxSdk_ROOT_DIR}/lib/vs2010/x86/release" "${FbxSdk_ROOT_DIR}/lib/vs2013/x86/release")
-  find_library(FbxSdk_LIBRARY_DEBUG "libfbxsdk-md.lib" HINTS "${FbxSdk_ROOT_DIR}/lib/vs2010/x86/debug" "${FbxSdk_ROOT_DIR}/lib/vs2013/x86/debug")
+  find_library(FbxSdk_LIBRARY_RELEASE "libfbxsdk-md.lib" HINTS "${FbxSdk_ROOT_DIR}/lib/vs2013/${BUILD_BIT_TYPE}/release")
+  find_library(FbxSdk_LIBRARY_DEBUG "libfbxsdk-md.lib" HINTS "${FbxSdk_ROOT_DIR}/lib/vs2013/${BUILD_BIT_TYPE}/debug")
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux") # This is the correct way to detect Linux operating system -- see http://www.openguru.com/2009/04/cmake-detecting-platformoperating.html
-  # TODO: somehow appropriately pick x86 or x64
-  find_library(FbxSdk_LIBRARY_RELEASE "libfbxsdk.a" HINTS "${FbxSdk_ROOT_DIR}/lib/gcc4/x64/release")
-  find_library(FbxSdk_LIBRARY_DEBUG "libfbxsdk.a" HINTS "${FbxSdk_ROOT_DIR}/lib/gcc4/x64/debug")
+  find_library(FbxSdk_LIBRARY_RELEASE "libfbxsdk.a" HINTS "${FbxSdk_ROOT_DIR}/lib/gcc4/${BUILD_BIT_TYPE}/release")
+  find_library(FbxSdk_LIBRARY_DEBUG "libfbxsdk.a" HINTS "${FbxSdk_ROOT_DIR}/lib/gcc4/${BUILD_BIT_TYPE}/debug")
 else()
   find_library(FbxSdk_LIBRARY_RELEASE "libfbxsdk.a" HINTS "${FbxSdk_ROOT_DIR}/lib/clang/ub/release")
   find_library(FbxSdk_LIBRARY_DEBUG "libfbxsdk.a" HINTS "${FbxSdk_ROOT_DIR}/lib/clang/ub/debug")
@@ -47,3 +53,4 @@ find_package_handle_standard_args(FbxSdk DEFAULT_MSG FbxSdk_INCLUDE_DIR FbxSdk_L
 
 include(CreateImportTargetHelpers)
 generate_import_target(FbxSdk STATIC)
+
