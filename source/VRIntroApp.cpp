@@ -43,7 +43,7 @@ void VRIntroApp::Initialize() {
   params.transparentWindow = false;
   params.fullscreen = false;
   params.antialias = false;
-  params.windowTitle = "Leap Motion VR Intro Demo (F11 to fullscreen)";
+  params.windowTitle = "Leap Motion VR Intro Demo BETA (F11 to fullscreen)";
 
   m_applicationTime = TimePoint(0.0);         // Start the application time at zero.
   m_SDLController.Initialize(params);         // This initializes everything SDL-related.

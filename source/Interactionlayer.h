@@ -10,9 +10,13 @@
 class GLShader;
 
 struct SkeletonHand {
+  float confidence;
+  Vector3f center;
   //stdvectorV3f tips[5];
   Vector3f joints[21];
   Vector3f jointConnections[21];
+  
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 class InteractionLayer : public RenderableEventHandler {
@@ -38,9 +42,9 @@ protected:
   float m_Alpha;
 
 private:
-  void DrawSkeletonHand(const SkeletonHand& hand) const;
-  void DrawCylinder(const Vector3f& p0, const Vector3f& p1, float radius) const;
-  void DrawSphere(const Vector3f& p0, float radius) const;
+  void DrawSkeletonHand(const SkeletonHand& hand, float alpha) const;
+  void DrawCylinder(const Vector3f& p0, const Vector3f& p1, float radius, float alpha) const;
+  void DrawSphere(const Vector3f& p0, float radius, float alpha) const;
 
   std::vector<SkeletonHand> m_SkeletonHands;
 };

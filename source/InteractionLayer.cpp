@@ -21,12 +21,15 @@ void InteractionLayer::UpdateLeap(const Leap::Frame& frame, const Matrix4x4f& wo
   Vector3f translation = worldTransform.block<3, 1>(0, 3);
 
   for (int i = 0; i < frame.hands().count(); i++) {
-    SkeletonHand outHand;
     const Leap::Hand& hand = frame.hands()[i];
+    SkeletonHand outHand;
+    outHand.confidence = hand.confidence();
+
     const Vector3f palm = rotation*hand.palmPosition().toVector3<Vector3f>() + translation;
     // const Vector3f palmDir = rotation*hand.direction().toVector3<Vector3f>();
     // const Vector3f palmNormal = rotation*hand.palmNormal().toVector3<Vector3f>();
     // const Vector3f palmSide = palmDir.cross(palmNormal).normalized();
+    outHand.center = palm;
     m_Palms.push_back(palm);
     m_PalmOrientations.push_back(rotation*Matrix3x3f(hand.basis().toArray3x3())*rotation.transpose());
 
@@ -60,20 +63,23 @@ void InteractionLayer::UpdateLeap(const Leap::Frame& frame, const Matrix4x4f& wo
 void InteractionLayer::DrawSkeletonHands() const {
   m_Shader->Bind();
   const Vector3f desiredLightPos(0, 10, 10);
-  const Vector3f lightPos = desiredLightPos - m_EyePos.cast<float>();
+  const Vector3f lightPos = desiredLightPos - m_EyePos;
   const int lightPosLoc = m_Shader->LocationOfUniform("lightPosition");
   glUniform3f(lightPosLoc, lightPos[0], lightPos[1], lightPos[2]);
 
   for (size_t i = 0; i < m_SkeletonHands.size(); i++) {
-    DrawSkeletonHand(m_SkeletonHands[i]);
+    const SkeletonHand hand = m_SkeletonHands[i];
+    float distSq = (hand.center - m_EyePos - m_EyeView.transpose()*Vector3f(0, 0, -0.3f)).squaredNorm();
+    float alpha = m_Alpha*std::min(hand.confidence, 0.015f/(distSq*distSq));
+    DrawSkeletonHand(hand, alpha);
   }
   m_Shader->Unbind();
 }
 
-void InteractionLayer::DrawSkeletonHand(const SkeletonHand& hand) const {
+void InteractionLayer::DrawSkeletonHand(const SkeletonHand& hand, float alpha) const {
   for (int i = 0; i < 21; i++) {
-    DrawSphere(hand.joints[i], 10e-3f);
-    DrawCylinder(hand.joints[i], hand.jointConnections[i], 7e-3f);
+    DrawSphere(hand.joints[i], 10e-3f, alpha);
+    DrawCylinder(hand.joints[i], hand.jointConnections[i], 7e-3f, alpha);
   }
 }
 
@@ -81,7 +87,7 @@ void InteractionLayer::DrawSkeletonHand(const SkeletonHand& hand) const {
 //mutable RenderState m_Renderer;
 //Vector3f m_EyePos;
 
-void InteractionLayer::DrawCylinder(const Vector3f& p0, const Vector3f& p1, float radius) const {
+void InteractionLayer::DrawCylinder(const Vector3f& p0, const Vector3f& p1, float radius, float alpha) const {
   Cylinder cylinder;
   cylinder.SetRadius(static_cast<double>(radius));
   cylinder.Translation() = 0.5*(p0 + p1).cast<double>();
@@ -99,16 +105,16 @@ void InteractionLayer::DrawCylinder(const Vector3f& p0, const Vector3f& p1, floa
   basis << X, Y, Z;
   cylinder.LinearTransformation() = basis.cast<double>();
 
-  cylinder.SetDiffuseColor(Color(0.85f, 0.85f, 0.85f, m_Alpha));
+  cylinder.SetDiffuseColor(Color(0.85f, 0.85f, 0.85f, alpha));
   cylinder.SetAmbientFactor(0.3f);
   PrimitiveBase::DrawSceneGraph(cylinder, m_Renderer);
 }
 
-void InteractionLayer::DrawSphere(const Vector3f& p0, float radius) const {
+void InteractionLayer::DrawSphere(const Vector3f& p0, float radius, float alpha) const {
   Sphere sphere;
   sphere.SetRadius(static_cast<double>(radius));
   sphere.Translation() = p0.cast<double>();
-  sphere.SetDiffuseColor(Color(0.4f, 0.6f, 1.0f, m_Alpha));
+  sphere.SetDiffuseColor(Color(0.4f, 0.6f, 1.0f, alpha));
   sphere.SetAmbientFactor(0.3f);
   PrimitiveBase::DrawSceneGraph(sphere, m_Renderer);
 }
