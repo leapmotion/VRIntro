@@ -1,8 +1,10 @@
 #include "SpheresLayer.h"
 
 #include "Primitives.h"
+#include "GLController.h"
 
-SpheresLayer::SpheresLayer() :
+SpheresLayer::SpheresLayer(const Vector3f& initialEyePos) : 
+  InteractionLayer(initialEyePos),
   m_Pos(NUM_SPHERES),
   m_Disp(NUM_SPHERES, Vector3f::Zero()),
   m_Vel(NUM_SPHERES, Vector3f::Zero()),
@@ -26,7 +28,7 @@ SpheresLayer::SpheresLayer() :
     m_Radius[i] = 0.025f + (float)rand() / RAND_MAX * 0.030f;
     m_Pos[i] = Vector3f(0.0f, 1.7f, -5.0f) + Vector3f(x, y, z)*dist;
     m_Colors[i] << r, g, b;
-    m_Mono[i] << 0.3333f*(r+g+b),0.3333f*(r+g+b),0.3333f*(r+g+b);
+    m_Mono[i] << 0.3333f*(r + g + b), 0.3333f*(r + g + b), 0.3333f*(r + g + b);
   }
 }
 
@@ -43,7 +45,7 @@ void SpheresLayer::Render(TimeDelta real_time_delta) const {
   glUniform3f(lightPosLoc, lightPos[0], lightPos[1], lightPos[2]);
 
   for (size_t j = 0; j < NUM_SPHERES; j++) {
-    float desaturation = 0.2f / (0.2f + m_Disp[j].squaredNorm());
+    float desaturation = 0.005f / (0.005f + m_Disp[j].squaredNorm());
     Vector3f color = m_Colors[j]*(1.0 - desaturation) + m_Mono[j]*desaturation;
 
     Sphere sphere;
@@ -54,7 +56,6 @@ void SpheresLayer::Render(TimeDelta real_time_delta) const {
     PrimitiveBase::DrawSceneGraph(sphere, m_Renderer);
   }
   m_Shader->Unbind();
-  DrawSkeletonHands();
 }
 
 EventHandlerAction SpheresLayer::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) {
@@ -70,8 +71,8 @@ void SpheresLayer::ComputePhysics(TimeDelta real_time_delta) {
   for (int i = 0; i < NUM_SPHERES; i++) {
     static const float K = 10;
     static const float D = 3;
-    static const float A = 0.03;
-    static const float AA = 0.0006;
+    static const float A = 0.003;
+    static const float AA = 0.0001;
 
     Vector3f accel = -K*m_Spring*m_Disp[i] -D*m_Damp*m_Vel[i];
     // std::cout << __LINE__ << ":\t     num_tips = " << (num_tips) << std::endl;

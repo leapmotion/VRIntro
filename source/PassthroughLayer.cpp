@@ -3,7 +3,7 @@
 #include "GLShader.h"
 
 PassthroughLayer::PassthroughLayer() :
-  InteractionLayer("passthrough"),
+  InteractionLayer(Vector3f::Zero(), "passthrough"),
   m_image(GLTexture2Params(640, 240, GL_LUMINANCE, GL_UNSIGNED_BYTE), NULL, 640*240),
   m_colorimage(GLTexture2Params(672, 600, GL_RGBA, GL_UNSIGNED_BYTE), NULL, 672*600*4),
   m_distortion(GLTexture2Params(64, 64, GL_RG, GL_FLOAT, GL_RG32F), NULL, 64*64*2),
@@ -37,17 +37,33 @@ PassthroughLayer::~PassthroughLayer() {
   m_Buffer.Destroy();
 }
 
-void PassthroughLayer::SetImage(const unsigned char* data) {
+void PassthroughLayer::SetImage(const unsigned char* data, int width, int height) {
   GLTexture2Params params = m_image.Params();
   m_image.Bind();
-  glTexSubImage2D(params.Target(),
-                  0,                               // mipmap level (for source images, this should be 0)
-                  0, 0,
-                  params.Width(),
-                  params.Height(),
-                  params.PixelDataFormat(),
-                  params.PixelDataType(),
-                  data);
+
+  // We have to resize our texture when image sizes change
+  if (width != params.Width() || height != params.Height()) {
+    params.SetWidth(width);
+    params.SetHeight(height);
+    glTexImage2D(params.Target(),
+                 0,
+                 params.InternalFormat(),
+                 params.Width(),
+                 params.Height(),
+                 0,
+                 params.PixelDataFormat(),
+                 params.PixelDataType(),
+                 data);
+  } else {
+    glTexSubImage2D(params.Target(),
+                    0,                               // mipmap level (for source images, this should be 0)
+                    0, 0,
+                    params.Width(),
+                    params.Height(),
+                    params.PixelDataFormat(),
+                    params.PixelDataType(),
+                    data);
+  }
   m_image.Unbind();
   m_UseColor = false;
 }
@@ -86,7 +102,7 @@ void PassthroughLayer::Render(TimeDelta real_time_delta) const {
   m_Renderer.UploadMatrices();
 
   glActiveTexture(GL_TEXTURE0 + 0);
-  if(m_UseColor) {
+  if (m_UseColor) {
     m_colorimage.Bind();
   } else {
     m_image.Bind();
@@ -100,7 +116,7 @@ void PassthroughLayer::Render(TimeDelta real_time_delta) const {
   glUniform1i(m_Shader->LocationOfUniform("texture"), 0);
   glUniform1i(m_Shader->LocationOfUniform("distortion"), 1);
   glUniform1f(m_Shader->LocationOfUniform("gamma"), m_Gamma);
-  glUniform1f(m_Shader->LocationOfUniform("brightness"), m_Brightness);
+  glUniform1f(m_Shader->LocationOfUniform("brightness"), m_Alpha*m_Brightness);
   glUniform1f(m_Shader->LocationOfUniform("use_color"), m_UseColor ? 1.0f : 0.0f);
 
 #if 0
@@ -121,7 +137,7 @@ void PassthroughLayer::Render(TimeDelta real_time_delta) const {
   glEnd();
 #endif
 
-  if(m_UseColor) {
+  if (m_UseColor) {
     m_colorimage.Unbind();
   } else {
     m_image.Unbind();
@@ -140,10 +156,10 @@ EventHandlerAction PassthroughLayer::HandleKeyboardEvent(const SDL_KeyboardEvent
     m_Gamma = std::min(1.2f, m_Gamma + 0.04f);
     return EventHandlerAction::CONSUME;
   case SDLK_INSERT:
-    m_Brightness = std::max(0.f, m_Brightness + 0.03f);
+    m_Brightness = std::max(0.f, m_Brightness + 0.02f);
     return EventHandlerAction::CONSUME;
   case SDLK_DELETE:
-    m_Brightness = std::min(2.f, m_Brightness - 0.03f);
+    m_Brightness = std::min(2.f, m_Brightness - 0.02f);
     return EventHandlerAction::CONSUME;
   default:
     return EventHandlerAction::PASS_ON;

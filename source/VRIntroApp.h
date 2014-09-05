@@ -4,7 +4,7 @@
 #include "GLController.h"
 #include "RenderableEventHandler.h"
 #include "SDLController.h"
-#include "SampleListener.h"
+#include "LeapListener.h"
 #include "Leap.h"
 #include "OculusVR.h"
 #include "PassthroughLayer.h"
@@ -16,8 +16,9 @@
 #include <thread>
 
 // Interface class for top-level control of an application.
-class ShapesApplication : public Application {
+class VRIntroApp : public Application {
 public:
+  VRIntroApp();
   // Application interface methods.  See Application for comments and details.
 
   virtual void Initialize() override;
@@ -25,7 +26,7 @@ public:
 
   virtual void Update(TimeDelta real_time_delta) override;
   virtual void Render(TimeDelta real_time_delta) const override;
-  void RenderEye(TimeDelta real_time_delta, int i) const;
+  void RenderEye(TimeDelta real_time_delta, int i, const Matrix4x4f& proj) const;
 
   virtual EventHandlerAction HandleWindowEvent(const SDL_WindowEvent &ev) override;
   virtual EventHandlerAction HandleKeyboardEvent(const SDL_KeyboardEvent &ev) override;
@@ -38,8 +39,11 @@ public:
   virtual TimePoint Time() const override;
 
 private:
+  static const int CONTENT_LAYERS = 4;
+
   void InitializeApplicationLayers();
   void ShutdownApplicationLayers();
+  void SelectLayer(int i);
 
   template <typename EventType_>
   EventHandlerAction DispatchEventToApplicationLayers(
@@ -61,7 +65,7 @@ private:
     return EventHandlerAction::PASS_ON;
   }
 
-  SampleListener m_LeapListener;
+  LeapListener m_LeapListener;
   Leap::Controller m_LeapController;
 
   mutable OculusVR m_Oculus;
@@ -72,4 +76,11 @@ private:
   std::shared_ptr<PassthroughLayer> m_PassthroughLayer[2];
 
   int m_Selected;
+  bool m_HealthWarningDismissed;
+  bool m_HelpToggled;
+  bool m_LeapHMDModeWasOn;
+  bool m_OculusMode;
+
+  int m_Width;
+  int m_Height;
 };

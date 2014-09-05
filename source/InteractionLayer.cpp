@@ -4,9 +4,11 @@
 #include "Resource.h"
 #include "GLShader.h"
 #include "GLShaderLoader.h"
+#include "GLController.h"
 
-InteractionLayer::InteractionLayer(const std::string& shaderName) :
+InteractionLayer::InteractionLayer(const Vector3f& initialEyePos, const std::string& shaderName) :
   m_Shader(Resource<GLShader>(shaderName)),
+  m_EyePos(initialEyePos),
   m_Alpha(0.0f) {
   m_Renderer.SetShader(m_Shader);
 }
@@ -22,10 +24,11 @@ void InteractionLayer::UpdateLeap(const Leap::Frame& frame, const Matrix4x4f& wo
     SkeletonHand outHand;
     const Leap::Hand& hand = frame.hands()[i];
     const Vector3f palm = rotation*hand.palmPosition().toVector3<Vector3f>() + translation;
-    const Vector3f palmDir = rotation*hand.direction().toVector3<Vector3f>();
-    const Vector3f palmNormal = rotation*hand.palmNormal().toVector3<Vector3f>();
-    const Vector3f palmSide = palmDir.cross(palmNormal).normalized();
+    // const Vector3f palmDir = rotation*hand.direction().toVector3<Vector3f>();
+    // const Vector3f palmNormal = rotation*hand.palmNormal().toVector3<Vector3f>();
+    // const Vector3f palmSide = palmDir.cross(palmNormal).normalized();
     m_Palms.push_back(palm);
+    m_PalmOrientations.push_back(rotation*Matrix3x3f(hand.basis().toArray3x3())*rotation.transpose());
 
     for (int j = 0; j < 5; j++) {
       const Leap::Finger& finger = hand.fingers()[j];
@@ -37,7 +40,7 @@ void InteractionLayer::UpdateLeap(const Leap::Frame& frame, const Matrix4x4f& wo
         outHand.jointConnections[j*3 + k] = rotation*bone.prevJoint().toVector3<Vector3f>() + translation;
       }
     }
-    const float thumbDist = (outHand.jointConnections[0] - palm).norm();
+    // const float thumbDist = (outHand.jointConnections[0] - palm).norm();
     //const Vector3f wrist = palm - thumbDist*(palmDir*0.90 + (hand.isLeft() ? -1 : 1)*palmSide*0.5);
     const Vector3f wrist = rotation*hand.fingers()[4].bone(static_cast<Leap::Bone::Type>(0)).prevJoint().toVector3<Vector3f>() + translation;
 

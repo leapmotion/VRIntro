@@ -1,9 +1,21 @@
 #include "SpaceLayer.h"
 
-SpaceLayer::SpaceLayer() {
+#include "GLController.h"
+
+SpaceLayer::SpaceLayer(const Vector3f& initialEyePos) :
+  InteractionLayer(initialEyePos, "solid") {
+  m_Buffer.Create(GL_ARRAY_BUFFER);
+  m_Buffer.Bind();
+  m_Buffer.Allocate(NULL, 3*sizeof(float)*NUM_STARS, GL_DYNAMIC_DRAW);
+  m_Buffer.Release();
   // TODO: switch to non-default shader
   InitPhysics();
 }
+
+SpaceLayer::~SpaceLayer() {
+  m_Buffer.Destroy();
+}
+
 
 void SpaceLayer::Update(TimeDelta real_time_delta) {
   for (int i = 0; i < 2; i++) {
@@ -14,18 +26,23 @@ void SpaceLayer::Update(TimeDelta real_time_delta) {
 void SpaceLayer::Render(TimeDelta real_time_delta) const {
   glDisable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
+  glPointSize(1.5f);
+  //int start = SDL_GetTicks();
+
+#if 0
   glColor3f(1, 0, 0);
+
   glBegin(GL_POINTS);
   for (int i = 0; i < NUM_GALAXIES; i++) {
     switch (i) {
     case 0:
-      glColor4f(1.0f, 1.0f, 0.8f, m_Alpha);
+      glColor4f(1.0f, 1.0f, 0.8f, 0.6f*m_Alpha);
       break;
     case 1:
-      glColor4f(1.0f, 0.8f, 1.0f, m_Alpha);
+      glColor4f(1.0f, 0.8f, 1.0f, 0.6f*m_Alpha);
       break;
     case 2:
-      glColor4f(0.8f, 1.0f, 1.0f, m_Alpha);
+      glColor4f(0.8f, 1.0f, 1.0f, 0.6f*m_Alpha);
       break;
     }
     for (int j = 0; j < STARS_PER; j++) {
@@ -34,9 +51,31 @@ void SpaceLayer::Render(TimeDelta real_time_delta) const {
     }
   }
   glEnd();
+#else
+  m_Shader->Bind();
+  m_Renderer.UploadMatrices();
+  float* star = static_cast<float *>(m_Buffer.Map(GL_WRITE_ONLY));
 
+  int i = 0;
+  for (int j = 0; j < NUM_STARS; j++) {
+    const Vector3& r = pos[j];
+    star[i++] = r.x();
+    star[i++] = r.y();
+    star[i++] = r.z();
+  }
+  m_Buffer.Unmap();
+
+  m_Buffer.Bind();
+  m_Renderer.EnablePositionAttribute();
+  //m_Buffer.Write(buf, 3*sizeof(float)*NUM_STARS);
+  glDrawArrays(GL_POINTS, 0, NUM_STARS);
+  m_Renderer.DisablePositionAttribute();
+
+  m_Buffer.Release();
+  m_Shader->Unbind();
+#endif
+  //std::cout << __LINE__ << ":\t SDL_GetTicks() = " << (SDL_GetTicks() - start) << std::endl;
   glEnable(GL_DEPTH_TEST);
-  //DrawSkeletonHands();
 }
 
 Vector3 SpaceLayer::GenerateVector(const Vector3& center, double radius) {
@@ -61,11 +100,11 @@ void SpaceLayer::InitPhysics() {
   vel.resize(NUM_STARS);
 
   for (int i = 0; i < NUM_GALAXIES; i++) {
-    m_GalaxyPos[i] = GenerateVector(0.9*m_EyePos.cast<double>(), 1.0);
+    m_GalaxyPos[i] = GenerateVector(1.2*m_EyePos.cast<double>(), 1.0);
     if (i == 0) {
-      m_GalaxyPos[i] = Vector3(0, 1, -6);
+      m_GalaxyPos[i] = m_EyePos.cast<double>() + Vector3(0, -0.5, -1.0);
     }
-    m_GalaxyVel[i] = GenerateVector(-1e-3*(m_GalaxyPos[i] - 0.9*m_EyePos.cast<double>()), 0.0004);
+    m_GalaxyVel[i] = GenerateVector(-1e-3*(m_GalaxyPos[i] - 1.1*m_EyePos.cast<double>()), 0.0004);
     m_GalaxyMass[i] = static_cast<double>(STARS_PER)*2e-10;
     m_GalaxyNormal[i] = GenerateVector(Vector3::Zero(), 1.0).normalized();
 
@@ -88,7 +127,7 @@ void SpaceLayer::UpdateV(const Vector3& p, Vector3& v, int galaxy) {
     v += m_GalaxyMass[galaxy]*dr.normalized()/(0.3e-3 + dr.squaredNorm());
   } else {
     const Vector3 dr = m_Tips[galaxy - NUM_GALAXIES].cast<double>() - p;
-    v += 1e-6*dr.normalized()/(0.3e-3 + dr.squaredNorm());
+    v += 25e-6*dr.normalized()/(150e-3 + dr.squaredNorm());
   }
 }
 
@@ -117,7 +156,7 @@ void SpaceLayer::UpdateAllPhysics() {
     const Vector3 tempP = m_GalaxyPos[i] + 0.667*tempV;
     for (int j = 0; j < NUM_GALAXIES + m_Tips.size(); j++) {
       if (i != j) { // Galaxy does not affect itself
-        UpdateV(m_GalaxyPos[i], m_GalaxyVel[i], j);
+        UpdateV(tempP, m_GalaxyVel[i], j);
       }
     }
     m_GalaxyPos[i] += 0.25*tempV + 0.75*m_GalaxyVel[i];
@@ -125,11 +164,14 @@ void SpaceLayer::UpdateAllPhysics() {
 }
 
 EventHandlerAction SpaceLayer::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) {
-  switch (ev.keysym.sym) {
-  case SDLK_SPACE:
-    InitPhysics();
-    return EventHandlerAction::CONSUME;
-  default:
-    return EventHandlerAction::PASS_ON;
+  if (ev.type == SDL_KEYDOWN) {
+    switch (ev.keysym.sym) {
+    case SDLK_SPACE:
+      InitPhysics();
+      return EventHandlerAction::CONSUME;
+    default:
+      return EventHandlerAction::PASS_ON;
+    }
   }
+  return EventHandlerAction::PASS_ON;
 }

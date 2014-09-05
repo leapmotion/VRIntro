@@ -4,10 +4,10 @@
 
 class GLShader;
 
-class QuadsLayer : public InteractionLayer {
+class HandLayer : public InteractionLayer {
 public:
-  QuadsLayer(const Vector3f& initialEyePos);
-  //virtual ~QuadsLayer ();
+  HandLayer(const Vector3f& initialEyePos);
+  //virtual ~HandLayer ();
 
   virtual void Update(TimeDelta real_time_delta) override;
   virtual void Render(TimeDelta real_time_delta) const override;

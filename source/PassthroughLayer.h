@@ -15,14 +15,14 @@ public:
   PassthroughLayer();
   virtual ~PassthroughLayer();
 
-  void SetImage(const unsigned char* data);
+  void SetImage(const unsigned char* data, int width, int height);
   void SetColorImage(const unsigned char* data);
   void SetDistortion(const float* data);
   //void SetProjection(const Matrix4x4f& proj) { m_projection = proj; } // HACK until I can do this a better way
 
   virtual void Update(TimeDelta real_time_delta) override {}
   virtual void Render(TimeDelta real_time_delta) const override;
-  EventHandlerAction PassthroughLayer::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) override;
+  EventHandlerAction HandleKeyboardEvent(const SDL_KeyboardEvent &ev) override;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

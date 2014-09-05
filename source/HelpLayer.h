@@ -2,12 +2,12 @@
 
 #include "Interactionlayer.h"
 
-class GLShader;
+class GLTexture2;
 
-class QuadsLayer : public InteractionLayer {
+class HelpLayer : public InteractionLayer {
 public:
-  QuadsLayer(const Vector3f& initialEyePos);
-  //virtual ~QuadsLayer ();
+  HelpLayer(const Vector3f& initialEyePos);
+  //virtual ~HelpLayer ();
 
   virtual void Update(TimeDelta real_time_delta) override;
   virtual void Render(TimeDelta real_time_delta) const override;
@@ -16,4 +16,6 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
+
+  std::shared_ptr<GLTexture2> m_texture;
 };
