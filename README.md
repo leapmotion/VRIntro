@@ -27,3 +27,4 @@ Be sure to select "Allow Images" and "Optimize for top-down tracking" in the Lea
 5. Run CMake and set the source directory to /source in this repo
 6. Set EXTERNAL_LIBRARY_DIR to the folder mentioned in step 3
 7. Open the generated VRIntro.sln file, and build
+8. Copy any needed DLLs (SDL, SFML) from within the libraries folder to your binary folder. (We are planning to automate this soon!)
