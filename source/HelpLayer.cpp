@@ -19,7 +19,8 @@ void HelpLayer::Render(TimeDelta real_time_delta) const {
   glClear(GL_DEPTH_BUFFER_BIT);
 
   m_Shader->Bind();
-  m_Renderer.GetModelView().Matrix().block<3, 1>(0, 3) = Vector3::Zero();
+  m_Renderer.GetModelView().Matrix() = Matrix4x4::Identity();
+  //m_Renderer.GetModelView().Matrix().block<3, 1>(0, 3) = Vector3::Zero();
   m_Renderer.UploadMatrices();
 
   glUniform2f(m_Shader->LocationOfUniform("ray_scale"), 1.25f, 1.0606f);

@@ -56,6 +56,30 @@ void SpheresLayer::Render(TimeDelta real_time_delta) const {
     PrimitiveBase::DrawSceneGraph(sphere, m_Renderer);
   }
   m_Shader->Unbind();
+  RenderGrid();
+}
+
+void SpheresLayer::RenderGrid() const {
+  const int divTheta = 22;
+  const int divPhi = 40;
+  const float radius = 0.7;
+
+  glTranslatef(m_EyePos.x(), m_EyePos.y(), m_EyePos.z());
+  glColor4f(0.2f, 0.6f, 1.0f, m_Alpha*0.5f);
+  glBegin(GL_LINES);
+  for (int i = 0; i < divPhi; i++) {
+    float phi0 = M_PI*(i/static_cast<float>(divPhi) - 0.5f);
+    float phi1 = M_PI*((i + 1)/static_cast<float>(divPhi) - 0.5f);
+    for (int j = 0; j < divTheta; j++) {
+      float theta0 = 2*M_PI*(j/static_cast<float>(divTheta));
+      float theta1 = 2*M_PI*((j + 1)/static_cast<float>(divTheta));
+      glVertex3f(radius*cos(phi0)*cos(theta0), radius*sin(phi0), radius*cos(phi0)*sin(theta0));
+      glVertex3f(radius*cos(phi0)*cos(theta1), radius*sin(phi0), radius*cos(phi0)*sin(theta1));
+      glVertex3f(radius*cos(phi0)*cos(theta0), radius*sin(phi0), radius*cos(phi0)*sin(theta0));
+      glVertex3f(radius*cos(phi1)*cos(theta0), radius*sin(phi1), radius*cos(phi1)*sin(theta0));
+    }
+  }
+  glEnd();
 }
 
 EventHandlerAction SpheresLayer::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) {

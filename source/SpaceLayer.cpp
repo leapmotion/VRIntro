@@ -10,9 +10,12 @@ SpaceLayer::SpaceLayer(const Vector3f& initialEyePos) :
   m_Buffer.Release();
   // TODO: switch to non-default shader
   InitPhysics();
+
+  m_Buf = new float[NUM_STARS*3];
 }
 
 SpaceLayer::~SpaceLayer() {
+  delete[] m_Buf;
   m_Buffer.Destroy();
 }
 
@@ -27,9 +30,9 @@ void SpaceLayer::Render(TimeDelta real_time_delta) const {
   glDisable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
   glPointSize(1.5f);
-  //int start = SDL_GetTicks();
+  int start = SDL_GetTicks();
 
-#if 0
+#if 0 // 12 ms per million particles
   glColor3f(1, 0, 0);
 
   glBegin(GL_POINTS);
@@ -51,27 +54,23 @@ void SpaceLayer::Render(TimeDelta real_time_delta) const {
     }
   }
   glEnd();
-#else
+#else // 4 ms per million particles
+  for (int i = 0, j = 0; j < NUM_STARS; j++) {
+    const Vector3& r = pos[j];
+    m_Buf[i++] = r.x();
+    m_Buf[i++] = r.y();
+    m_Buf[i++] = r.z();
+  }
   m_Shader->Bind();
   m_Renderer.UploadMatrices();
-  float* star = static_cast<float *>(m_Buffer.Map(GL_WRITE_ONLY));
-
-  int i = 0;
-  for (int j = 0; j < NUM_STARS; j++) {
-    const Vector3& r = pos[j];
-    star[i++] = r.x();
-    star[i++] = r.y();
-    star[i++] = r.z();
-  }
-  m_Buffer.Unmap();
 
   m_Buffer.Bind();
+  m_Buffer.Write(m_Buf, 3*NUM_STARS*sizeof(float));
   m_Renderer.EnablePositionAttribute();
-  //m_Buffer.Write(buf, 3*sizeof(float)*NUM_STARS);
   glDrawArrays(GL_POINTS, 0, NUM_STARS);
   m_Renderer.DisablePositionAttribute();
-
   m_Buffer.Release();
+
   m_Shader->Unbind();
 #endif
   //std::cout << __LINE__ << ":\t SDL_GetTicks() = " << (SDL_GetTicks() - start) << std::endl;
@@ -102,7 +101,7 @@ void SpaceLayer::InitPhysics() {
   for (int i = 0; i < NUM_GALAXIES; i++) {
     m_GalaxyPos[i] = GenerateVector(1.2*m_EyePos.cast<double>(), 1.0);
     if (i == 0) {
-      m_GalaxyPos[i] = m_EyePos.cast<double>() + Vector3(0, -0.5, -1.0);
+      m_GalaxyPos[i] = m_EyePos.cast<double>() + m_EyeView.transpose().cast<double>()*Vector3(0, -0.5, -1.0);
     }
     m_GalaxyVel[i] = GenerateVector(-1e-3*(m_GalaxyPos[i] - 1.1*m_EyePos.cast<double>()), 0.0004);
     m_GalaxyMass[i] = static_cast<double>(STARS_PER)*2e-10;

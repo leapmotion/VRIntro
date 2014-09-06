@@ -17,6 +17,8 @@ public:
 
 private:
   static const int NUM_SPHERES = 400;
+
+  virtual void RenderGrid() const;
   void ComputePhysics(TimeDelta real_time_delta);
 
   stdvectorV3f m_Pos;

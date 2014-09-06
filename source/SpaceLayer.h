@@ -19,7 +19,7 @@ public:
 
 private:
   static const int NUM_GALAXIES = 1;
-  static const int STARS_PER = 5000;
+  static const int STARS_PER = 10000;
   static const int NUM_STARS = STARS_PER*NUM_GALAXIES;
 
   void InitPhysics();
@@ -37,6 +37,7 @@ private:
   stdvectorV3 vel;
 
   mutable GLBuffer m_Buffer;
+  float *m_Buf;
 
   static float buf[NUM_STARS];
 };
