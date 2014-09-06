@@ -7,37 +7,78 @@
 
 HelpLayer::HelpLayer(const Vector3f& initialEyePos) :
   InteractionLayer(Vector3f::Zero(), "transparent"),
-  m_texture(Resource<GLTexture2>("help.png")) {
-  // TODO: switch to non-default shader
-}
+  m_HelpTexture(Resource<GLTexture2>("help.png")),
+  m_LowFPSTexture(Resource<GLTexture2>("help.png")) {
 
-void HelpLayer::Update(TimeDelta real_time_delta) {
+  static const float edges[] = {
+    // Help menu
+    -0.224f, -0.264f, -0.5f, 0, 0,
+    -0.224f, +0.264f, -0.5f, 0, 1,
+    +0.224f, -0.264f, -0.5f, 1, 0,
+    +0.224f, +0.264f, -0.5f, 1, 1,
 
+    // Low FPS warning
+    -0.224f, -0.264f, -0.5f, 0, 0,
+    -0.224f, +0.264f, -0.5f, 0, 1,
+    +0.224f, -0.264f, -0.5f, 1, 0,
+    +0.224f, +0.264f, -0.5f, 1, 1,
+  };
+
+  m_Buffer.Create(GL_ARRAY_BUFFER);
+  m_Buffer.Bind();
+  m_Buffer.Allocate(edges, sizeof(edges), GL_STATIC_DRAW);
+  m_Buffer.Release();
+
+  m_Visible[0] = true;
+  for (int i = 1; i < NUM_MESSAGES; i++) {
+    m_Visible[i] = false;
+  }
 }
 
 void HelpLayer::Render(TimeDelta real_time_delta) const {
-  glClear(GL_DEPTH_BUFFER_BIT);
+  glDepthMask(GL_FALSE);
 
   m_Shader->Bind();
   m_Renderer.GetModelView().Matrix() = Matrix4x4::Identity();
-  //m_Renderer.GetModelView().Matrix().block<3, 1>(0, 3) = Vector3::Zero();
   m_Renderer.UploadMatrices();
 
-  glUniform2f(m_Shader->LocationOfUniform("ray_scale"), 1.25f, 1.0606f);
-  glUniform2f(m_Shader->LocationOfUniform("ray_offset"), 0.5f, 0.5f);
+  glActiveTexture(GL_TEXTURE0 + 0);
   glUniform1i(m_Shader->LocationOfUniform("texture"), 0);
 
-  glActiveTexture(GL_TEXTURE0 + 0);
-  m_texture->Bind();
-  glBegin(GL_TRIANGLE_STRIP);
-  glVertex3f(-.2, -0.235715, -0.5);
-  glVertex3f(-.2, 0.235715, -0.5);
-  glVertex3f(.2, -0.235715, -0.5);
-  glVertex3f(.2, 0.235715, -0.5);
-  glEnd();
-  m_texture->Unbind();
+  m_Buffer.Bind();
+  glEnableVertexAttribArray(m_Shader->LocationOfAttribute("position"));
+  glEnableVertexAttribArray(m_Shader->LocationOfAttribute("texcoord"));
+  glVertexAttribPointer(m_Shader->LocationOfAttribute("position"), 3, GL_FLOAT, GL_TRUE, 5*sizeof(float), (GLvoid*)0);
+  glVertexAttribPointer(m_Shader->LocationOfAttribute("texcoord"), 2, GL_FLOAT, GL_TRUE, 5*sizeof(float), (GLvoid*)(3*sizeof(float)));
+
+  for (int i = 0; i < NUM_MESSAGES; i++) {
+    if (m_Visible[i]) {
+      DrawMessage(0);
+    }
+  }
+  //DrawMessage(1);
+
+  glDisableVertexAttribArray(m_Shader->LocationOfAttribute("position"));
+  glDisableVertexAttribArray(m_Shader->LocationOfAttribute("texcoord"));
+  m_Buffer.Release();
 
   m_Shader->Unbind();
+  glDepthMask(GL_TRUE);
+}
+
+void HelpLayer::DrawMessage(int index) const {
+  switch (index) {
+  case 0:
+    m_HelpTexture->Bind();
+    break;
+  case 1:
+    m_LowFPSTexture->Bind();
+    break;
+  default:
+    return;
+  }
+  glDrawArrays(GL_TRIANGLE_STRIP, 4*index, 4);
+  glBindTexture(GL_TEXTURE_2D, 0); // Unbind
 }
 
 EventHandlerAction HelpLayer::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) {

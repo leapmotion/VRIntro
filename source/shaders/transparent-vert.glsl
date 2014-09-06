@@ -1,13 +1,11 @@
 #version 120
 attribute vec3 position;
+attribute vec2 texcoord;
 uniform mat4 projection;
 uniform mat4 modelView;
-uniform vec2 ray_scale;
-uniform vec2 ray_offset;
-varying vec2 frag_ray;
+varying vec2 oTexcoord;
 
 void main(void) {
   gl_Position = projection * modelView * vec4(position, 1.0);
-  vec2 ray = vec2(-position.x/position.z, -position.y/position.z);
-  frag_ray = ray*ray_scale + ray_offset;
+  oTexcoord = texcoord;
 }

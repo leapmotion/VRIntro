@@ -70,7 +70,7 @@ void InteractionLayer::DrawSkeletonHands() const {
   for (size_t i = 0; i < m_SkeletonHands.size(); i++) {
     const SkeletonHand hand = m_SkeletonHands[i];
     float distSq = (hand.center - m_EyePos - m_EyeView.transpose()*Vector3f(0, 0, -0.3f)).squaredNorm();
-    float alpha = m_Alpha*std::min(hand.confidence, 0.015f/(distSq*distSq));
+    float alpha = m_Alpha*std::min(hand.confidence, 0.006f/(distSq*distSq));
     DrawSkeletonHand(hand, alpha);
   }
   m_Shader->Unbind();

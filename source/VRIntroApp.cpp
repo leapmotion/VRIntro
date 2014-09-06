@@ -4,6 +4,7 @@
 #include "HandLayer.h"
 #include "GridLayer.h"
 #include "HelpLayer.h"
+//#include "MessageLayer.h"
 #include "QuadsLayer.h"
 #include "FlyingLayer.h"
 #include "SDL.h"
@@ -43,7 +44,7 @@ void VRIntroApp::Initialize() {
   params.transparentWindow = false;
   params.fullscreen = false;
   params.antialias = false;
-  params.windowTitle = "Leap Motion VR Intro Demo BETA (F11 to fullscreen)";
+  params.windowTitle = "Leap Motion VR Intro BETA (F11 to fullscreen)";
 
   m_applicationTime = TimePoint(0.0);         // Start the application time at zero.
   m_SDLController.Initialize(params);         // This initializes everything SDL-related.
@@ -140,7 +141,8 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
   }
   if (m_applicationTime > 15.0f && !m_HelpToggled) {
     m_HelpToggled = true;
-    SelectLayer(CONTENT_LAYERS + 1);
+    HelpLayer* helpLayer = static_cast<HelpLayer*>(&*m_Layers[HELP_LAYER]);
+    helpLayer->SetVisible(0, false);
   }
 }
 
@@ -220,12 +222,15 @@ EventHandlerAction VRIntroApp::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) 
       break;
     case 'h':
       // Hand
-      SelectLayer(CONTENT_LAYERS);
+      SelectLayer(HAND_LAYER);
       break;
     case SDLK_F1:
       // Help menu
       m_HelpToggled = true;
-      SelectLayer(CONTENT_LAYERS + 1);
+      {
+        HelpLayer* helpLayer = static_cast<HelpLayer*>(&*m_Layers[HELP_LAYER]);
+        helpLayer->SetVisible(0, !helpLayer->GetVisible(0));
+      }
       break;
     case SDLK_1:
     case SDLK_2:
@@ -306,6 +311,7 @@ void VRIntroApp::InitializeApplicationLayers() {
 
   m_Layers.push_back(std::shared_ptr<HandLayer>(new HandLayer(defaultEyePose)));
   m_Layers.push_back(std::shared_ptr<HelpLayer>(new HelpLayer(defaultEyePose)));
+  // m_Layers.push_back(std::shared_ptr<MessageLayer>(new MessageLayer(defaultEyePose)));
   //m_Layers.push_back(std::shared_ptr<QuadsLayer>(new QuadsLayer(defaultEyePose)));
 
   m_Layers[CONTENT_LAYERS]->Alpha() = 1;

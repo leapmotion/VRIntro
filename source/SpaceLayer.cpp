@@ -65,10 +65,13 @@ void SpaceLayer::Render(TimeDelta real_time_delta) const {
   m_Renderer.UploadMatrices();
 
   m_Buffer.Bind();
+  glEnableVertexAttribArray(m_Shader->LocationOfAttribute("position"));
+  glVertexAttribPointer(m_Shader->LocationOfAttribute("position"), 3, GL_FLOAT, GL_TRUE, 0, 0);
+
   m_Buffer.Write(m_Buf, 3*NUM_STARS*sizeof(float));
-  m_Renderer.EnablePositionAttribute();
   glDrawArrays(GL_POINTS, 0, NUM_STARS);
-  m_Renderer.DisablePositionAttribute();
+  
+  glDisableVertexAttribArray(m_Shader->LocationOfAttribute("position"));
   m_Buffer.Release();
 
   m_Shader->Unbind();

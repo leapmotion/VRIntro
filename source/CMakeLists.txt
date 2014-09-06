@@ -20,6 +20,9 @@ set(VRIntro_SOURCES
     HandLayer.h
     HelpLayer.cpp
     HelpLayer.h
+    MessageLayer.cpp
+    MessageLayer.h
+    HelpLayer.h
     GridLayer.cpp
     GridLayer.h
     SpheresLayer.cpp

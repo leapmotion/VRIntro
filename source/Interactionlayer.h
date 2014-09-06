@@ -2,6 +2,8 @@
 
 #include "RenderableEventHandler.h"
 #include "RenderState.h"
+#include "GLBuffer.h"
+
 #include "EigenTypes.h"
 #include "Leap.h"
 
@@ -32,6 +34,7 @@ public:
 
 protected:
   void DrawSkeletonHands() const;
+  mutable GLBuffer m_Buffer;
   std::shared_ptr<GLShader> m_Shader;
   mutable RenderState m_Renderer;
   Vector3f m_EyePos;

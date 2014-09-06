@@ -2,8 +2,6 @@
 
 #include "Interactionlayer.h"
 
-#include "GLBuffer.h"
-
 class GLShader;
 
 class SpaceLayer : public InteractionLayer {
@@ -36,7 +34,6 @@ private:
   stdvectorV3 pos;
   stdvectorV3 vel;
 
-  mutable GLBuffer m_Buffer;
   float *m_Buf;
 
   static float buf[NUM_STARS];
