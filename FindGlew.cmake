@@ -20,9 +20,14 @@ find_path(Glew_ROOT_DIR
           NAMES include/GL/glew.h
           PATH_SUFFIXES glew-${Glew_FIND_VERSION}
                         Glew)
-
-set(Glew_INCLUDE_DIR ${Glew_ROOT_DIR}/include)
-
+find_path(
+    Glew_INCLUDE_DIR
+    NAMES GL/glew.h
+    HINTS ${Glew_ROOT_DIR}
+    PATH_SUFFIXES include    
+    NO_DEFAULT_PATH
+    )
+    
 if(MSVC)
   find_library(Glew_LIBRARY_RELEASE "glew32s.lib" HINTS "${Glew_ROOT_DIR}" PATH_SUFFIXES lib)
   find_library(Glew_LIBRARY_DEBUG "glew32s.lib" HINTS "${Glew_ROOT_DIR}" PATH_SUFFIXES lib)

@@ -278,6 +278,17 @@ if(NOT EXISTS SDL_ROOT_DIR)
   unset(_candidate_sdl2_root_dir CACHE)
 endif()
 
+### Find SDL version by using predefined SDL root directory ###
+ find_file(
+        _version_file
+        NAMES SDL_version.h
+        PATHS ${SDL_ROOT_DIR}
+        PATH_SUFFIXES include include/SDL2 include/SDL
+        NO_DEFAULT_PATH
+      )
+sdl_parse_version_file("${_version_file}" _major _minor _patch _version_string)
+set(SDL_VERSION_MAJOR ${_major})
+
 # A find_path command analogous to the one used to derived SDL_ROOT_DIR is used here.
 find_path(
     SDL_INCLUDE_DIR
@@ -383,10 +394,15 @@ if(SDL_FOUND AND NOT TARGET SDL::SDL)
   add_library(SDL::SDL INTERFACE IMPORTED GLOBAL)
   set_property(TARGET SDL::SDL APPEND PROPERTY INTERFACE_LINK_LIBRARIES SDL::Library SDL::Main)
 
-  #HACK FOR MAC X11 DEPENDENCY
-  #TODO - Create a modernized FindX11.cmake module, make SDL depend on it on macs
-  if(APPLE)
-    find_package(X11 REQUIRED)
-    set_property(TARGET SDL::SDL APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${X11_INCLUDE_DIR})
+  # NOTE: this is commented out because SDL does not in principle need to depend
+  # on X11 (it should be using Cocoa), and thus the SDL library we use should be
+  # configured to not use X11.  Jon has rolled an SDL build with X11 disabled, and
+  # that build should be making it into our external libraries.
+  # # HACK FOR MAC X11 DEPENDENCY
+  # # TODO - Create a modernized FindX11.cmake module, make SDL depend on it on macs
+  # if(APPLE)
+  #   find_package(X11 REQUIRED)
+  #   set_property(TARGET SDL::SDL APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${X11_INCLUDE_DIR})
+  # endif()
   endif()
 endif()

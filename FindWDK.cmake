@@ -1,4 +1,7 @@
 # - Try to find WDK
+# This module takes as inputs
+#  WDK_ROOT_ALTERNATE - An alternate possible location for the wdk
+#
 # Once done this will define
 #  WDK_FOUND - System has WDK
 #  WDK_INCLUDE_DIRS - The WDK include directory
@@ -37,7 +40,7 @@ foreach(COMPONENT ${WDK_FIND_COMPONENTS})
   string(TOUPPER ${COMPONENT} UPPERCOMPONENT)
   
   find_library(
-    WDK_${UPPERCOMPONENT} winusb
+    WDK_${UPPERCOMPONENT} ${COMPONENT}
     PATHS ${WDK_ROOT_DIR}
     PATH_SUFFIXES /Lib/win8/um/${WDK_ARCH} /Lib/winv6.3/um/${WDK_ARCH}
   )
