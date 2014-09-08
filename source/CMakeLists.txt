@@ -98,7 +98,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") # This is the correct way to detect Ma
     # see: http://www.cmake.org/cmake/help/v3.0/prop_sf/MACOSX_PACKAGE_LOCATION.html
     # http://www.cmake.org/cmake/help/v3.0/prop_tgt/RESOURCE.html
     # http://www.cmake.org/Wiki/CMake:Bundles_And_Frameworks#Bundle_only
-    install(FILES ${RESOURCE_FILES} DESTINATION "${ACTUAL_BUILD_DIR}/OculusSample.app/Contents/Resources")
+    install(FILES ${RESOURCE_FILES} DESTINATION "${ACTUAL_BUILD_DIR}/VRIntro.app/Contents/Resources")
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     # TODO: figure out how this should be done correctly -- do we want to use the POSIX directory scheme, or what?
     # For now, just install into the binary dir, because that's where the SDL_GetBasePath will point us to.
