@@ -155,14 +155,16 @@ void VRIntroApp::Render(TimeDelta real_time_delta) const {
   assert(real_time_delta >= 0.0);
   if (m_OculusMode) {
     m_Oculus.BeginFrame();
+    glGetError(); // Remove any phantom gl errors before they throw an exception
 
     // Do the eye-order trick!
-    for (int i = 0; i < 2; i++) {
+    for (int i = 1; i >= 0; i--) {
       const ovrRecti& rect = m_Oculus.EyeViewport(i);
       glViewport(rect.Pos.x, rect.Pos.y, rect.Size.w, rect.Size.h);
       RenderEye(real_time_delta, i, m_Oculus.EyeProjection(i));
     }
     m_Oculus.EndFrame();
+    glGetError(); // Remove any phantom gl errors before they throw an exception
   } else {
     m_SDLController.BeginRender();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
