@@ -63,14 +63,18 @@ void VRIntroApp::Initialize() {
     throw std::runtime_error("Oculus initialization failed");
   }
   m_LeapController.addListener(m_LeapListener);
-  m_LeapController.setPolicyFlags(Leap::Controller::POLICY_BACKGROUND_FRAMES);
-  m_LeapController.setPolicyFlags(Leap::Controller::POLICY_IMAGES);
 
   // Temporarily turn on head_mounted_display_mode to on if it was off
   m_LeapHMDModeWasOn = m_LeapController.config().getBool("head_mounted_display_mode");
+
+  int flags = m_LeapController.policyFlags();
+  flags |= Leap::Controller::POLICY_IMAGES;
+
+  m_LeapHMDModeWasOn = (flags & Leap::Controller::POLICY_OPTIMIZE_HMD) != 0;
   if (!m_LeapHMDModeWasOn) {
-    m_LeapController.config().setBool("head_mounted_display_mode", true);
+    flags |= Leap::Controller::POLICY_OPTIMIZE_HMD;
   }
+  m_LeapController.setPolicyFlags(static_cast<Leap::Controller::PolicyFlag>(flags));
 
   // TODO: Add to components
   ovrHmd_RecenterPose(m_Oculus.GetHMD());
@@ -81,7 +85,9 @@ void VRIntroApp::Initialize() {
 
 void VRIntroApp::Shutdown() {
   if (!m_LeapHMDModeWasOn) {
-    m_LeapController.config().setBool("head_mounted_display_mode", false);
+    int flags = m_LeapController.policyFlags();
+    flags &= ~Leap::Controller::POLICY_OPTIMIZE_HMD;
+    m_LeapController.setPolicyFlags(static_cast<Leap::Controller::PolicyFlag>(flags));
   }
   m_LeapController.removeListener(m_LeapListener);
 
