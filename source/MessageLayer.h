@@ -4,10 +4,10 @@
 
 class GLTexture2;
 
-class HelpLayer : public InteractionLayer {
+class MessageLayer : public InteractionLayer {
 public:
-  HelpLayer(const Vector3f& initialEyePos);
-  //virtual ~HelpLayer ();
+  MessageLayer(const Vector3f& initialEyePos);
+  //virtual ~MessageLayer ();
 
   virtual void Update(TimeDelta real_time_delta) override {}
   virtual void Render(TimeDelta real_time_delta) const override;
@@ -19,11 +19,12 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  static const int NUM_MESSAGES = 2;
+  static const int NUM_MESSAGES = 3;
   void DrawMessage(int index) const;
 
   std::shared_ptr<GLTexture2> m_HelpTexture;
   std::shared_ptr<GLTexture2> m_LowFPSTexture;
+  std::shared_ptr<GLTexture2> m_NoOculusTexture;
 
   bool m_Visible[NUM_MESSAGES];
 };

@@ -18,11 +18,8 @@ set(VRIntro_SOURCES
     PassthroughLayer.h
     HandLayer.cpp
     HandLayer.h
-    HelpLayer.cpp
-    HelpLayer.h
     MessageLayer.cpp
     MessageLayer.h
-    HelpLayer.h
     GridLayer.cpp
     GridLayer.h
     SpheresLayer.cpp
@@ -85,6 +82,8 @@ set(RESOURCE_FILES
   shaders/transparent-frag.glsl
   shaders/transparent-vert.glsl
   help.png
+  lowfps.png
+  no_oculus.png
 )
 
 # TODO: install steps (or resource-copying steps) for other platforms

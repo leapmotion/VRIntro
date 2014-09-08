@@ -3,8 +3,7 @@
 #include "SpaceLayer.h"
 #include "HandLayer.h"
 #include "GridLayer.h"
-#include "HelpLayer.h"
-//#include "MessageLayer.h"
+#include "MessageLayer.h"
 #include "QuadsLayer.h"
 #include "FlyingLayer.h"
 #include "SDL.h"
@@ -141,8 +140,8 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
   }
   if (m_applicationTime > 15.0f && !m_HelpToggled) {
     m_HelpToggled = true;
-    HelpLayer* helpLayer = static_cast<HelpLayer*>(&*m_Layers[HELP_LAYER]);
-    helpLayer->SetVisible(0, false);
+    MessageLayer* messageLayer = static_cast<MessageLayer*>(&*m_Layers[HELP_LAYER]);
+    messageLayer->SetVisible(0, false);
   }
 }
 
@@ -228,8 +227,8 @@ EventHandlerAction VRIntroApp::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) 
       // Help menu
       m_HelpToggled = true;
       {
-        HelpLayer* helpLayer = static_cast<HelpLayer*>(&*m_Layers[HELP_LAYER]);
-        helpLayer->SetVisible(0, !helpLayer->GetVisible(0));
+        MessageLayer* messageLayer = static_cast<MessageLayer*>(&*m_Layers[HELP_LAYER]);
+        messageLayer->SetVisible(0, !messageLayer->GetVisible(0));
       }
       break;
     case SDLK_1:
@@ -310,7 +309,7 @@ void VRIntroApp::InitializeApplicationLayers() {
   m_Layers.push_back(std::shared_ptr<FlyingLayer>(new FlyingLayer(defaultEyePose)));
 
   m_Layers.push_back(std::shared_ptr<HandLayer>(new HandLayer(defaultEyePose)));
-  m_Layers.push_back(std::shared_ptr<HelpLayer>(new HelpLayer(defaultEyePose)));
+  m_Layers.push_back(std::shared_ptr<MessageLayer>(new MessageLayer(defaultEyePose)));
   // m_Layers.push_back(std::shared_ptr<MessageLayer>(new MessageLayer(defaultEyePose)));
   //m_Layers.push_back(std::shared_ptr<QuadsLayer>(new QuadsLayer(defaultEyePose)));
 
