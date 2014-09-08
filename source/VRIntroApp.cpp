@@ -79,8 +79,6 @@ void VRIntroApp::Initialize() {
   // TODO: Add to components
   ovrHmd_RecenterPose(m_Oculus.GetHMD());
   InitializeApplicationLayers();
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void VRIntroApp::Shutdown() {
@@ -188,6 +186,9 @@ void VRIntroApp::RenderEye(TimeDelta real_time_delta, int i, const Matrix4x4f& p
   m_PassthroughLayer[i]->Render(real_time_delta);
 
   glEnable(GL_DEPTH_TEST);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
   for (auto it = m_Layers.begin(); it != m_Layers.end(); ++it) {
     // Set individual shader's state
     InteractionLayer &layer = **it;
