@@ -22,13 +22,41 @@
 
 include(CMakeParseArguments)
 function(target_imported_libraries target)
-  cmake_parse_arguments(target_imported_libraries "" "LINK_TYPE" "" ${ARGV})
   list(REMOVE_AT ARGV 0) #pop the target
+  cmake_parse_arguments(target_imported_libraries "" "LINK_TYPE" "" ${ARGV})
   
-  foreach(_import_lib ${ARGV})
+  set(_library_list ${target_imported_libraries_UNPARSED_ARGUMENTS})
+  target_link_libraries(${target} ${target_link_libraries_LINK_TYPE} ${_library_list})
+
+  #early out if the target isn't an EXECUTABLE
+  get_target_property(_target_type ${target} TYPE)
+  if(NOT ${_target_type} STREQUAL EXECUTABLE)
+    return()
+  endif()
+
+  #setup custom commands to copy .dll/dylib files for all dependencies
+  set(_lib_index 0 )
+  list(LENGTH _library_list _lib_length)
+
+  #foreach doesn't allow you to append to the list from within the loop.
+  while(_lib_index LESS _lib_length)
+    list(GET _library_list ${_lib_index} _import_lib)
+
     if(TARGET ${_import_lib})
-      target_link_libraries(${target} ${target_imported_libraries_LINK_TYPE} ${_import_lib})
-      
+      get_target_property(_depends ${_import_lib} INTERFACE_LINK_LIBRARIES)
+      foreach(_depend ${_depends})
+        if(TARGET ${_depend})
+          list(FIND _library_list ${_depend} _found_lib)
+          if(_found_lib EQUAL -1) #make sure we don't do duplicate adds.
+            verbose_message("${target}:Adding nested dependency ${_depend}")
+            list(APPEND _library_list ${_depend})
+          else()
+            verbose_message("${target}:skipping duplicate nested dependency ${_depend}")
+          endif()
+
+        endif()
+      endforeach()
+
       get_target_property(_type ${_import_lib} TYPE)
       get_target_property(_imported ${_import_lib} IMPORTED)
       if((${_type} STREQUAL SHARED_LIBRARY) AND ${_imported})
@@ -80,7 +108,11 @@ function(target_imported_libraries target)
         endif()
       endif()
     endif()
-  endforeach()
+
+    math(EXPR _lib_index "${_lib_index} + 1") #an extremely verbose i++...
+    #if this is expensive, simply increment it when adding to the list.
+    list(LENGTH _library_list _lib_length) #this is likely to have changed
+  endwhile()
 endfunction()
 
 #This function wraps find_package, then calls target_imported_libraries on the generated package)
@@ -94,5 +126,9 @@ function(target_package target package )
     find_package(${target_package_UNPARSED_ARGUMENTS})
   endif()
 
-  target_imported_libraries(${target} ${package}::${package} LINK_TYPE ${target_package_LINK_TYPE})
+  if(target_package_LINK_TYPE)
+    target_imported_libraries(${target} ${package}::${package} LINK_TYPE ${target_package_LINK_TYPE})
+  else()
+    target_imported_libraries(${target} ${package}::${package})
+  endif()
 endfunction()
