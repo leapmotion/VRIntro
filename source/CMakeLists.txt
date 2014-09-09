@@ -32,6 +32,9 @@ set(VRIntro_SOURCES
     LifeLayer.h
     QuadsLayer.cpp
     QuadsLayer.h
+    PlatformInitializer.h
+    PlatformInitializerMac.h
+    PlatformInitializerMac.mm
 )
 
 option(SHOW_CONSOLE "Display console window for debugging" OFF)

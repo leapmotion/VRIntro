@@ -7,6 +7,7 @@
 #include "QuadsLayer.h"
 #include "FlyingLayer.h"
 #include "SDL.h"
+#include "PlatformInitializer.h"
 
 #define FREEIMAGE_LIB
 #include "FreeImage.h"
@@ -38,6 +39,7 @@ VRIntroApp::VRIntroApp() :
   m_Selected(0) {}
 
 void VRIntroApp::Initialize() {
+  PlatformInitializer init;
   m_Selected = 0;
   SDLControllerParams params;
   params.transparentWindow = false;
