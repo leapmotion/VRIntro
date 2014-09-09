@@ -6,7 +6,7 @@
 #include "GLTexture2Loader.h"
 
 MessageLayer::MessageLayer(const Vector3f& initialEyePos) :
-  InteractionLayer(Vector3f::Zero(), "transparent"),
+  InteractionLayer(Vector3f::Zero(), "shaders/transparent"),
   m_HelpTexture(Resource<GLTexture2>("help.png")),
   m_LowFPSTexture(Resource<GLTexture2>("lowfps.png")),
   m_NoOculusTexture(Resource<GLTexture2>("no_oculus.png")) {
@@ -34,7 +34,7 @@ MessageLayer::MessageLayer(const Vector3f& initialEyePos) :
   m_Buffer.Create(GL_ARRAY_BUFFER);
   m_Buffer.Bind();
   m_Buffer.Allocate(edges, sizeof(edges), GL_STATIC_DRAW);
-  m_Buffer.Release();
+  m_Buffer.Unbind();
 
   m_Visible[0] = true;
   for (int i = 1; i < NUM_MESSAGES; i++) {
@@ -46,8 +46,7 @@ void MessageLayer::Render(TimeDelta real_time_delta) const {
   glDepthMask(GL_FALSE);
 
   m_Shader->Bind();
-  m_Renderer.GetModelView().Matrix() = Matrix4x4::Identity();
-  m_Renderer.UploadMatrices();
+  GLShaderMatrices::UploadUniforms(*m_Shader, Matrix4x4::Identity(), m_Projection.cast<double>(), BindFlags::NONE);
 
   glActiveTexture(GL_TEXTURE0 + 0);
   glUniform1i(m_Shader->LocationOfUniform("texture"), 0);
@@ -70,7 +69,7 @@ void MessageLayer::Render(TimeDelta real_time_delta) const {
 
   glDisableVertexAttribArray(m_Shader->LocationOfAttribute("position"));
   glDisableVertexAttribArray(m_Shader->LocationOfAttribute("texcoord"));
-  m_Buffer.Release();
+  m_Buffer.Unbind();
 
   m_Shader->Unbind();
   glDepthMask(GL_TRUE);

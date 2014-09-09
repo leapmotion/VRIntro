@@ -63,12 +63,11 @@ void FlyingLayer::Render(TimeDelta real_time_delta) const {
   const int lightPosLoc = m_Shader->LocationOfUniform("lightPosition");
   glUniform3f(lightPosLoc, lightPos[0], lightPos[1], lightPos[2]);
 
-  Sphere sphere;
-  sphere.SetRadius(0.3f);
-  sphere.Translation() = (m_EyeView.transpose()*Vector3f(0, 0, 1.25) + m_EyePos).cast<double>();
-  sphere.SetDiffuseColor(Color(1.0f, 0.5f, 0.4f, m_Alpha));
-  sphere.SetAmbientFactor(0.3f);
-  PrimitiveBase::DrawSceneGraph(sphere, m_Renderer);
+  m_Sphere.SetRadius(0.3f);
+  m_Sphere.Translation() = (m_EyeView.transpose()*Vector3f(0, 0, 1.25) + m_EyePos).cast<double>();
+  m_Sphere.Material().SetDiffuseLightColor(Color(1.0f, 0.5f, 0.4f, m_Alpha));
+  m_Sphere.Material().SetAmbientLightingProportion(0.3f);
+  PrimitiveBase::DrawSceneGraph(m_Sphere, m_Renderer);
   m_Shader->Unbind();
 
   glBegin(GL_LINES);

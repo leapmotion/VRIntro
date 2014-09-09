@@ -1,6 +1,5 @@
 #include "SpheresLayer.h"
 
-#include "Primitives.h"
 #include "GLController.h"
 
 SpheresLayer::SpheresLayer(const Vector3f& initialEyePos) : 
@@ -48,12 +47,11 @@ void SpheresLayer::Render(TimeDelta real_time_delta) const {
     float desaturation = 0.005f / (0.005f + m_Disp[j].squaredNorm());
     Vector3f color = m_Colors[j]*(1.0 - desaturation) + m_Mono[j]*desaturation;
 
-    Sphere sphere;
-    sphere.SetRadius(m_Radius[j]);
-    sphere.Translation() = (m_Pos[j] + m_Disp[j]).cast<double>();
-    sphere.SetDiffuseColor(Color(color.x(), color.y(), color.z(), m_Alpha));
-    sphere.SetAmbientFactor(0.3f);
-    PrimitiveBase::DrawSceneGraph(sphere, m_Renderer);
+    m_Sphere.SetRadius(m_Radius[j]);
+    m_Sphere.Translation() = (m_Pos[j] + m_Disp[j]).cast<double>();
+    m_Sphere.Material().SetDiffuseLightColor(Color(color.x(), color.y(), color.z(), m_Alpha));
+    m_Sphere.Material().SetAmbientLightingProportion(0.3f);
+    PrimitiveBase::DrawSceneGraph(m_Sphere, m_Renderer);
   }
   m_Shader->Unbind();
   RenderGrid();

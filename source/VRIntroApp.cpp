@@ -154,6 +154,7 @@ void VRIntroApp::Render(TimeDelta real_time_delta) const {
   if (m_OculusMode) {
     m_Oculus.BeginFrame();
     glGetError(); // Remove any phantom gl errors before they throw an exception
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Do the eye-order trick!
     for (int i = 1; i >= 0; i--) {
@@ -182,7 +183,7 @@ void VRIntroApp::Render(TimeDelta real_time_delta) const {
 void VRIntroApp::RenderEye(TimeDelta real_time_delta, int i, const Matrix4x4f& proj) const {
   const Matrix4x4f view = m_Oculus.EyeView(i);
 
-  m_PassthroughLayer[i]->GetRenderState().GetProjection().Matrix() = proj.cast<double>();
+  m_PassthroughLayer[i]->SetProjection(proj);
   m_PassthroughLayer[i]->Render(real_time_delta);
 
   glEnable(GL_DEPTH_TEST);
@@ -193,8 +194,8 @@ void VRIntroApp::RenderEye(TimeDelta real_time_delta, int i, const Matrix4x4f& p
     // Set individual shader's state
     InteractionLayer &layer = **it;
     if (layer.Alpha() > 0.01f) {
-      layer.GetRenderState().GetProjection().Matrix() = proj.cast<double>();
-      layer.GetRenderState().GetModelView().Matrix() = view.cast<double>();
+      layer.SetProjection(proj);
+      layer.SetModelView(view);
       // Set default shader's state
       glMatrixMode(GL_PROJECTION);
       glLoadMatrixf(proj.data());

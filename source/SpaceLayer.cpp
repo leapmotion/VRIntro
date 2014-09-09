@@ -3,11 +3,11 @@
 #include "GLController.h"
 
 SpaceLayer::SpaceLayer(const Vector3f& initialEyePos) :
-  InteractionLayer(initialEyePos, "solid") {
+  InteractionLayer(initialEyePos, "shaders/solid") {
   m_Buffer.Create(GL_ARRAY_BUFFER);
   m_Buffer.Bind();
   m_Buffer.Allocate(NULL, 3*sizeof(float)*NUM_STARS, GL_DYNAMIC_DRAW);
-  m_Buffer.Release();
+  m_Buffer.Unbind();
   // TODO: switch to non-default shader
   InitPhysics();
 
@@ -62,7 +62,7 @@ void SpaceLayer::Render(TimeDelta real_time_delta) const {
     m_Buf[i++] = r.z();
   }
   m_Shader->Bind();
-  m_Renderer.UploadMatrices();
+  GLShaderMatrices::UploadUniforms(*m_Shader, m_ModelView.cast<double>(), m_Projection.cast<double>(), BindFlags::NONE);
 
   m_Buffer.Bind();
   glEnableVertexAttribArray(m_Shader->LocationOfAttribute("position"));
@@ -72,7 +72,7 @@ void SpaceLayer::Render(TimeDelta real_time_delta) const {
   glDrawArrays(GL_POINTS, 0, NUM_STARS);
   
   glDisableVertexAttribArray(m_Shader->LocationOfAttribute("position"));
-  m_Buffer.Release();
+  m_Buffer.Unbind();
 
   m_Shader->Unbind();
 #endif

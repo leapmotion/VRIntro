@@ -10,7 +10,7 @@ InteractionLayer::InteractionLayer(const Vector3f& initialEyePos, const std::str
   m_Shader(Resource<GLShader>(shaderName)),
   m_EyePos(initialEyePos),
   m_Alpha(0.0f) {
-  m_Renderer.SetShader(m_Shader);
+  
 }
 
 void InteractionLayer::UpdateLeap(const Leap::Frame& frame, const Matrix4x4f& worldTransform) {
@@ -88,13 +88,12 @@ void InteractionLayer::DrawSkeletonHand(const SkeletonHand& hand, float alpha) c
 //Vector3f m_EyePos;
 
 void InteractionLayer::DrawCylinder(const Vector3f& p0, const Vector3f& p1, float radius, float alpha) const {
-  Cylinder cylinder;
-  cylinder.SetRadius(static_cast<double>(radius));
-  cylinder.Translation() = 0.5*(p0 + p1).cast<double>();
+  m_Cylinder.SetRadius(static_cast<double>(radius));
+  m_Cylinder.Translation() = 0.5*(p0 + p1).cast<double>();
 
   Vector3f direction = p1 - p0;
   const float length = direction.norm();
-  cylinder.SetHeight(length);
+  m_Cylinder.SetHeight(length);
   direction /= length;
 
   Vector3f Y = direction;
@@ -103,18 +102,17 @@ void InteractionLayer::DrawCylinder(const Vector3f& p0, const Vector3f& p1, floa
 
   Matrix3x3f basis;
   basis << X, Y, Z;
-  cylinder.LinearTransformation() = basis.cast<double>();
+  m_Cylinder.LinearTransformation() = basis.cast<double>();
 
-  cylinder.SetDiffuseColor(Color(0.85f, 0.85f, 0.85f, alpha));
-  cylinder.SetAmbientFactor(0.3f);
-  PrimitiveBase::DrawSceneGraph(cylinder, m_Renderer);
+  m_Cylinder.Material().SetDiffuseLightColor(Color(0.85f, 0.85f, 0.85f, alpha));
+  m_Cylinder.Material().SetAmbientLightingProportion(0.3f);
+  PrimitiveBase::DrawSceneGraph(m_Cylinder, m_Renderer);
 }
 
 void InteractionLayer::DrawSphere(const Vector3f& p0, float radius, float alpha) const {
-  Sphere sphere;
-  sphere.SetRadius(static_cast<double>(radius));
-  sphere.Translation() = p0.cast<double>();
-  sphere.SetDiffuseColor(Color(0.4f, 0.6f, 1.0f, alpha));
-  sphere.SetAmbientFactor(0.3f);
-  PrimitiveBase::DrawSceneGraph(sphere, m_Renderer);
+  m_Sphere.SetRadius(static_cast<double>(radius));
+  m_Sphere.Translation() = p0.cast<double>();
+  m_Sphere.Material().SetDiffuseLightColor(Color(0.4f, 0.6f, 1.0f, alpha));
+  m_Sphere.Material().SetAmbientLightingProportion(0.3f);
+  PrimitiveBase::DrawSceneGraph(m_Sphere, m_Renderer);
 }

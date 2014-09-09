@@ -3,10 +3,10 @@
 #include "GLShader.h"
 
 PassthroughLayer::PassthroughLayer() :
-  InteractionLayer(Vector3f::Zero(), "passthrough"),
-  m_image(GLTexture2Params(640, 240, GL_LUMINANCE, GL_UNSIGNED_BYTE), NULL, 640*240),
-  m_colorimage(GLTexture2Params(672, 600, GL_RGBA, GL_UNSIGNED_BYTE), NULL, 672*600*4),
-  m_distortion(GLTexture2Params(64, 64, GL_RG, GL_FLOAT, GL_RG32F), NULL, 64*64*2),
+  InteractionLayer(Vector3f::Zero(), "shaders/passthrough"),
+  m_image(GLTexture2Params(640, 240, GL_LUMINANCE), GLTexture2PixelDataReference(GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL, 0)),
+  m_colorimage(GLTexture2Params(672, 600, GL_LUMINANCE), GLTexture2PixelDataReference(GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL, 0)),
+  m_distortion(GLTexture2Params(64, 64, GL_RG32F), GLTexture2PixelDataReference(GL_RG, GL_FLOAT, NULL, 0)),
   m_Gamma(0.8f),
   m_Brightness(1.0f) {
   m_Buffer.Create(GL_ARRAY_BUFFER);
@@ -39,10 +39,10 @@ PassthroughLayer::~PassthroughLayer() {
 
 void PassthroughLayer::SetImage(const unsigned char* data, int width, int height) {
   GLTexture2Params params = m_image.Params();
-  m_image.Bind();
 
   // We have to resize our texture when image sizes change
   if (width != params.Width() || height != params.Height()) {
+    m_image.Bind();
     params.SetWidth(width);
     params.SetHeight(height);
     glTexImage2D(params.Target(),
@@ -51,55 +51,28 @@ void PassthroughLayer::SetImage(const unsigned char* data, int width, int height
                  params.Width(),
                  params.Height(),
                  0,
-                 params.PixelDataFormat(),
-                 params.PixelDataType(),
+                 GL_LUMINANCE, // HACK because we don't have api-level access for glTexImage2D after construction, only glTexSubImage2D
+                 GL_UNSIGNED_BYTE,
                  data);
+    m_image.Unbind();
   } else {
-    glTexSubImage2D(params.Target(),
-                    0,                               // mipmap level (for source images, this should be 0)
-                    0, 0,
-                    params.Width(),
-                    params.Height(),
-                    params.PixelDataFormat(),
-                    params.PixelDataType(),
-                    data);
+    m_image.UpdateTexture(data);
   }
-  m_image.Unbind();
   m_UseColor = false;
 }
 
 void PassthroughLayer::SetColorImage(const unsigned char* data) {
-  GLTexture2Params params = m_colorimage.Params();
-  m_colorimage.Bind();
-  glTexSubImage2D(params.Target(),
-                  0,                               // mipmap level (for source images, this should be 0)
-                  0, 0,
-                  params.Width(),
-                  params.Height(),
-                  params.PixelDataFormat(),
-                  params.PixelDataType(),
-                  data);
-  m_colorimage.Unbind();
+  m_colorimage.UpdateTexture(data);
   m_UseColor = true;
 }
 
 void PassthroughLayer::SetDistortion(const float* data) {
-  GLTexture2Params params = m_distortion.Params();
-  m_distortion.Bind();
-  glTexSubImage2D(params.Target(),
-                  0,                               // mipmap level (for source images, this should be 0)
-                  0, 0,
-                  params.Width(),
-                  params.Height(),
-                  params.PixelDataFormat(),
-                  params.PixelDataType(),
-                  data);
-  m_distortion.Unbind();
+  m_distortion.UpdateTexture(data);
 }
 
 void PassthroughLayer::Render(TimeDelta real_time_delta) const {
   m_Shader->Bind();
-  m_Renderer.UploadMatrices();
+  GLShaderMatrices::UploadUniforms(*m_Shader, Matrix4x4::Identity(), m_Projection.cast<double>(), BindFlags::NONE);
 
   glActiveTexture(GL_TEXTURE0 + 0);
   if (m_UseColor) {
