@@ -64,6 +64,7 @@ void SpheresLayer::RenderGrid() const {
 
   glTranslatef(m_EyePos.x(), m_EyePos.y(), m_EyePos.z());
   glColor4f(0.2f, 0.6f, 1.0f, m_Alpha*0.5f);
+  glLineWidth(1.0f);
   glBegin(GL_LINES);
   for (int i = 0; i < divPhi; i++) {
     float phi0 = M_PI*(i/static_cast<float>(divPhi) - 0.5f);
