@@ -29,18 +29,24 @@ function(define_post_build_resource_copy_rules)
         # TODO: apparently there is a different "correct" way to install files on Mac;
         # see: http://www.cmake.org/cmake/help/v3.0/prop_sf/MACOSX_PACKAGE_LOCATION.html
         # Though this seems unnecessary.  Maybe we'll do this later.
-        set(ACTUAL_BUILD_DIR "${PROJECT_BINARY_DIR}")
+        set(_resources_dir "${PROJECT_BINARY_DIR}")
         if(${CMAKE_GENERATOR} MATCHES "Xcode")
             # CMAKE_BUILD_TYPE will be one of Release, Debug, etc.
-            set(ACTUAL_BUILD_DIR "${ACTUAL_BUILD_DIR}/${CMAKE_BUILD_TYPE}")
+            set(_resources_dir "${_resources_dir}/${CMAKE_BUILD_TYPE}")
         endif()
-        # This assumes that the Mac bundle name is the same as the target name.
-        set(_resources_dir "${ACTUAL_BUILD_DIR}/${_arg_TARGET}.app/Contents/Resources")
+        
+        
+        # Check to see if the target is a Mac OS X bundle.  If so, set the resources dir to the appropriate
+        # directory in the bundle
+        get_property(_mac_bundle TARGET ${_arg_TARGET} PROPERTY MACOSX_BUNDLE SET)
+        if (_mac_bundle)
+            set(_resources_dir "${_resources_dir}/${_arg_TARGET}.app/Contents/Resources")
+        endif()
     elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-        set(_resources_dir "${PROJECT_BINARY_DIR}")
+        set(_resources_dir "${_resources_dir}")
     elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
             # CMAKE_CFG_INTDIR  will be one of Release, Debug, etc.
-        set(_resources_dir "${PROJECT_BINARY_DIR}/${CMAKE_CFG_INTDIR}")
+        set(_resources_dir "${_resources_dir}/${CMAKE_CFG_INTDIR}")
     endif()
 
     # Add post-build rules for copying the resources into the correct place.
