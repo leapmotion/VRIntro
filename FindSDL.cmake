@@ -278,6 +278,17 @@ if(NOT EXISTS SDL_ROOT_DIR)
   unset(_candidate_sdl2_root_dir CACHE)
 endif()
 
+### Find SDL version by using predefined SDL root directory ###
+ find_file(
+        _version_file
+        NAMES SDL_version.h
+        PATHS ${SDL_ROOT_DIR}
+        PATH_SUFFIXES include include/SDL2 include/SDL
+        NO_DEFAULT_PATH
+      )
+sdl_parse_version_file("${_version_file}" _major _minor _patch _version_string)
+set(SDL_VERSION_MAJOR ${_major})
+
 # A find_path command analogous to the one used to derived SDL_ROOT_DIR is used here.
 find_path(
     SDL_INCLUDE_DIR

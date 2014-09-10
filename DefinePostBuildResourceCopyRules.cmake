@@ -53,7 +53,7 @@ function(define_post_build_resource_copy_rules)
             set(_resources_dir "${_resources_dir}/${_arg_TARGET}.app/Contents/Resources")
         endif()
     elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-            # CMAKE_CFG_INTDIR  will be one of Release, Debug, etc.
+        # CMAKE_CFG_INTDIR  will be one of Release, Debug, etc.
         set(_resources_dir "${_resources_dir}/${CMAKE_CFG_INTDIR}")
     endif()
 
