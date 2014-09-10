@@ -10,6 +10,7 @@ using namespace Leap;
 
 class LeapListener : public Listener {
 public:
+  LeapListener();
   virtual void onInit(const Controller&);
   virtual void onConnect(const Controller&);
   virtual void onDisconnect(const Controller&);
@@ -22,10 +23,18 @@ public:
   virtual void onServiceDisconnect(const Controller&);
   //std::mutex& getMutex() { return m_Mutex; }
   //const std::mutex& getMutex() const { return m_Mutex; }
-
   void WaitForFrame();
+  double GetFPSEstimate() { return m_FPSEstimate; }
 
 private:
+  static const double FPS_SMOOTHING;
+  
+  void EstimateFPS(double dt);
+
   std::mutex m_Mutex;
   std::condition_variable m_Cond;
+
+  double m_FPSEstimate;
+  double m_FPSIntegral;
+  double m_LastTimestamp;
 };

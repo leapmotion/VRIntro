@@ -145,11 +145,13 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
     m_Oculus.DismissHealthWarning();
     m_HealthWarningDismissed = true;
   }
+
+  MessageLayer* messageLayer = static_cast<MessageLayer*>(&*m_Layers[HELP_LAYER]);
   if (m_applicationTime > 15.0f && !m_HelpToggled) {
     m_HelpToggled = true;
-    MessageLayer* messageLayer = static_cast<MessageLayer*>(&*m_Layers[HELP_LAYER]);
     messageLayer->SetVisible(0, false);
   }
+  messageLayer->SetVisible(1, m_LeapListener.GetFPSEstimate() < 59);
 }
 
 void VRIntroApp::Render(TimeDelta real_time_delta) const {
