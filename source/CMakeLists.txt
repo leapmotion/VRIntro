@@ -33,9 +33,22 @@ set(VRIntro_SOURCES
     QuadsLayer.cpp
     QuadsLayer.h
     PlatformInitializer.h
-    PlatformInitializerMac.h
-    PlatformInitializerMac.mm
 )
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set(VRIntro_SOURCES
+        ${VRIntro_SOURCES}
+        PlatformInitializerMac.mm
+        PlatformInitializerMac.h
+    )
+elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
+    set(VRIntro_SOURCES
+        ${VRIntro_SOURCES}
+        PlatformInitializerWin.cpp
+        PlatformInitializerWin.h
+    )
+endif()
+
 
 option(SHOW_CONSOLE "Display console window for debugging" OFF)
 

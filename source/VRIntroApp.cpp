@@ -43,8 +43,7 @@ void VRIntroApp::Initialize() {
   m_Selected = 0;
   SDLControllerParams params;
   params.transparentWindow = false;
-  //params.fullscreen = false;
-  params.fullscreen = true;
+  params.fullscreen = false;
   params.antialias = false;
   params.windowTitle = "Leap Motion VR Intro BETA (F11 to fullscreen)";
 
