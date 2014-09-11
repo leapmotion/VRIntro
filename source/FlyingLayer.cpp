@@ -48,8 +48,10 @@ void FlyingLayer::Update(TimeDelta real_time_delta) {
     m_RotationAA = (1 - 0.3f*FILTER)*m_RotationAA;
   }
 
-  m_GridCenter -= m_Velocity*m_Velocity.squaredNorm()*(real_time_delta/PERIOD_TRANS);
-  const Matrix3x3f rot = RotationVectorToMatrix((real_time_delta/PERIOD_ROT)*m_RotationAA*m_RotationAA.squaredNorm());
+  static const float MAX_VELOCITY_SQNORM = 0.2f;
+  static const float MAX_ROTATION_SQNORM = 1.0f;
+  m_GridCenter -= m_Velocity*std::min(MAX_VELOCITY_SQNORM, m_Velocity.squaredNorm())*(real_time_delta/PERIOD_TRANS);
+  const Matrix3x3f rot = RotationVectorToMatrix((real_time_delta/PERIOD_ROT)*m_RotationAA*std::min(MAX_ROTATION_SQNORM, m_RotationAA.squaredNorm()));
   //std::cout << __LINE__ << ":\t   rot = " << (rot) << std::endl;
   //Matrix3x3f foo = ;
   m_GridOrientation.block<3, 3>(0, 0) = m_EyeView.transpose()*rot.transpose()*m_EyeView*m_GridOrientation.block<3, 3>(0, 0);
