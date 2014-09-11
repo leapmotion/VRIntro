@@ -33,6 +33,7 @@ set(VRIntro_SOURCES
     QuadsLayer.cpp
     QuadsLayer.h
     PlatformInitializer.h
+    PrecisionTimer.h
 )
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")

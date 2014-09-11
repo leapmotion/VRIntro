@@ -1,5 +1,7 @@
 #include "LeapListener.h"
 
+//#include "PrecisionTimer.h"
+
 #include <iostream>
 #include <string.h>
 #include "Leap.h"
@@ -34,6 +36,8 @@ void LeapListener::onFrame(const Controller& controller) {
   m_Cond.notify_all();
   
   double t = static_cast<double>(controller.frame().timestamp()) * 1e-6;
+  //double t = PrecisionTimer::GetTime();
+
   m_LastTimestamp = std::min(m_LastTimestamp, t);
   EstimateFPS(t - m_LastTimestamp);
   m_LastTimestamp = t;
