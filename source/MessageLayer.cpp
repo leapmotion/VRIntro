@@ -61,7 +61,7 @@ void MessageLayer::Render(TimeDelta real_time_delta) const {
   glVertexAttribPointer(m_Shader->LocationOfAttribute("texcoord"), 2, GL_FLOAT, GL_TRUE, 5*sizeof(float), (GLvoid*)(3*sizeof(float)));
 
   int topMessage = -1;
-  for (int i = 0; i < NUM_MESSAGES; i++) {
+  for (int i = NUM_MESSAGES - 1; i >= 0; i--) {
     if (m_Visible[i]) {
       topMessage = i;
     }
