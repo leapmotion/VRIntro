@@ -10,11 +10,14 @@ InteractionLayer::InteractionLayer(const Vector3f& initialEyePos, const std::str
   m_Shader(Resource<GLShader>(shaderName)),
   m_EyePos(initialEyePos),
   m_Alpha(0.0f) {
-  
+
 }
 
 void InteractionLayer::UpdateLeap(const Leap::Frame& frame, const Matrix4x4f& worldTransform) {
   m_Tips.clear();
+  m_TipsLeftRight.clear();
+  m_TipsExtended.clear();
+  m_TipsIndex.clear();
   m_Palms.clear();
   m_SkeletonHands.clear();
   Matrix3x3f rotation = worldTransform.block<3, 3>(0, 0);
@@ -36,6 +39,9 @@ void InteractionLayer::UpdateLeap(const Leap::Frame& frame, const Matrix4x4f& wo
     for (int j = 0; j < 5; j++) {
       const Leap::Finger& finger = hand.fingers()[j];
       m_Tips.push_back(rotation*finger.tipPosition().toVector3<Vector3f>() + translation);
+      m_TipsExtended.push_back(hand.grabStrength() < 0.9f);
+      m_TipsLeftRight.push_back(hand.isRight());
+      m_TipsIndex.push_back(j);
 
       for (int k = 0; k < 3; k++) {
         Leap::Bone bone = finger.bone(static_cast<Leap::Bone::Type>(k + 1));

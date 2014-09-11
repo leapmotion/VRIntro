@@ -1,17 +1,34 @@
 #include "SpaceLayer.h"
 
 #include "GLController.h"
+#include "GLTexture2.h"
+#include "GLTexture2Loader.h"
+#include "GLShaderLoader.h"
 
 SpaceLayer::SpaceLayer(const Vector3f& initialEyePos) :
-  InteractionLayer(initialEyePos, "shaders/solid") {
+  InteractionLayer(initialEyePos, "shaders/solid"),
+  m_PopupShader(Resource<GLShader>("shaders/transparent")),
+  m_PopupTexture(Resource<GLTexture2>("level3_popup.png")) {
   m_Buffer.Create(GL_ARRAY_BUFFER);
   m_Buffer.Bind();
   m_Buffer.Allocate(NULL, 3*sizeof(float)*NUM_STARS, GL_DYNAMIC_DRAW);
   m_Buffer.Unbind();
-  // TODO: switch to non-default shader
-  InitPhysics();
+
+  // Define popup text coordinates
+  static const float edges[] = {
+    -0.7f, -0.375f, -4.0f, 0, 0,
+    -0.7f, +0.375f, -4.0f, 0, 1,
+    +0.7f, -0.375f, -4.0f, 1, 0,
+    +0.7f, +0.375f, -4.0f, 1, 1,
+  };
+
+  m_PopupBuffer.Create(GL_ARRAY_BUFFER);
+  m_PopupBuffer.Bind();
+  m_PopupBuffer.Allocate(edges, sizeof(edges), GL_STATIC_DRAW);
+  m_PopupBuffer.Unbind();
 
   m_Buf = new float[NUM_STARS*3];
+  InitPhysics();
 }
 
 SpaceLayer::~SpaceLayer() {
@@ -27,6 +44,7 @@ void SpaceLayer::Update(TimeDelta real_time_delta) {
 }
 
 void SpaceLayer::Render(TimeDelta real_time_delta) const {
+  RenderPopup();
   glDisable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
   glPointSize(1.5f);
@@ -70,7 +88,7 @@ void SpaceLayer::Render(TimeDelta real_time_delta) const {
 
   m_Buffer.Write(m_Buf, 3*NUM_STARS*sizeof(float));
   glDrawArrays(GL_POINTS, 0, NUM_STARS);
-  
+
   glDisableVertexAttribArray(m_Shader->LocationOfAttribute("position"));
   m_Buffer.Unbind();
 
@@ -78,6 +96,33 @@ void SpaceLayer::Render(TimeDelta real_time_delta) const {
 #endif
   //std::cout << __LINE__ << ":\t SDL_GetTicks() = " << (SDL_GetTicks() - start) << std::endl;
   glEnable(GL_DEPTH_TEST);
+}
+
+void SpaceLayer::RenderPopup() const {
+  m_PopupShader->Bind();
+  Matrix4x4f modelView = m_ModelView;
+  modelView.block<3, 1>(0, 3) += modelView.block<3, 3>(0, 0)*m_EyePos;
+  //modelView.block<3, 3>(0, 0) = Matrix3x3f::Identity();
+  GLShaderMatrices::UploadUniforms(*m_PopupShader, modelView.cast<double>(), m_Projection.cast<double>(), BindFlags::NONE);
+
+  glActiveTexture(GL_TEXTURE0 + 0);
+  glUniform1i(m_PopupShader->LocationOfUniform("texture"), 0);
+
+  m_PopupBuffer.Bind();
+  glEnableVertexAttribArray(m_PopupShader->LocationOfAttribute("position"));
+  glEnableVertexAttribArray(m_PopupShader->LocationOfAttribute("texcoord"));
+  glVertexAttribPointer(m_PopupShader->LocationOfAttribute("position"), 3, GL_FLOAT, GL_TRUE, 5*sizeof(float), (GLvoid*)0);
+  glVertexAttribPointer(m_PopupShader->LocationOfAttribute("texcoord"), 2, GL_FLOAT, GL_TRUE, 5*sizeof(float), (GLvoid*)(3*sizeof(float)));
+
+  m_PopupTexture->Bind();
+  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+  glBindTexture(GL_TEXTURE_2D, 0); // Unbind
+
+  glDisableVertexAttribArray(m_PopupShader->LocationOfAttribute("position"));
+  glDisableVertexAttribArray(m_PopupShader->LocationOfAttribute("texcoord"));
+  m_PopupBuffer.Unbind();
+
+  m_PopupShader->Unbind();
 }
 
 Vector3 SpaceLayer::GenerateVector(const Vector3& center, double radius) {
@@ -126,13 +171,15 @@ void SpaceLayer::InitPhysics() {
 void SpaceLayer::UpdateV(const Vector3& p, Vector3& v, int galaxy) {
   if (galaxy == -1) {
     // Origin force
-    v += 5e-6f*(m_EyePos.cast<double>() - p);
+    const Vector3 dr = m_EyePos.cast<double>() - p - 100*v;
+    v += 1e-6f*dr*dr.squaredNorm();
   } else if (galaxy < NUM_GALAXIES) {
     const Vector3 dr = m_GalaxyPos[galaxy] - p;
     v += m_GalaxyMass[galaxy]*dr.normalized()/(0.3e-3 + dr.squaredNorm());
   } else {
+    double multiplier = m_TipsLeftRight[galaxy - NUM_GALAXIES] ? 5e-4 : 1.15;
     const Vector3 dr = m_Tips[galaxy - NUM_GALAXIES].cast<double>() - (p + 0.8*v);
-    v += 1e-3*(dr) /(250e-3 + dr.squaredNorm());
+    v += multiplier*dr/(250e-3 + dr.squaredNorm());
   }
 }
 
@@ -149,6 +196,13 @@ void SpaceLayer::UpdateAllPhysics() {
     }
     UpdateV(tempP, vel[i], -1);
     pos[i] += 0.25*tempV + 0.75*vel[i];
+
+    //if (!vel[i].allFinite()) {
+    //  vel[i].setZero();
+    //}
+    //if (!pos[i].allFinite()) {
+    //  pos[i].setZero();
+    //}
   }
 
   // Update galaxies

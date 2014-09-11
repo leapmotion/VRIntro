@@ -25,6 +25,12 @@ private:
   Vector3 InitialVelocity(double mass, const Vector3& normal, const Vector3& dr);
   void UpdateV(const Vector3& p, Vector3& v, int galaxy);
   void UpdateAllPhysics();
+  void RenderPopup() const;
+
+  mutable GLBuffer m_Buffer;
+  mutable GLBuffer m_PopupBuffer;
+  std::shared_ptr<GLTexture2> m_PopupTexture;
+  std::shared_ptr<GLShader> m_PopupShader;
 
   Vector3 m_GalaxyPos[NUM_GALAXIES];
   Vector3 m_GalaxyVel[NUM_GALAXIES];

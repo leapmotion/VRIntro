@@ -103,6 +103,7 @@ define_post_build_resource_copy_rules(
         help.png
         lowfps.png
         no_oculus.png
+        level3_popup.png
     ABSOLUTE_PATH_RESOURCES
         ${Components_DIR}/resources/material-frag.glsl
         ${Components_DIR}/resources/matrix-transformed-vert.glsl

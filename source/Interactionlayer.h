@@ -37,7 +37,6 @@ public:
 
 protected:
   void DrawSkeletonHands() const;
-  mutable GLBuffer m_Buffer;
   mutable RenderState m_Renderer;
   std::shared_ptr<GLShader> m_Shader;
   mutable Sphere m_Sphere;
@@ -50,6 +49,9 @@ protected:
   stdvectorV3f m_Palms;
   std::vector<Matrix3x3f, Eigen::aligned_allocator<Matrix3x3f>> m_PalmOrientations;
   stdvectorV3f m_Tips;
+  std::vector<bool> m_TipsLeftRight;
+  std::vector<bool> m_TipsExtended;
+  std::vector<int> m_TipsIndex;
   float m_Alpha;
 
 private:
