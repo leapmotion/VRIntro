@@ -20,14 +20,14 @@ SpheresLayer::SpheresLayer(const Vector3f& initialEyePos) :
     float x = xy*cos(theta);
     float y = xy*sin(theta);
 
-    float r = 0.4f + 0.5f * (float)rand() / RAND_MAX;
-    float g = 0.4f + 0.5f * (float)rand() / RAND_MAX;
-    float b = 0.4f + 0.5f * (float)rand() / RAND_MAX;
+    float r = (float)rand() / RAND_MAX;
+    float g = (float)rand() / RAND_MAX;
+    float b = (float)rand() / RAND_MAX;
     float dist = 0.55f + (float)rand() / RAND_MAX * 0.2f;
     m_Radius[i] = 0.025f + (float)rand() / RAND_MAX * 0.030f;
     m_Pos[i] = Vector3f(0.0f, 1.7f, -5.0f) + Vector3f(x, y, z)*dist;
-    m_Colors[i] << r, g, b;
-    m_Mono[i] << 0.3333f*(r + g + b), 0.3333f*(r + g + b), 0.3333f*(r + g + b);
+    m_Colors[i] = Vector3f(r, g, b).normalized();
+    m_Mono[i] = Vector3f::Ones()*m_Colors[i].sum()*0.33f;
   }
 }
 
@@ -38,9 +38,9 @@ void SpheresLayer::Update(TimeDelta real_time_delta) {
 void SpheresLayer::Render(TimeDelta real_time_delta) const {
   glEnable(GL_BLEND);
   m_Shader->Bind();
-  const Vector3f desiredLightPos(0, 10, 10);
-  const Vector3f lightPos = desiredLightPos - m_EyePos.cast<float>();
-  const int lightPosLoc = m_Shader->LocationOfUniform("lightPosition");
+  const Vector3f desiredLightPos(0, 1.5, 0.5);
+  const Vector3f lightPos = m_EyeView*desiredLightPos;
+  const int lightPosLoc = m_Shader->LocationOfUniform("light_position");
   glUniform3f(lightPosLoc, lightPos[0], lightPos[1], lightPos[2]);
 
   for (size_t j = 0; j < NUM_SPHERES; j++) {
@@ -50,7 +50,8 @@ void SpheresLayer::Render(TimeDelta real_time_delta) const {
     m_Sphere.SetRadius(m_Radius[j]);
     m_Sphere.Translation() = (m_Pos[j] + m_Disp[j]).cast<double>();
     m_Sphere.Material().SetDiffuseLightColor(Color(color.x(), color.y(), color.z(), m_Alpha));
-    m_Sphere.Material().SetAmbientLightingProportion(0.3f);
+    m_Sphere.Material().SetAmbientLightColor(Color(color.x(), color.y(), color.z(), m_Alpha));
+    m_Sphere.Material().SetAmbientLightingProportion(0.2f);
     PrimitiveBase::DrawSceneGraph(m_Sphere, m_Renderer);
   }
   m_Shader->Unbind();
