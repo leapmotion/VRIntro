@@ -17,7 +17,7 @@ public:
 
 private:
   static const int NUM_GALAXIES = 1;
-  static const int STARS_PER = 10000;
+  static const int STARS_PER = 8000;
   static const int NUM_STARS = STARS_PER*NUM_GALAXIES;
 
   void InitPhysics();

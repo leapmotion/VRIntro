@@ -124,12 +124,15 @@ void SpaceLayer::InitPhysics() {
 }
 
 void SpaceLayer::UpdateV(const Vector3& p, Vector3& v, int galaxy) {
-  if (galaxy < NUM_GALAXIES) {
+  if (galaxy == -1) {
+    // Origin force
+    v += 5e-6f*(m_EyePos.cast<double>() - p);
+  } else if (galaxy < NUM_GALAXIES) {
     const Vector3 dr = m_GalaxyPos[galaxy] - p;
     v += m_GalaxyMass[galaxy]*dr.normalized()/(0.3e-3 + dr.squaredNorm());
   } else {
-    const Vector3 dr = m_Tips[galaxy - NUM_GALAXIES].cast<double>() - p;
-    v += 10e-6*(dr+dr.normalized()) /(150e-3 + dr.squaredNorm());
+    const Vector3 dr = m_Tips[galaxy - NUM_GALAXIES].cast<double>() - (p + 0.8*v);
+    v += 1e-3*(dr) /(250e-3 + dr.squaredNorm());
   }
 }
 
@@ -144,6 +147,7 @@ void SpaceLayer::UpdateAllPhysics() {
     for (int j = 0; j < NUM_GALAXIES + m_Tips.size(); j++) {
       UpdateV(tempP, vel[i], j);
     }
+    UpdateV(tempP, vel[i], -1);
     pos[i] += 0.25*tempV + 0.75*vel[i];
   }
 

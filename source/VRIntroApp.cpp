@@ -258,7 +258,15 @@ EventHandlerAction VRIntroApp::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) 
       // Dim passthrough if in flying stage
       SelectLayer(ev.keysym.sym - SDLK_1);
       for (int i = 0; i < 2; i++) {
-        float& alpha = m_PassthroughLayer[i]->Alpha() = (ev.keysym.sym - SDLK_1 == 3) ? 0.1f : 1.0f;
+        float alpha;
+        if (ev.keysym.sym == SDLK_3) {
+          alpha = 0.7f;
+        } else if (ev.keysym.sym == SDLK_4) {
+          alpha = 0.1f;
+        } else {
+          alpha = 1.0f;
+        }
+        m_PassthroughLayer[i]->Alpha() = alpha;
       }
       break;
     case SDLK_UP: {
