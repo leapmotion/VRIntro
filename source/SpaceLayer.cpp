@@ -129,7 +129,7 @@ void SpaceLayer::UpdateV(const Vector3& p, Vector3& v, int galaxy) {
     v += m_GalaxyMass[galaxy]*dr.normalized()/(0.3e-3 + dr.squaredNorm());
   } else {
     const Vector3 dr = m_Tips[galaxy - NUM_GALAXIES].cast<double>() - p;
-    v += 25e-6*dr.normalized()/(150e-3 + dr.squaredNorm());
+    v += 10e-6*(dr+dr.normalized()) /(150e-3 + dr.squaredNorm());
   }
 }
 
