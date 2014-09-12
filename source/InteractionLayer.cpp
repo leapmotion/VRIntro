@@ -68,15 +68,25 @@ void InteractionLayer::UpdateLeap(const Leap::Frame& frame, const Matrix4x4f& wo
 
 void InteractionLayer::DrawSkeletonHands() const {
   m_Shader->Bind();
-  const Vector3f desiredLightPos(0, 10, 10);
-  const Vector3f lightPos = desiredLightPos - m_EyePos;
-  const int lightPosLoc = m_Shader->LocationOfUniform("lightPosition");
+  const Vector3f desiredLightPos(0, 1.5, 0.5);
+  const Vector3f lightPos = m_EyeView*desiredLightPos;
+  const int lightPosLoc = m_Shader->LocationOfUniform("light_position");
   glUniform3f(lightPosLoc, lightPos[0], lightPos[1], lightPos[2]);
 
   for (size_t i = 0; i < m_SkeletonHands.size(); i++) {
     const SkeletonHand hand = m_SkeletonHands[i];
     float distSq = (hand.center - m_EyePos - m_EyeView.transpose()*Vector3f(0, 0, -0.3f)).squaredNorm();
     float alpha = m_Alpha*std::min(hand.confidence, 0.006f/(distSq*distSq));
+
+    // Set common properties
+    m_Sphere.Material().SetDiffuseLightColor(Color(0.4f, 0.6f, 1.0f, alpha));
+    m_Sphere.Material().SetAmbientLightColor(Color(0.4f, 0.6f, 1.0f, alpha));
+    m_Sphere.Material().SetAmbientLightingProportion(0.3f);
+
+    m_Cylinder.Material().SetDiffuseLightColor(Color(0.85f, 0.85f, 0.85f, alpha));
+    m_Cylinder.Material().SetAmbientLightColor(Color(0.85f, 0.85f, 0.85f, alpha));
+    m_Cylinder.Material().SetAmbientLightingProportion(0.3f);
+
     DrawSkeletonHand(hand, alpha);
   }
   m_Shader->Unbind();
@@ -109,16 +119,11 @@ void InteractionLayer::DrawCylinder(const Vector3f& p0, const Vector3f& p1, floa
   Matrix3x3f basis;
   basis << X, Y, Z;
   m_Cylinder.LinearTransformation() = basis.cast<double>();
-
-  m_Cylinder.Material().SetDiffuseLightColor(Color(0.85f, 0.85f, 0.85f, alpha));
-  m_Cylinder.Material().SetAmbientLightingProportion(0.3f);
   PrimitiveBase::DrawSceneGraph(m_Cylinder, m_Renderer);
 }
 
 void InteractionLayer::DrawSphere(const Vector3f& p0, float radius, float alpha) const {
   m_Sphere.SetRadius(static_cast<double>(radius));
   m_Sphere.Translation() = p0.cast<double>();
-  m_Sphere.Material().SetDiffuseLightColor(Color(0.4f, 0.6f, 1.0f, alpha));
-  m_Sphere.Material().SetAmbientLightingProportion(0.3f);
   PrimitiveBase::DrawSceneGraph(m_Sphere, m_Renderer);
 }

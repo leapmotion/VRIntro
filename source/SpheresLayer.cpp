@@ -2,7 +2,7 @@
 
 #include "GLController.h"
 
-SpheresLayer::SpheresLayer(const Vector3f& initialEyePos) : 
+SpheresLayer::SpheresLayer(const Vector3f& initialEyePos) :
   InteractionLayer(initialEyePos),
   m_Pos(NUM_SPHERES),
   m_Disp(NUM_SPHERES, Vector3f::Zero()),
@@ -43,6 +43,9 @@ void SpheresLayer::Render(TimeDelta real_time_delta) const {
   const int lightPosLoc = m_Shader->LocationOfUniform("light_position");
   glUniform3f(lightPosLoc, lightPos[0], lightPos[1], lightPos[2]);
 
+  // Common property
+  m_Sphere.Material().SetAmbientLightingProportion(0.3f);
+
   for (size_t j = 0; j < NUM_SPHERES; j++) {
     float desaturation = 0.005f / (0.005f + m_Disp[j].squaredNorm());
     Vector3f color = m_Colors[j]*(1.0 - desaturation) + m_Mono[j]*desaturation;
@@ -51,7 +54,6 @@ void SpheresLayer::Render(TimeDelta real_time_delta) const {
     m_Sphere.Translation() = (m_Pos[j] + m_Disp[j]).cast<double>();
     m_Sphere.Material().SetDiffuseLightColor(Color(color.x(), color.y(), color.z(), m_Alpha));
     m_Sphere.Material().SetAmbientLightColor(Color(color.x(), color.y(), color.z(), m_Alpha));
-    m_Sphere.Material().SetAmbientLightingProportion(0.2f);
     PrimitiveBase::DrawSceneGraph(m_Sphere, m_Renderer);
   }
   m_Shader->Unbind();
