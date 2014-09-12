@@ -23,7 +23,7 @@ private:
   void InitPhysics();
   Vector3 GenerateVector(const Vector3& center, double radius);
   Vector3 InitialVelocity(double mass, const Vector3& normal, const Vector3& dr);
-  void UpdateV(const Vector3& p, Vector3& v, int galaxy);
+  void UpdateV(int type, const Vector3& p, Vector3& v, int galaxy);
   void UpdateAllPhysics();
   void RenderPopup() const;
 

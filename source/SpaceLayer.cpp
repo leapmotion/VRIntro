@@ -44,7 +44,7 @@ void SpaceLayer::Update(TimeDelta real_time_delta) {
 }
 
 void SpaceLayer::Render(TimeDelta real_time_delta) const {
-  RenderPopup();
+  //RenderPopup();
   glDisable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
   glPointSize(1.5f);
@@ -168,18 +168,18 @@ void SpaceLayer::InitPhysics() {
   }
 }
 
-void SpaceLayer::UpdateV(const Vector3& p, Vector3& v, int galaxy) {
+void SpaceLayer::UpdateV(int type, const Vector3& p, Vector3& v, int galaxy) {
   if (galaxy == -1) {
     // Origin force
-    const Vector3 dr = m_EyePos.cast<double>() - p - 100*v;
-    v += 1e-6f*dr*dr.squaredNorm();
+    //const Vector3 dr = m_EyePos.cast<double>() - p - 100*v;
+    //v += 1e-6f*dr*dr.squaredNorm();
   } else if (galaxy < NUM_GALAXIES) {
     const Vector3 dr = m_GalaxyPos[galaxy] - p;
     v += m_GalaxyMass[galaxy]*dr.normalized()/(0.3e-3 + dr.squaredNorm());
   } else {
-    double multiplier = m_TipsLeftRight[galaxy - NUM_GALAXIES] ? 5e-4 : 1.15;
-    const Vector3 dr = m_Tips[galaxy - NUM_GALAXIES].cast<double>() - (p + 0.8*v);
-    v += multiplier*dr/(250e-3 + dr.squaredNorm());
+    double multiplier = 1.5e-4;
+    const Vector3 dr = m_Tips[galaxy - NUM_GALAXIES].cast<double>() - (p + (0.1 + static_cast<double>(type)*0.0001)*v);
+    v += multiplier*(dr)/(10e-3 + dr.squaredNorm());
   }
 }
 
@@ -188,21 +188,18 @@ void SpaceLayer::UpdateAllPhysics() {
   for (int i = 0; i < NUM_STARS; i++) {
     Vector3 tempV = vel[i];
     for (int j = 0; j < NUM_GALAXIES + m_Tips.size(); j++) {
-      UpdateV(pos[i], tempV, j);
+      UpdateV(i, pos[i], tempV, j);
     }
     const Vector3 tempP = pos[i] + 0.667*tempV;
     for (int j = 0; j < NUM_GALAXIES + m_Tips.size(); j++) {
-      UpdateV(tempP, vel[i], j);
+      UpdateV(i, tempP, vel[i], j);
     }
-    UpdateV(tempP, vel[i], -1);
     pos[i] += 0.25*tempV + 0.75*vel[i];
 
-    //if (!vel[i].allFinite()) {
-    //  vel[i].setZero();
-    //}
-    //if (!pos[i].allFinite()) {
-    //  pos[i].setZero();
-    //}
+    if ((pos[i] - m_EyePos.cast<double>()).squaredNorm() > 50) {
+      pos[i] = m_EyePos.cast<double>() - 10*vel[i];
+      vel[i].setZero();
+    }
   }
 
   // Update galaxies
@@ -210,13 +207,13 @@ void SpaceLayer::UpdateAllPhysics() {
     Vector3 tempV = m_GalaxyVel[i];
     for (int j = 0; j < NUM_GALAXIES + m_Tips.size(); j++) {
       if (i != j) { // Galaxy does not affect itself
-        UpdateV(m_GalaxyPos[i], m_GalaxyVel[i], j);
+        UpdateV(0, m_GalaxyPos[i], m_GalaxyVel[i], j);
       }
     }
     const Vector3 tempP = m_GalaxyPos[i] + 0.667*tempV;
     for (int j = 0; j < NUM_GALAXIES + m_Tips.size(); j++) {
       if (i != j) { // Galaxy does not affect itself
-        UpdateV(tempP, m_GalaxyVel[i], j);
+        UpdateV(0, tempP, m_GalaxyVel[i], j);
       }
     }
     m_GalaxyPos[i] += 0.25*tempV + 0.75*m_GalaxyVel[i];

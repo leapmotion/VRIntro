@@ -38,6 +38,8 @@ public:
 
   virtual TimePoint Time() const override;
 
+  HWND GetHwnd() const { return const_cast<SDLController*>(&m_SDLController)->GetHWND(); } // TODO: change components so const cast is not required
+
 private:
   static const int CONTENT_LAYERS = 4;
   static const int HAND_LAYER = CONTENT_LAYERS;
