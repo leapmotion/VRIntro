@@ -1,27 +1,45 @@
 #include "VRIntroApp.h"
 
-void DispatchEventToApplication (const SDL_Event &ev, Application &app) {
+#if _WIN32
+#include "Mirror.h"
+#endif
+
+void DispatchEventToApplication(const SDL_Event &ev, Application &app) {
   // https://wiki.libsdl.org/SDL_Event?highlight=%28%5CbCategoryStruct%5Cb%29%7C%28SDLStructTemplate%29
   switch (ev.type) {
-    case SDL_KEYDOWN:
-    case SDL_KEYUP:           app.HandleKeyboardEvent(ev.key);        break;
+  case SDL_KEYDOWN:
+  case SDL_KEYUP:
+    app.HandleKeyboardEvent(ev.key);
+    break;
 
-    case SDL_MOUSEMOTION:     app.HandleMouseMotionEvent(ev.motion);  break;
+  case SDL_MOUSEMOTION:
+    app.HandleMouseMotionEvent(ev.motion);
+    break;
 
-    case SDL_MOUSEBUTTONDOWN:
-    case SDL_MOUSEBUTTONUP:   app.HandleMouseButtonEvent(ev.button);  break;
+  case SDL_MOUSEBUTTONDOWN:
+  case SDL_MOUSEBUTTONUP:
+    app.HandleMouseButtonEvent(ev.button);
+    break;
 
-    case SDL_MOUSEWHEEL:      app.HandleMouseWheelEvent(ev.wheel);    break;
+  case SDL_MOUSEWHEEL:
+    app.HandleMouseWheelEvent(ev.wheel);
+    break;
 
-    case SDL_QUIT:            app.HandleQuitEvent(ev.quit);           break;
+  case SDL_QUIT:
+    app.HandleQuitEvent(ev.quit);
+    break;
 
-    case SDL_WINDOWEVENT:     app.HandleWindowEvent(ev.window);       break;
+  case SDL_WINDOWEVENT:
+    app.HandleWindowEvent(ev.window);
+    break;
 
-    default:                  app.HandleGenericSDLEvent(ev);          break;
+  default:
+    app.HandleGenericSDLEvent(ev);
+    break;
   }
 }
 
-void RunApplication (Application &app) {
+void RunApplication(Application &app) {
   // Give the application a chance to initialize itself.
 
   // Run the game loop until a "quit" has been requested.
@@ -49,17 +67,26 @@ void RunApplication (Application &app) {
 
 }
 
-int main (int argc, char **argv)
-{
-    VRIntroApp app;
-    // VRIntroApp::Initialize is what sets everything up,
-    // and VRIntroApp::Shutdown is what tears it down.
-    // This call to RunApplication is what drives the application (it
-    // contains e.g. the game loop, with event handling, etc).
-    
-    app.Initialize();
-     std::cout << __LINE__ << ":\t     app.GetHwnd() = " << (app.GetHwnd()) << std::endl;
-    RunApplication(app);
-    app.Shutdown();
-    return 0;
+int main(int argc, char **argv) {
+  VRIntroApp app;
+  // VRIntroApp::Initialize is what sets everything up,
+  // and VRIntroApp::Shutdown is what tears it down.
+  // This call to RunApplication is what drives the application (it
+  // contains e.g. the game loop, with event handling, etc).
+
+  std::thread thread;
+
+  app.Initialize();
+#if _WIN32
+  if (argc >= 2 && strcmp(argv[1], "mirror") == 0) {
+    thread = std::thread(RunMirror, app.GetHwnd());
+  }
+#endif
+  RunApplication(app);
+
+  if (thread.joinable()) {
+    thread.join();
+  }
+  app.Shutdown();
+  return 0;
 }

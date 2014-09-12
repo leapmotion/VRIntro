@@ -16,10 +16,10 @@ SpaceLayer::SpaceLayer(const Vector3f& initialEyePos) :
 
   // Define popup text coordinates
   static const float edges[] = {
-    -0.7f, -0.375f, -4.0f, 0, 0,
-    -0.7f, +0.375f, -4.0f, 0, 1,
-    +0.7f, -0.375f, -4.0f, 1, 0,
-    +0.7f, +0.375f, -4.0f, 1, 1,
+    -0.7f, -0.07f, -4.0f, 0, 0,
+    -0.7f, +0.07f, -4.0f, 0, 1,
+    +0.7f, -0.07f, -4.0f, 1, 0,
+    +0.7f, +0.07f, -4.0f, 1, 1,
   };
 
   m_PopupBuffer.Create(GL_ARRAY_BUFFER);
@@ -44,10 +44,10 @@ void SpaceLayer::Update(TimeDelta real_time_delta) {
 }
 
 void SpaceLayer::Render(TimeDelta real_time_delta) const {
-  //RenderPopup();
+  RenderPopup();
   glDisable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
-  glPointSize(1.5f);
+  glPointSize(2.0f);
   int start = SDL_GetTicks();
 
 #if 0 // 12 ms per million particles

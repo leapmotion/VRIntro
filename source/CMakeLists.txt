@@ -47,6 +47,8 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
         ${VRIntro_SOURCES}
         PlatformInitializerWin.cpp
         PlatformInitializerWin.h
+        Mirror.h
+        Mirror.cpp
     )
 endif()
 
@@ -85,6 +87,10 @@ target_link_components(VRIntro Application GLController GLShaderLoader GLTexture
 target_package(VRIntro Leap)
 target_package(VRIntro Eigen)
 
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
+  target_link_libraries(VRIntro comctl32.lib Dwmapi.lib)
+endif()
+
 ###################################################################################################
 # Resource rules
 ###################################################################################################
@@ -104,6 +110,7 @@ define_post_build_resource_copy_rules(
         lowfps.png
         no_oculus.png
         level3_popup.png
+        RunMirrored.bat
     ABSOLUTE_PATH_RESOURCES
         ${Components_DIR}/resources/material-frag.glsl
         ${Components_DIR}/resources/matrix-transformed-vert.glsl
