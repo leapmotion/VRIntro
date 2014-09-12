@@ -130,8 +130,8 @@ void RunMirror(HWND hwnd) {
   if (SUCCEEDED(CoInitialize(NULL))) {/* In case we use COM */
 
     hwnd = CreateWindow(
-             TEXT("Scratch"),                /* Class Name */
-             TEXT("Scratch"),                /* Title */
+             TEXT("Mirror"),                /* Class Name */
+             TEXT("Mirror"),                /* Title */
              WS_OVERLAPPEDWINDOW,            /* Style */
              CW_USEDEFAULT, CW_USEDEFAULT,   /* Position */
              CW_USEDEFAULT, CW_USEDEFAULT,   /* Size */
@@ -146,7 +146,6 @@ void RunMirror(HWND hwnd) {
       TranslateMessage(&msg);
       DispatchMessage(&msg);
     }
-    Sleep(1000);
 
     CoUninitialize();
   }
