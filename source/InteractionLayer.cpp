@@ -29,9 +29,9 @@ void InteractionLayer::UpdateLeap(const Leap::Frame& frame, const Matrix4x4f& wo
     outHand.confidence = hand.confidence();
 
     const Vector3f palm = rotation*hand.palmPosition().toVector3<Vector3f>() + translation;
-    // const Vector3f palmDir = rotation*hand.direction().toVector3<Vector3f>();
-    // const Vector3f palmNormal = rotation*hand.palmNormal().toVector3<Vector3f>();
-    // const Vector3f palmSide = palmDir.cross(palmNormal).normalized();
+    const Vector3f palmDir = (rotation*hand.direction().toVector3<Vector3f>()).normalized();
+    const Vector3f palmNormal = (rotation*hand.palmNormal().toVector3<Vector3f>()).normalized();
+    const Vector3f palmSide = palmDir.cross(palmNormal).normalized();
     outHand.center = palm;
     m_Palms.push_back(palm);
     m_PalmOrientations.push_back(rotation*Matrix3x3f(hand.basis().toArray3x3())*rotation.transpose());
@@ -49,9 +49,8 @@ void InteractionLayer::UpdateLeap(const Leap::Frame& frame, const Matrix4x4f& wo
         outHand.jointConnections[j*3 + k] = rotation*bone.prevJoint().toVector3<Vector3f>() + translation;
       }
     }
-    // const float thumbDist = (outHand.jointConnections[0] - palm).norm();
-    //const Vector3f wrist = palm - thumbDist*(palmDir*0.90 + (hand.isLeft() ? -1 : 1)*palmSide*0.5);
-    const Vector3f wrist = rotation*hand.fingers()[4].bone(static_cast<Leap::Bone::Type>(0)).prevJoint().toVector3<Vector3f>() + translation;
+    const float thumbDist = (outHand.jointConnections[0] - palm).norm();
+    const Vector3f wrist = palm - thumbDist*(palmDir*0.8 + (hand.isLeft() ? -1 : 1)*palmSide*0.5);
 
     for (int j = 0; j < 4; j++) {
       outHand.joints[15 + j] = outHand.jointConnections[3 * j];
@@ -61,6 +60,13 @@ void InteractionLayer::UpdateLeap(const Leap::Frame& frame, const Matrix4x4f& wo
     outHand.jointConnections[19] = wrist;
     outHand.joints[20] = wrist;
     outHand.jointConnections[20] = outHand.jointConnections[0];
+
+    // Arm
+    const Vector3f elbow = rotation*hand.arm().elbowPosition().toVector3<Vector3f>() + translation;
+    outHand.joints[21] = elbow - thumbDist*(hand.isLeft() ? -1 : 1)*palmSide*0.5;
+    outHand.jointConnections[21] = wrist;
+    outHand.joints[22] = elbow + thumbDist*(hand.isLeft() ? -1 : 1)*palmSide*0.5;
+    outHand.jointConnections[22] = outHand.jointConnections[0];
 
     m_SkeletonHands.push_back(outHand);
   }
@@ -93,7 +99,7 @@ void InteractionLayer::DrawSkeletonHands() const {
 }
 
 void InteractionLayer::DrawSkeletonHand(const SkeletonHand& hand, float alpha) const {
-  for (int i = 0; i < 21; i++) {
+  for (int i = 0; i < 23; i++) {
     DrawSphere(hand.joints[i], 10e-3f, alpha);
     DrawCylinder(hand.joints[i], hand.jointConnections[i], 7e-3f, alpha);
   }

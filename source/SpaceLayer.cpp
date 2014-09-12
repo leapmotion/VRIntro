@@ -149,7 +149,7 @@ void SpaceLayer::InitPhysics() {
   for (int i = 0; i < NUM_GALAXIES; i++) {
     m_GalaxyPos[i] = GenerateVector(1.2*m_EyePos.cast<double>(), 1.0);
     if (i == 0) {
-      m_GalaxyPos[i] = m_EyePos.cast<double>() + m_EyeView.transpose().cast<double>()*Vector3(0, -0.5, -1.0);
+      m_GalaxyPos[i] = m_EyePos.cast<double>() + m_EyeView.transpose().cast<double>()*Vector3(0, -0.2, -1.2);
     }
     m_GalaxyVel[i] = GenerateVector(-1e-3*(m_GalaxyPos[i] - 1.1*m_EyePos.cast<double>()), 0.0004);
     m_GalaxyMass[i] = static_cast<double>(STARS_PER)*2e-10;
@@ -197,7 +197,7 @@ void SpaceLayer::UpdateAllPhysics() {
     pos[i] += 0.25*tempV + 0.75*vel[i];
 
     if ((pos[i] - m_EyePos.cast<double>()).squaredNorm() > 50) {
-      pos[i] = m_EyePos.cast<double>() - 10*vel[i];
+      pos[i] = m_EyePos.cast<double>() - 10*vel[i] + m_EyeView.transpose().cast<double>()*Vector3(0, 0.5, 0);
       vel[i].setZero();
     }
   }
