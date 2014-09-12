@@ -84,6 +84,8 @@ void VRIntroApp::Initialize() {
 }
 
 void VRIntroApp::Shutdown() {
+  ShutdownApplicationLayers();                // Destroy the application layers, from top (last) to bottom (first).
+
   if (!m_LeapHMDModeWasOn) {
     int flags = m_LeapController.policyFlags();
     flags &= ~Leap::Controller::POLICY_OPTIMIZE_HMD;
@@ -91,9 +93,10 @@ void VRIntroApp::Shutdown() {
   }
   m_LeapController.removeListener(m_LeapListener);
 
-  ShutdownApplicationLayers();                // Destroy the application layers, from top (last) to bottom (first).
+  m_Oculus.Destroy();
+  FreeImage_DeInitialise();                   // Shut down FreeImage.
   m_GLController.Shutdown();                  // This shuts down the general GL state.
-  m_SDLController.Shutdown();                // This shuts down everything SDL-related.
+  m_SDLController.Shutdown();                 // This shuts down everything SDL-related.
 }
 
 void VRIntroApp::Update(TimeDelta real_time_delta) {
@@ -311,7 +314,7 @@ EventHandlerAction VRIntroApp::HandleMouseWheelEvent(const SDL_MouseWheelEvent &
 }
 
 EventHandlerAction VRIntroApp::HandleQuitEvent(const SDL_QuitEvent &ev) {
-  exit(0);
+  return DispatchEventToApplicationLayers<SDL_QuitEvent>(ev, &EventHandler::HandleQuitEvent);
 }
 
 EventHandlerAction VRIntroApp::HandleGenericSDLEvent(const SDL_Event &ev) {

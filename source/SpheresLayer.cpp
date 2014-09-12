@@ -105,6 +105,10 @@ void SpheresLayer::ComputePhysics(TimeDelta real_time_delta) {
       // std::cout << __LINE__ << ":\t       (positions[i] - tips[j]).squaredNorm() = " << ((positions[i] - tips[j]).squaredNorm()) << std::endl;
       const Vector3f diff = m_Tips[j] - (m_Pos[i] + m_Disp[i]);
       float distSq = diff.squaredNorm();
+      if (distSq < m_Radius[i]*m_Radius[i]) {
+        m_Vel[i] *= 10;
+        break;
+      }
       accel += A*m_Well*diff/(AA + distSq*distSq);
       // accel += A*m_Well*diff/(AA + distSq*diff.norm());
     }
