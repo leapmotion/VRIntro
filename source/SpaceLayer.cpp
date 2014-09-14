@@ -46,6 +46,7 @@ void SpaceLayer::Update(TimeDelta real_time_delta) {
 void SpaceLayer::Render(TimeDelta real_time_delta) const {
   RenderPopup();
   glDisable(GL_DEPTH_TEST);
+  glDepthMask(GL_FALSE);
   glEnable(GL_BLEND);
   glPointSize(2.0f);
   int start = SDL_GetTicks();
@@ -96,6 +97,7 @@ void SpaceLayer::Render(TimeDelta real_time_delta) const {
 #endif
   //std::cout << __LINE__ << ":\t SDL_GetTicks() = " << (SDL_GetTicks() - start) << std::endl;
   glEnable(GL_DEPTH_TEST);
+  glDepthMask(GL_TRUE);
 }
 
 void SpaceLayer::RenderPopup() const {

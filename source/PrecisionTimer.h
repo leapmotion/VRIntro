@@ -23,9 +23,30 @@
 #include <chrono>
 #include <thread>
 
+namespace {
+const long long g_Frequency = []() -> long long {
+  LARGE_INTEGER frequency;
+  QueryPerformanceFrequency(&frequency);
+  return frequency.QuadPart;
+}();
+}
+
+struct HighResClock {
+  typedef long long                               rep;
+  typedef std::nano                               period;
+  typedef std::chrono::duration<rep, period>      duration;
+  typedef std::chrono::time_point<HighResClock>   time_point;
+  static const bool is_steady = true;
+
+  static HighResClock::time_point HighResClock::now() {
+    LARGE_INTEGER count;
+    QueryPerformanceCounter(&count);
+    return time_point(duration(count.QuadPart * static_cast<rep>(period::den) / g_Frequency));
+  }
+};
+
 template<typename T>
-class GeneralTimer
-{
+class GeneralTimer {
 public:
   GeneralTimer():
     m_Start(epoch())
@@ -79,6 +100,6 @@ private:
 
 };
 
-typedef GeneralTimer<std::chrono::high_resolution_clock> PrecisionTimer;
+typedef GeneralTimer<HighResClock> PrecisionTimer;
 
 #endif

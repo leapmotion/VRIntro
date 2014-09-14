@@ -97,8 +97,8 @@ void SpheresLayer::ComputePhysics(TimeDelta real_time_delta) {
   for (int i = 0; i < NUM_SPHERES; i++) {
     static const float K = 10;
     static const float D = 3;
-    static const float A = 0.003;
-    static const float AA = 0.0001;
+    static const float A = 0.0015;
+    static const float AA = 0.00005;
 
     Vector3f accel = -K*m_Spring*m_Disp[i] -D*m_Damp*m_Vel[i];
     // std::cout << __LINE__ << ":\t     num_tips = " << (num_tips) << std::endl;
@@ -108,7 +108,7 @@ void SpheresLayer::ComputePhysics(TimeDelta real_time_delta) {
       const Vector3f diff = m_Tips[j] - (m_Pos[i] + m_Disp[i]);
       float distSq = diff.squaredNorm();
       if (distSq < m_Radius[i]*m_Radius[i]) {
-        m_Vel[i] *= 10;
+        m_Vel[i] += -diff.normalized();
         break;
       }
       accel += A*m_Well*diff/(AA + distSq*distSq);

@@ -110,6 +110,7 @@ define_post_build_resource_copy_rules(
         lowfps.png
         no_oculus.png
         level3_popup.png
+        level4_popup.png
         RunMirrored.bat
     ABSOLUTE_PATH_RESOURCES
         ${Components_DIR}/resources/material-frag.glsl

@@ -8,6 +8,7 @@
 #include "FlyingLayer.h"
 #include "SDL.h"
 #include "PlatformInitializer.h"
+#include "PrecisionTimer.h"
 
 #define FREEIMAGE_LIB
 #include "FreeImage.h"
@@ -100,6 +101,8 @@ void VRIntroApp::Shutdown() {
 }
 
 void VRIntroApp::Update(TimeDelta real_time_delta) {
+  PrecisionTimer timer;
+  timer.Start();
   assert(real_time_delta >= 0.0);
   m_applicationTime += real_time_delta;         // Increment the application time by the delta.
 
@@ -154,9 +157,13 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
     messageLayer->SetVisible(0, false);
   }
   messageLayer->SetVisible(1, m_LeapListener.GetFPSEstimate() < 59);
+  double elapsed = timer.Stop();
+  //std::cout << __LINE__ << ":\t   Update() = " << (elapsed) << std::endl;
 }
 
 void VRIntroApp::Render(TimeDelta real_time_delta) const {
+  PrecisionTimer timer;
+  timer.Start();
   assert(real_time_delta >= 0.0);
   if (m_OculusMode) {
     m_Oculus.BeginFrame();
@@ -169,6 +176,9 @@ void VRIntroApp::Render(TimeDelta real_time_delta) const {
       glViewport(rect.Pos.x, rect.Pos.y, rect.Size.w, rect.Size.h);
       RenderEye(real_time_delta, i, m_Oculus.EyeProjection(i));
     }
+
+    double elapsed = timer.Stop();
+    //std::cout << __LINE__ << ":\t   Render() = " << (elapsed) << std::endl;
     m_Oculus.EndFrame();
     glGetError(); // Remove any phantom gl errors before they throw an exception
   } else {
@@ -182,9 +192,11 @@ void VRIntroApp::Render(TimeDelta real_time_delta) const {
     projection.Perspective(-hfov, -VFOV, hfov, VFOV, 0.1, 10000.0);
 
     RenderEye(real_time_delta, 0, projection.Matrix().cast<float>()); // TODO: Should add an option to oculus vr for eye-agnostic view (halfway between the two eyes)
+
+    double elapsed = timer.Stop();
+    //std::cout << __LINE__ << ":\t   Render() = " << (elapsed) << std::endl;
     m_SDLController.EndRender();
   }
-  return;
 }
 
 void VRIntroApp::RenderEye(TimeDelta real_time_delta, int i, const Matrix4x4f& proj) const {

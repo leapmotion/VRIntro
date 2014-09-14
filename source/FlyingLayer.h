@@ -25,6 +25,12 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
+  mutable GLBuffer m_PopupBuffer;
+  std::shared_ptr<GLTexture2> m_PopupTexture;
+  std::shared_ptr<GLShader> m_PopupShader;
+
+  void RenderPopup() const;
+
   Vector3f m_GridCenter;
   //Vector3f m_AveragePalm;
   Vector3f m_Velocity;
