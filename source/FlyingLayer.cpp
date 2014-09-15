@@ -1,17 +1,36 @@
 #include "FlyingLayer.h"
+#include "PrecisionTimer.h"
 
 #include "Primitives.h"
 #include "GLController.h"
 
+#include "GLTexture2.h"
+#include "GLTexture2Loader.h"
+#include "GLShaderLoader.h"
+
 FlyingLayer::FlyingLayer(const Vector3f& initialEyePos) :
   InteractionLayer(initialEyePos),
+  m_PopupShader(Resource<GLShader>("shaders/transparent")),
+  m_PopupTexture(Resource<GLTexture2>("level4_popup.png")),
   m_GridCenter(initialEyePos),
   m_Velocity(Vector3f::Zero()),
   m_RotationAA(Vector3f::Zero()),
   m_GridOrientation(Matrix4x4f::Identity()),
   m_LineThickness(3.0f),
   m_GridBrightness(80) {
-  // TODO: switch to non-default shader
+
+  // Define popup text coordinates
+  static const float edges[] = {
+    -0.4f, -0.174f, -0.312f, 0, 0,
+    -0.4f, +0.210f, -0.6f, 0, 1,
+    +0.4f, -0.174f, -0.312f, 1, 0,
+    +0.4f, +0.210f, -0.6f, 1, 1,
+  };
+
+  m_PopupBuffer.Create(GL_ARRAY_BUFFER);
+  m_PopupBuffer.Bind();
+  m_PopupBuffer.Allocate(edges, sizeof(edges), GL_STATIC_DRAW);
+  m_PopupBuffer.Unbind();
 }
 
 void FlyingLayer::Update(TimeDelta real_time_delta) {
@@ -58,18 +77,21 @@ void FlyingLayer::Update(TimeDelta real_time_delta) {
 }
 
 void FlyingLayer::Render(TimeDelta real_time_delta) const {
+  glDepthMask(GL_FALSE);
   // Draw joystick
+  //PrecisionTimer timer;
+  //timer.Start();
   m_Shader->Bind();
-  const Vector3f desiredLightPos(0, 10, -10);
-  const Vector3f lightPos = m_EyeView.transpose()*desiredLightPos + m_EyePos;
+  const Vector3f desiredLightPos(0, 1.5, 0.5);
+  const Vector3f lightPos = m_EyeView*desiredLightPos;
   const int lightPosLoc = m_Shader->LocationOfUniform("lightPosition");
   glUniform3f(lightPosLoc, lightPos[0], lightPos[1], lightPos[2]);
 
   m_Sphere.SetRadius(0.3f);
-  m_Sphere.Translation() = (m_EyeView.transpose()*Vector3f(0, 0, 1.25) + m_EyePos).cast<double>();
+  m_Sphere.Translation() = (m_EyeView.transpose()*Vector3f(0, 0, -1.25) + m_EyePos).cast<double>();
   m_Sphere.Material().SetDiffuseLightColor(Color(1.0f, 0.5f, 0.4f, m_Alpha));
   m_Sphere.Material().SetAmbientLightingProportion(0.3f);
-  PrimitiveBase::DrawSceneGraph(m_Sphere, m_Renderer);
+  //PrimitiveBase::DrawSceneGraph(m_Sphere, m_Renderer);
   m_Shader->Unbind();
 
   glBegin(GL_LINES);
@@ -121,6 +143,39 @@ void FlyingLayer::Render(TimeDelta real_time_delta) const {
     }
   }
   glEnd();
+  //double elapsed = timer.Stop();
+  //std::cout << __LINE__ << ":\t   elapsed = " << (elapsed) << std::endl;
+  if (m_Palms.size() == 0) {
+    RenderPopup();
+  }
+  glDepthMask(GL_TRUE);
+}
+
+void FlyingLayer::RenderPopup() const {
+  m_PopupShader->Bind();
+  Matrix4x4f modelView = m_ModelView;
+  modelView.block<3, 1>(0, 3) += modelView.block<3, 3>(0, 0)*m_EyePos;
+  modelView.block<3, 3>(0, 0) = Matrix3x3f::Identity();
+  GLShaderMatrices::UploadUniforms(*m_PopupShader, modelView.cast<double>(), m_Projection.cast<double>(), BindFlags::NONE);
+
+  glActiveTexture(GL_TEXTURE0 + 0);
+  glUniform1i(m_PopupShader->LocationOfUniform("texture"), 0);
+
+  m_PopupBuffer.Bind();
+  glEnableVertexAttribArray(m_PopupShader->LocationOfAttribute("position"));
+  glEnableVertexAttribArray(m_PopupShader->LocationOfAttribute("texcoord"));
+  glVertexAttribPointer(m_PopupShader->LocationOfAttribute("position"), 3, GL_FLOAT, GL_TRUE, 5*sizeof(float), (GLvoid*)0);
+  glVertexAttribPointer(m_PopupShader->LocationOfAttribute("texcoord"), 2, GL_FLOAT, GL_TRUE, 5*sizeof(float), (GLvoid*)(3*sizeof(float)));
+
+  m_PopupTexture->Bind();
+  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+  glBindTexture(GL_TEXTURE_2D, 0); // Unbind
+
+  glDisableVertexAttribArray(m_PopupShader->LocationOfAttribute("position"));
+  glDisableVertexAttribArray(m_PopupShader->LocationOfAttribute("texcoord"));
+  m_PopupBuffer.Unbind();
+
+  m_PopupShader->Unbind();
 }
 
 EventHandlerAction FlyingLayer::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) {

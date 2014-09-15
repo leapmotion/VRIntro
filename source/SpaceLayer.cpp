@@ -8,10 +8,11 @@
 SpaceLayer::SpaceLayer(const Vector3f& initialEyePos) :
   InteractionLayer(initialEyePos, "shaders/solid"),
   m_PopupShader(Resource<GLShader>("shaders/transparent")),
-  m_PopupTexture(Resource<GLTexture2>("level3_popup.png")) {
+  m_PopupTexture(Resource<GLTexture2>("level3_popup.png")),
+  m_OddEven(0) {
   m_Buffer.Create(GL_ARRAY_BUFFER);
   m_Buffer.Bind();
-  m_Buffer.Allocate(NULL, 3*sizeof(float)*NUM_STARS, GL_DYNAMIC_DRAW);
+  m_Buffer.Allocate(NULL, 12*sizeof(float)*NUM_STARS, GL_DYNAMIC_DRAW);
   m_Buffer.Unbind();
 
   // Define popup text coordinates
@@ -27,7 +28,7 @@ SpaceLayer::SpaceLayer(const Vector3f& initialEyePos) :
   m_PopupBuffer.Allocate(edges, sizeof(edges), GL_STATIC_DRAW);
   m_PopupBuffer.Unbind();
 
-  m_Buf = new float[NUM_STARS*3];
+  m_Buf = new float[NUM_STARS*12];
   InitPhysics();
 }
 
@@ -38,16 +39,29 @@ SpaceLayer::~SpaceLayer() {
 
 
 void SpaceLayer::Update(TimeDelta real_time_delta) {
+  m_OddEven ^= 1;
   for (int i = 0; i < 2; i++) {
     UpdateAllPhysics();
+  }
+  for (int i = 6*m_OddEven, j = 0; j < NUM_STARS; j++) {
+    const Vector3& r = pos[j];
+    m_Buf[i++] = r.x();
+    m_Buf[i++] = r.y();
+    m_Buf[i++] = r.z();
+    const Vector3& v = vel[j];
+    m_Buf[i++] = v.x();
+    m_Buf[i++] = v.y();
+    m_Buf[i++] = v.z();
+    i += 6;
   }
 }
 
 void SpaceLayer::Render(TimeDelta real_time_delta) const {
-  RenderPopup();
   glDisable(GL_DEPTH_TEST);
+  glDepthMask(GL_FALSE);
+  RenderPopup();
   glEnable(GL_BLEND);
-  glPointSize(2.0f);
+  glLineWidth(1.5f);
   int start = SDL_GetTicks();
 
 #if 0 // 12 ms per million particles
@@ -73,29 +87,28 @@ void SpaceLayer::Render(TimeDelta real_time_delta) const {
   }
   glEnd();
 #else // 4 ms per million particles
-  for (int i = 0, j = 0; j < NUM_STARS; j++) {
-    const Vector3& r = pos[j];
-    m_Buf[i++] = r.x();
-    m_Buf[i++] = r.y();
-    m_Buf[i++] = r.z();
-  }
+
   m_Shader->Bind();
   GLShaderMatrices::UploadUniforms(*m_Shader, m_ModelView.cast<double>(), m_Projection.cast<double>(), BindFlags::NONE);
 
   m_Buffer.Bind();
   glEnableVertexAttribArray(m_Shader->LocationOfAttribute("position"));
-  glVertexAttribPointer(m_Shader->LocationOfAttribute("position"), 3, GL_FLOAT, GL_TRUE, 0, 0);
+  glEnableVertexAttribArray(m_Shader->LocationOfAttribute("velocity"));
+  glVertexAttribPointer(m_Shader->LocationOfAttribute("position"), 3, GL_FLOAT, GL_TRUE, 6*sizeof(float), 0);
+  glVertexAttribPointer(m_Shader->LocationOfAttribute("velocity"), 3, GL_FLOAT, GL_TRUE, 6*sizeof(float), (GLvoid*)(3*sizeof(float)));
 
-  m_Buffer.Write(m_Buf, 3*NUM_STARS*sizeof(float));
-  glDrawArrays(GL_POINTS, 0, NUM_STARS);
+  m_Buffer.Write(m_Buf, 12*NUM_STARS*sizeof(float));
+  glDrawArrays(GL_LINES, 0, 2*NUM_STARS);
 
   glDisableVertexAttribArray(m_Shader->LocationOfAttribute("position"));
+  glDisableVertexAttribArray(m_Shader->LocationOfAttribute("velocity"));
   m_Buffer.Unbind();
 
   m_Shader->Unbind();
 #endif
   //std::cout << __LINE__ << ":\t SDL_GetTicks() = " << (SDL_GetTicks() - start) << std::endl;
   glEnable(GL_DEPTH_TEST);
+  glDepthMask(GL_TRUE);
 }
 
 void SpaceLayer::RenderPopup() const {
@@ -177,7 +190,7 @@ void SpaceLayer::UpdateV(int type, const Vector3& p, Vector3& v, int galaxy) {
     const Vector3 dr = m_GalaxyPos[galaxy] - p;
     v += m_GalaxyMass[galaxy]*dr.normalized()/(0.3e-3 + dr.squaredNorm());
   } else {
-    double multiplier = 1.5e-4;
+    double multiplier = 1.5e-4*(m_TipsExtended[galaxy - NUM_GALAXIES] ? 1.0f : 0.1f);
     const Vector3 dr = m_Tips[galaxy - NUM_GALAXIES].cast<double>() - (p + (0.1 + static_cast<double>(type)*0.0001)*v);
     v += multiplier*(dr)/(10e-3 + dr.squaredNorm());
   }

@@ -16,7 +16,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
-  static const int NUM_SPHERES = 400;
+  static const int NUM_SPHERES = 300;
 
   virtual void RenderGrid() const;
   void ComputePhysics(TimeDelta real_time_delta);

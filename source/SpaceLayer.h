@@ -43,4 +43,5 @@ private:
   float *m_Buf;
 
   static float buf[NUM_STARS];
+  int m_OddEven;
 };
