@@ -38,7 +38,12 @@ public:
 
   virtual TimePoint Time() const override;
 
-  HWND GetHwnd() const { return const_cast<SDLController*>(&m_SDLController)->GetHWND(); } // TODO: change components so const cast is not required
+  #if _WIN32
+    // TODO: change components so const cast is not required
+    HWND GetHwnd() const { return const_cast<SDLController*>(&m_SDLController)->GetHWND(); }
+  #elif __APPLE__
+    Uint32 GetWindowID() const { return const_cast<SDLController*>(&m_SDLController)->GetWindowID(); }
+  #endif
 
 private:
   static const int CONTENT_LAYERS = 4;
