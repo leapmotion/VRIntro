@@ -23,6 +23,7 @@
 #include <chrono>
 #include <thread>
 
+#if _WIN32
 namespace {
 const long long g_Frequency = []() -> long long {
   LARGE_INTEGER frequency;
@@ -44,6 +45,7 @@ struct HighResClock {
     return time_point(duration(count.QuadPart * static_cast<rep>(period::den) / g_Frequency));
   }
 };
+#endif
 
 template<typename T>
 class GeneralTimer {
@@ -87,7 +89,11 @@ public:
   }
 
   static void Sleep(int milliseconds) {
+#if _WIN32
     std::this_thread::sleep(std::posix_time::milliseconds(milliseconds));
+#elif __APPLE__
+    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+#endif
   }
 
 private:
@@ -100,6 +106,9 @@ private:
 
 };
 
-typedef GeneralTimer<HighResClock> PrecisionTimer;
-
+#if _WIN32
+  typedef GeneralTimer<HighResClock> PrecisionTimer;
+#elif __APPLE__
+  typedef GeneralTimer<std::chrono::high_resolution_clock> PrecisionTimer;
+#endif
 #endif
