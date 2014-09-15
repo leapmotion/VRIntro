@@ -46,18 +46,27 @@ void VRIntroApp::Initialize() {
   params.fullscreen = false;
   params.antialias = false;
   params.windowTitle = "Leap Motion VR Intro BETA (F11 to fullscreen)";
+  
+  // Set HMD window
+  ovrHmd hmd = m_Oculus.GetHMD();
+  if ( hmd->Handle != NULL ){
+    params.windowHeight = hmd->Resolution.h;
+    params.windowWidth = hmd->Resolution.w;
+  }
 
   m_applicationTime = TimePoint(0.0);         // Start the application time at zero.
+  
   m_SDLController.Initialize(params);         // This initializes everything SDL-related.
   m_Width = m_SDLController.GetParams().windowWidth;
   m_Height = m_SDLController.GetParams().windowHeight;
 
   m_GLController.Initialize();                // This initializes the general GL state.
   FreeImage_Initialise();
+  
   if (glewInit() != GLEW_OK) {
     throw std::runtime_error("Glew initialization failed");
   }
-
+  
 #if _WIN32
   m_Oculus.SetHWND(m_SDLController.GetHWND());
 #endif
