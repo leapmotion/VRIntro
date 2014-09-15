@@ -39,7 +39,7 @@ void InteractionLayer::UpdateLeap(const Leap::Frame& frame, const Matrix4x4f& wo
     for (int j = 0; j < 5; j++) {
       const Leap::Finger& finger = hand.fingers()[j];
       m_Tips.push_back(rotation*finger.tipPosition().toVector3<Vector3f>() + translation);
-      m_TipsExtended.push_back(hand.grabStrength() < 0.9f);
+      m_TipsExtended.push_back(hand.grabStrength() > 0.9f || finger.isExtended());
       m_TipsLeftRight.push_back(hand.isRight());
       m_TipsIndex.push_back(j);
 

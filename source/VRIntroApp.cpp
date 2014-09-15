@@ -209,7 +209,7 @@ void VRIntroApp::RenderEye(TimeDelta real_time_delta, int i, const Matrix4x4f& p
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  for (auto it = m_Layers.begin(); it != m_Layers.end(); ++it) {
+  for (auto it = m_Layers.rbegin(); it != m_Layers.rend(); ++it) {
     // Set individual shader's state
     InteractionLayer &layer = **it;
     if (layer.Alpha() > 0.01f) {
