@@ -115,6 +115,7 @@ define_post_build_resource_copy_rules(
         no_oculus.png
         level3_popup.png
         level4_popup.png
+        no_images.png
         random.png
         RunMirrored.bat
     ABSOLUTE_PATH_RESOURCES

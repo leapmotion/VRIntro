@@ -27,6 +27,12 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
+  void RenderPopup() const;
+
+  mutable GLBuffer m_PopupBuffer;
+  std::shared_ptr<GLTexture2> m_PopupTexture;
+  std::shared_ptr<GLShader> m_PopupShader;
+
   //std::shared_ptr<GLShader> m_shader;
   mutable GLTexture2 m_image;
   mutable GLTexture2 m_colorimage;
@@ -35,5 +41,6 @@ private:
   mutable GLBuffer m_Buffer;
   float m_Gamma;
   float m_Brightness;
+  bool m_HasData;
   bool m_UseColor;
 };
