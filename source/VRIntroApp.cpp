@@ -170,6 +170,7 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
     messageLayer->SetVisible(0, false);
   }
   messageLayer->SetVisible(1, m_LeapListener.GetFPSEstimate() < 59);
+  messageLayer->SetVisible(2, !m_OculusMode);
   double elapsed = timer.Stop();
   //std::cout << __LINE__ << ":\t   Update() = " << (elapsed) << std::endl;
 }
