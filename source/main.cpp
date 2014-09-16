@@ -32,9 +32,8 @@ void DispatchEventToApplication(const SDL_Event &ev, Application &app) {
       break;
 
     case SDL_WINDOWEVENT:
-      if (ev.window.windowID == SDL_Window_ID)
-        app.HandleWindowEvent(ev.window);
-      break;
+      app.HandleWindowEvent(ev.window);
+
     default:
       app.HandleGenericSDLEvent(ev);
       break;
