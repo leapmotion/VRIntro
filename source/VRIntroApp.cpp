@@ -47,13 +47,6 @@ void VRIntroApp::Initialize() {
   params.fullscreen = false;
   params.antialias = false;
   params.windowTitle = "Leap Motion VR Intro BETA (F11 to fullscreen)";
-  
-  // Set HMD window
-  ovrHmd hmd = m_Oculus.GetHMD();
-  if ( hmd->Handle != NULL ){
-    params.windowHeight = hmd->Resolution.h;
-    params.windowWidth = hmd->Resolution.w;
-  }
 
   m_applicationTime = TimePoint(0.0);         // Start the application time at zero.
   
@@ -74,6 +67,16 @@ void VRIntroApp::Initialize() {
   if (!m_Oculus.Init()) {
     throw std::runtime_error("Oculus initialization failed");
   }
+  
+  // Set HMD window dimetions
+  if ( ! m_Oculus.isDebug() ){
+    params.windowHeight = m_Oculus.GetHMDHeight();
+    params.windowWidth = m_Oculus.GetHMDWidth();
+  }
+  else{
+    m_OculusMode = false;
+  }
+  
   m_LeapController.addListener(m_LeapListener);
 
   // Temporarily turn on head_mounted_display_mode to on if it was off
