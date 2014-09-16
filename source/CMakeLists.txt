@@ -30,6 +30,8 @@ set(VRIntro_SOURCES
     FlyingLayer.h
     LifeLayer.cpp
     LifeLayer.h
+    FractalLayer.cpp
+    FractalLayer.h
     QuadsLayer.cpp
     QuadsLayer.h
     PlatformInitializer.h
@@ -100,6 +102,8 @@ define_post_build_resource_copy_rules(
     TARGET
         VRIntro
     RELATIVE_PATH_RESOURCES
+        shaders/fractal-frag.glsl
+        shaders/fractal-vert.glsl
         shaders/passthrough-frag.glsl
         shaders/passthrough-vert.glsl
         shaders/solid-frag.glsl
@@ -111,6 +115,7 @@ define_post_build_resource_copy_rules(
         no_oculus.png
         level3_popup.png
         level4_popup.png
+        random.png
         RunMirrored.bat
     ABSOLUTE_PATH_RESOURCES
         ${Components_DIR}/resources/material-frag.glsl

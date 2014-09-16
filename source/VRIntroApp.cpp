@@ -4,6 +4,7 @@
 #include "HandLayer.h"
 #include "GridLayer.h"
 #include "MessageLayer.h"
+#include "FractalLayer.h"
 #include "QuadsLayer.h"
 #include "FlyingLayer.h"
 #include "SDL.h"
@@ -276,6 +277,7 @@ EventHandlerAction VRIntroApp::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) 
     case SDLK_2:
     case SDLK_3:
     case SDLK_4:
+    case SDLK_5:
       // Content layer
       if (!(SDL_GetModState() & KMOD_CTRL)) {
         for (int i = 0; i < CONTENT_LAYERS; i++) {
@@ -356,6 +358,7 @@ void VRIntroApp::InitializeApplicationLayers() {
   m_Layers.push_back(std::shared_ptr<SpheresLayer>(new SpheresLayer(defaultEyePose)));
   m_Layers.push_back(std::shared_ptr<SpaceLayer>(new SpaceLayer(defaultEyePose)));
   m_Layers.push_back(std::shared_ptr<FlyingLayer>(new FlyingLayer(defaultEyePose)));
+  m_Layers.push_back(std::shared_ptr<FractalLayer>(new FractalLayer(defaultEyePose)));
 
   m_Layers.push_back(std::shared_ptr<HandLayer>(new HandLayer(defaultEyePose)));
   m_Layers.push_back(std::shared_ptr<MessageLayer>(new MessageLayer(defaultEyePose)));

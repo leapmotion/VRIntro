@@ -46,7 +46,7 @@ public:
   #endif
 
 private:
-  static const int CONTENT_LAYERS = 4;
+  static const int CONTENT_LAYERS = 5;
   static const int HAND_LAYER = CONTENT_LAYERS;
   static const int HELP_LAYER = CONTENT_LAYERS + 1;
 
