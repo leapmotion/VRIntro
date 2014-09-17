@@ -50,6 +50,15 @@ void VRIntroApp::Initialize() {
   params.antialias = false;
   params.windowTitle = "Leap Motion VR Intro BETA (F11 to fullscreen)";
 
+  m_Oculus.InitHMD();
+  if ( ! m_Oculus.isDebug() ){
+    params.windowHeight = m_Oculus.GetHMDHeight();
+    params.windowWidth = m_Oculus.GetHMDWidth();
+  }
+  else{
+    m_OculusMode = false;
+  }
+  
   m_applicationTime = TimePoint(0.0);         // Start the application time at zero.
   
   m_SDLController.Initialize(params);         // This initializes everything SDL-related.
@@ -68,15 +77,6 @@ void VRIntroApp::Initialize() {
 #endif
   if (!m_Oculus.Init()) {
     throw std::runtime_error("Oculus initialization failed");
-  }
-  
-  // Set HMD window dimetions
-  if ( ! m_Oculus.isDebug() ){
-    params.windowHeight = m_Oculus.GetHMDHeight();
-    params.windowWidth = m_Oculus.GetHMDWidth();
-  }
-  else{
-    m_OculusMode = false;
   }
   
   m_LeapController.addListener(m_LeapListener);
