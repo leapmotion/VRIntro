@@ -1,6 +1,6 @@
-#version 150
+#version 120
 uniform sampler2D texture;
-in vec2 oTexcoord;
+varying vec2 oTexcoord;
 
 vec2 iResolution = vec2(1.0, 1.0);
 uniform float time;
