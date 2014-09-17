@@ -50,7 +50,7 @@ void InteractionLayer::UpdateLeap(const Leap::Frame& frame, const Matrix4x4f& wo
       }
     }
     const float thumbDist = (outHand.jointConnections[0] - palm).norm();
-    const Vector3f wrist = palm - thumbDist*(palmDir*0.8 + (hand.isLeft() ? -1 : 1)*palmSide*0.5);
+    const Vector3f wrist = palm - thumbDist*(palmDir*0.8f + static_cast<float>(hand.isLeft() ? -1 : 1)*palmSide*0.5f);
 
     for (int j = 0; j < 4; j++) {
       outHand.joints[15 + j] = outHand.jointConnections[3 * j];

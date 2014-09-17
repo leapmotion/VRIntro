@@ -21,9 +21,9 @@ private:
   static const int NUM_STARS = STARS_PER*NUM_GALAXIES;
 
   void InitPhysics();
-  Vector3 GenerateVector(const Vector3& center, double radius);
-  Vector3 InitialVelocity(double mass, const Vector3& normal, const Vector3& dr);
-  void UpdateV(int type, const Vector3& p, Vector3& v, int galaxy);
+  Vector3f GenerateVector(const Vector3f& center, float radius);
+  Vector3f InitialVelocity(float mass, const Vector3f& normal, const Vector3f& dr);
+  void UpdateV(int type, const Vector3f& p, Vector3f& v, int galaxy);
   void UpdateAllPhysics();
   void RenderPopup() const;
 
@@ -32,13 +32,13 @@ private:
   std::shared_ptr<GLTexture2> m_PopupTexture;
   std::shared_ptr<GLShader> m_PopupShader;
 
-  Vector3 m_GalaxyPos[NUM_GALAXIES];
-  Vector3 m_GalaxyVel[NUM_GALAXIES];
-  Vector3 m_GalaxyNormal[NUM_GALAXIES];
-  double m_GalaxyMass[NUM_GALAXIES];
+  Vector3f m_GalaxyPos[NUM_GALAXIES];
+  Vector3f m_GalaxyVel[NUM_GALAXIES];
+  Vector3f m_GalaxyNormal[NUM_GALAXIES];
+  float m_GalaxyMass[NUM_GALAXIES];
 
-  stdvectorV3 pos;
-  stdvectorV3 vel;
+  stdvectorV3f pos;
+  stdvectorV3f vel;
 
   float *m_Buf;
 

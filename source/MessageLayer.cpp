@@ -97,8 +97,8 @@ void MessageLayer::DrawMessage(int index) const {
 }
 
 EventHandlerAction MessageLayer::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) {
-  switch (ev.keysym.sym) {
-  default:
-    return EventHandlerAction::PASS_ON;
-  }
+  //switch (ev.keysym.sym) {
+  //default:
+  return EventHandlerAction::PASS_ON;
+  //}
 }

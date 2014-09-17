@@ -2,7 +2,7 @@
 
 #include "GLController.h"
 
-HandLayer::HandLayer(const Vector3f& initialEyePos) : 
+HandLayer::HandLayer(const Vector3f& initialEyePos) :
   InteractionLayer(initialEyePos) {
   // TODO: switch to non-default shader
 }
@@ -16,8 +16,8 @@ void HandLayer::Render(TimeDelta real_time_delta) const {
 }
 
 EventHandlerAction HandLayer::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) {
-  switch (ev.keysym.sym) {
-  default:
-    return EventHandlerAction::PASS_ON;
-  }
+  //switch (ev.keysym.sym) {
+  //default:
+  return EventHandlerAction::PASS_ON;
+  //}
 }

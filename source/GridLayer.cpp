@@ -7,7 +7,7 @@ GridLayer::GridLayer(const Vector3f& initialEyePos) :
   InteractionLayer(initialEyePos),
   m_DivTheta(22),
   m_DivPhi(40),
-  m_Radius(0.7) {
+  m_Radius(0.7f) {
 
 }
 
@@ -21,11 +21,11 @@ void GridLayer::Render(TimeDelta real_time_delta) const {
   glLineWidth(1.0f);
   glBegin(GL_LINES);
   for (int i = 0; i < m_DivPhi; i++) {
-    float phi0 = M_PI*(i/static_cast<float>(m_DivPhi) - 0.5f);
-    float phi1 = M_PI*((i + 1)/static_cast<float>(m_DivPhi) - 0.5f);
+    float phi0 = (float)M_PI*(i/static_cast<float>(m_DivPhi) - 0.5f);
+    float phi1 = (float)M_PI*((i + 1)/static_cast<float>(m_DivPhi) - 0.5f);
     for (int j = 0; j < m_DivTheta; j++) {
-      float theta0 = 2*M_PI*(j/static_cast<float>(m_DivTheta));
-      float theta1 = 2*M_PI*((j + 1)/static_cast<float>(m_DivTheta));
+      float theta0 = 2*(float)M_PI*(j/static_cast<float>(m_DivTheta));
+      float theta1 = 2*(float)M_PI*((j + 1)/static_cast<float>(m_DivTheta));
       glVertex3f(m_Radius*cos(phi0)*cos(theta0), m_Radius*sin(phi0), m_Radius*cos(phi0)*sin(theta0));
       glVertex3f(m_Radius*cos(phi0)*cos(theta1), m_Radius*sin(phi0), m_Radius*cos(phi0)*sin(theta1));
       glVertex3f(m_Radius*cos(phi0)*cos(theta0), m_Radius*sin(phi0), m_Radius*cos(phi0)*sin(theta0));

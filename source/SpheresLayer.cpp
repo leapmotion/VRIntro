@@ -48,7 +48,7 @@ void SpheresLayer::Render(TimeDelta real_time_delta) const {
 
   for (size_t j = 0; j < NUM_SPHERES; j++) {
     float desaturation = 0.005f / (0.005f + m_Disp[j].squaredNorm());
-    Vector3f color = m_Colors[j]*(1.0 - desaturation) + m_Mono[j]*desaturation;
+    Vector3f color = m_Colors[j]*(1.0f - desaturation) + m_Mono[j]*desaturation;
 
     m_Sphere.SetRadius(m_Radius[j]);
     m_Sphere.Translation() = (m_Pos[j] + m_Disp[j]).cast<double>();
@@ -63,18 +63,18 @@ void SpheresLayer::Render(TimeDelta real_time_delta) const {
 void SpheresLayer::RenderGrid() const {
   const int divTheta = 22;
   const int divPhi = 40;
-  const float radius = 0.7;
+  const float radius = 0.7f;
 
   glTranslatef(m_EyePos.x(), m_EyePos.y(), m_EyePos.z());
   glColor4f(0.2f, 0.6f, 1.0f, m_Alpha*0.5f);
   glLineWidth(1.0f);
   glBegin(GL_LINES);
   for (int i = 0; i < divPhi; i++) {
-    float phi0 = M_PI*(i/static_cast<float>(divPhi) - 0.5f);
-    float phi1 = M_PI*((i + 1)/static_cast<float>(divPhi) - 0.5f);
+    float phi0 = (float)M_PI*(i/static_cast<float>(divPhi) - 0.5f);
+    float phi1 = (float)M_PI*((i + 1)/static_cast<float>(divPhi) - 0.5f);
     for (int j = 0; j < divTheta; j++) {
-      float theta0 = 2*M_PI*(j/static_cast<float>(divTheta));
-      float theta1 = 2*M_PI*((j + 1)/static_cast<float>(divTheta));
+      float theta0 = 2*(float)M_PI*(j/static_cast<float>(divTheta));
+      float theta1 = 2*(float)M_PI*((j + 1)/static_cast<float>(divTheta));
       glVertex3f(radius*cos(phi0)*cos(theta0), radius*sin(phi0), radius*cos(phi0)*sin(theta0));
       glVertex3f(radius*cos(phi0)*cos(theta1), radius*sin(phi0), radius*cos(phi0)*sin(theta1));
       glVertex3f(radius*cos(phi0)*cos(theta0), radius*sin(phi0), radius*cos(phi0)*sin(theta0));
@@ -85,10 +85,10 @@ void SpheresLayer::RenderGrid() const {
 }
 
 EventHandlerAction SpheresLayer::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) {
-  switch (ev.keysym.sym) {
-  default:
-    return EventHandlerAction::PASS_ON;
-  }
+  //switch (ev.keysym.sym) {
+  //default:
+  return EventHandlerAction::PASS_ON;
+  //}
 }
 
 void SpheresLayer::ComputePhysics(TimeDelta real_time_delta) {
@@ -97,8 +97,8 @@ void SpheresLayer::ComputePhysics(TimeDelta real_time_delta) {
   for (int i = 0; i < NUM_SPHERES; i++) {
     static const float K = 10;
     static const float D = 3;
-    static const float A = 0.0015;
-    static const float AA = 0.00005;
+    static const float A = 0.0015f;
+    static const float AA = 0.00005f;
 
     Vector3f accel = -K*m_Spring*m_Disp[i] -D*m_Damp*m_Vel[i];
     // std::cout << __LINE__ << ":\t     num_tips = " << (num_tips) << std::endl;
@@ -115,8 +115,8 @@ void SpheresLayer::ComputePhysics(TimeDelta real_time_delta) {
       // accel += A*m_Well*diff/(AA + distSq*diff.norm());
     }
 
-    m_Disp[i] += 0.5*m_Vel[i]*real_time_delta;
-    m_Vel[i] += accel*real_time_delta;
-    m_Disp[i] += 0.5*m_Vel[i]*real_time_delta;
+    m_Disp[i] += 0.5f*m_Vel[i]*static_cast<float>(real_time_delta);
+    m_Vel[i] += accel*static_cast<float>(real_time_delta);
+    m_Disp[i] += 0.5f*m_Vel[i]*static_cast<float>(real_time_delta);
   }
 }

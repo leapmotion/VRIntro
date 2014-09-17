@@ -42,17 +42,17 @@ void FlyingLayer::Update(TimeDelta real_time_delta) {
 
     Vector3f positionSum = Vector3f::Zero();
     Vector3f rotationAASum = Vector3f::Zero();
-    for (int i = 0; i < m_Palms.size(); i++) {
-      positionSum += m_GridOrientation.block<3, 3>(0, 0).transpose()*(m_Palms[i] - m_EyePos - m_EyeView.transpose()*Vector3f(0, -0.15, -0.05));
+    for (size_t i = 0; i < m_Palms.size(); i++) {
+      positionSum += m_GridOrientation.block<3, 3>(0, 0).transpose()*(m_Palms[i] - m_EyePos - m_EyeView.transpose()*Vector3f(0, -0.15f, -0.05f));
       //rotationAASum += RotationMatrixToVector(m_EyeView.transpose()*m_PalmOrientations[i]*m_EyeView.transpose());
       Matrix3x3f rot;
-      RotationMatrix_VectorToVector(-Vector3f::UnitZ(), m_EyeView*(m_Palms[i] - m_EyePos) - Vector3f(0, -0.15, -0.05), rot);
+      RotationMatrix_VectorToVector(-Vector3f::UnitZ(), m_EyeView*(m_Palms[i] - m_EyePos) - Vector3f(0, -0.15f, -0.05f), rot);
       //std::cout << __LINE__ << ":\t       rot = " << (rot) << std::endl;
       rotationAASum += RotationMatrixToVector(rot);
     }
     if (m_Palms.size() == 2) {
-      const Vector3f dir0 = m_EyeView*(m_Palms[0] - m_EyePos) - Vector3f(0, -0.15, -0.05);
-      const Vector3f dir1 = m_EyeView*(m_Palms[1] - m_EyePos) - Vector3f(0, -0.15, -0.05);
+      const Vector3f dir0 = m_EyeView*(m_Palms[0] - m_EyePos) - Vector3f(0, -0.15f, -0.05f);
+      const Vector3f dir1 = m_EyeView*(m_Palms[1] - m_EyePos) - Vector3f(0, -0.15f, -0.05f);
 
       Matrix3x3f rot;
       RotationMatrix_VectorToVector((dir0.x() < dir1.x() ? 1.0f : -1.0f) * Vector3f::UnitX(), dir1 - dir0, rot);
@@ -60,8 +60,8 @@ void FlyingLayer::Update(TimeDelta real_time_delta) {
 
       rotationAASum += 2.0f*RotationMatrixToVector(rot);
     }
-    m_Velocity = (1 - FILTER)*m_Velocity + FILTER*positionSum/m_Palms.size();
-    m_RotationAA = (1 - FILTER)*m_RotationAA + FILTER*rotationAASum/m_Palms.size();
+    m_Velocity = (1 - FILTER)*m_Velocity + FILTER*positionSum/static_cast<float>(m_Palms.size());
+    m_RotationAA = (1 - FILTER)*m_RotationAA + FILTER*rotationAASum/static_cast<float>(m_Palms.size());
   } else {
     m_Velocity = (1 - 0.3f*FILTER)*m_Velocity;
     m_RotationAA = (1 - 0.3f*FILTER)*m_RotationAA;
@@ -69,8 +69,9 @@ void FlyingLayer::Update(TimeDelta real_time_delta) {
 
   static const float MAX_VELOCITY_SQNORM = 0.2f;
   static const float MAX_ROTATION_SQNORM = 1.0f;
-  m_GridCenter -= m_Velocity*std::min(MAX_VELOCITY_SQNORM, m_Velocity.squaredNorm())*(real_time_delta/PERIOD_TRANS);
-  const Matrix3x3f rot = RotationVectorToMatrix((real_time_delta/PERIOD_ROT)*m_RotationAA*std::min(MAX_ROTATION_SQNORM, m_RotationAA.squaredNorm()));
+  float dt = static_cast<float>(real_time_delta);
+  m_GridCenter -= m_Velocity*std::min(MAX_VELOCITY_SQNORM, m_Velocity.squaredNorm())*(dt/PERIOD_TRANS);
+  const Matrix3x3f rot = RotationVectorToMatrix((dt/PERIOD_ROT)*m_RotationAA*std::min(MAX_ROTATION_SQNORM, m_RotationAA.squaredNorm()));
   //std::cout << __LINE__ << ":\t   rot = " << (rot) << std::endl;
   //Matrix3x3f foo = ;
   m_GridOrientation.block<3, 3>(0, 0) = m_EyeView.transpose()*rot.transpose()*m_EyeView*m_GridOrientation.block<3, 3>(0, 0);
@@ -105,9 +106,9 @@ void FlyingLayer::Render(TimeDelta real_time_delta) const {
   glMultMatrixf(m_GridOrientation.eval().data());
   glTranslatef(m_GridCenter.x(), m_GridCenter.y(), m_GridCenter.z());
 
-  int xShift = 2.0f*static_cast<int>(0.5f*centerpoint.x() + 0.5f);
-  int yShift = 20.0f*static_cast<int>(0.05f*centerpoint.y() + 0.5f);
-  int zShift = 2.0f*static_cast<int>(0.5f*centerpoint.z() + 0.5f);
+  int xShift = 2*static_cast<int>(0.5f*centerpoint.x() + 0.5f);
+  int yShift = 20*static_cast<int>(0.05f*centerpoint.y() + 0.5f);
+  int zShift = 2*static_cast<int>(0.5f*centerpoint.z() + 0.5f);
   glLineWidth(m_LineThickness);
   glBegin(GL_LINES);
   for (int i = -60 + xShift; i < 60 + xShift; i+=2) {
@@ -223,18 +224,18 @@ Matrix3x3f FlyingLayer::RotationVectorToMatrix(const Vector3f& angle_scaled_axis
 }
 
 Vector3f FlyingLayer::RotationMatrixToVector(const Matrix3x3f& rotationMatrix) const {
-  static const float epsilon = 1e-6;
-  const float cs = (rotationMatrix.trace() - 1.0)*0.5;
-  if (cs > 1.0 - epsilon) {
+  static const float epsilon = 1e-6f;
+  const float cs = (rotationMatrix.trace() - 1.0f)*0.5f;
+  if (cs > 1.0f - epsilon) {
     return Vector3f::Zero();
-  } else if (cs < epsilon - 1.0) {
+  } else if (cs < epsilon - 1.0f) {
     Eigen::SelfAdjointEigenSolver<Matrix3x3f> evals(rotationMatrix, Eigen::ComputeEigenvectors);
     Vector3f rotVector = evals.eigenvectors().col(2).transpose();
-    return rotVector.normalized()*M_PI;
+    return rotVector.normalized()*(float)M_PI;
   } else {
-    const float sn = std::sqrt(1.0 - cs*cs);
+    const float sn = std::sqrt(1.0f - cs*cs);
     const float angle = std::acos(cs);
-    const float multiplier = angle * 0.5 / sn;
+    const float multiplier = angle * 0.5f / sn;
     return Vector3f((rotationMatrix(2, 1) - rotationMatrix(1, 2))*multiplier,
                     (rotationMatrix(0, 2) - rotationMatrix(2, 0))*multiplier,
                     (rotationMatrix(1, 0) - rotationMatrix(0, 1))*multiplier);
@@ -254,7 +255,7 @@ void FlyingLayer::AngleAxisRotationMatrix(float angle, const Vector3f& axis, Mat
   retval(1, 1) += cos_angle;
   retval(2, 2) += cos_angle;
   // add the outer product term -- multiply the scalar factor before forming the outer product
-  retval += ((1.0 - cos_angle)*axisVec) * axisVec.transpose();
+  retval += ((1.0f - cos_angle)*axisVec) * axisVec.transpose();
 }
 
 void FlyingLayer::RotationMatrix_VectorToVector(const Vector3f& from, const Vector3f& to, Matrix3x3f &retval) const {
@@ -271,13 +272,12 @@ void FlyingLayer::RotationMatrix_VectorToVector(const Vector3f& from, const Vect
 
 Matrix3x3f FlyingLayer::RotationMatrixLinearInterpolation(const Matrix3x3f& A0, const Matrix3x3f& A1, float t) const {
   Vector3f dA = RotationMatrixToVector(A0.transpose()*A1);
-  float angle = std::fmod(t*dA.norm(), M_PI);
+  float angle = std::fmod(t*dA.norm(), (float)M_PI);
   Matrix3x3f At = A0*RotationVectorToMatrix(angle*dA.normalized());
   return At;
 }
 
 void FlyingLayer::RotationMatrixSuppress(Matrix3x3f& A0, float t) const {
-  assert(t >= 0.0 && t <= 1.0);
   const Vector3f dA = RotationMatrixToVector(A0);
   A0 = RotationVectorToMatrix(dA * t);
 }

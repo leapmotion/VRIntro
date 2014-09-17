@@ -39,10 +39,10 @@ void FractalLayer::Update(TimeDelta real_time_delta) {
   if (m_Palms.size() > 0) {
 
     Vector3f positionSum = Vector3f::Zero();
-    for (int i = 0; i < m_Palms.size(); i++) {
+    for (size_t i = 0; i < m_Palms.size(); i++) {
       positionSum += m_EyeView*(m_Palms[i] - m_EyePos);
     }
-    m_AvgPalm = (1 - FILTER)*m_AvgPalm + FILTER*(Vector3f(-0.8f, .156f, 0)+0.2f*positionSum/m_Palms.size());
+    m_AvgPalm = (1 - FILTER)*m_AvgPalm + FILTER*(Vector3f(-0.8f, .156f, 0)+0.2f*positionSum/static_cast<float>(m_Palms.size()));
   }
 }
 
@@ -78,8 +78,8 @@ void FractalLayer::Render(TimeDelta real_time_delta) const {
 }
 
 EventHandlerAction FractalLayer::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) {
-  switch (ev.keysym.sym) {
-  default:
-    return EventHandlerAction::PASS_ON;
-  }
+  //switch (ev.keysym.sym) {
+  //default:
+  return EventHandlerAction::PASS_ON;
+  //}
 }
