@@ -123,14 +123,14 @@ InitApp(void) {
   return TRUE;
 }
 
-void RunMirror(HWND hwnd) {
+void RunMirror(HWND parentHwnd, HWND& outHwnd) {
   MSG msg;
 
   InitApp();
 
   if (SUCCEEDED(CoInitialize(NULL))) {/* In case we use COM */
 
-    hwnd = CreateWindow(
+    outHwnd = CreateWindow(
              TEXT("Mirror"),                /* Class Name */
              TEXT("Mirror"),                /* Title */
              WS_OVERLAPPEDWINDOW,            /* Style */
@@ -139,9 +139,9 @@ void RunMirror(HWND hwnd) {
              NULL,                           /* Parent */
              NULL,                           /* No menu */
              (HINSTANCE)GetModuleHandle(NULL),/* Instance */
-             &hwnd);
+             &parentHwnd);
 
-    ShowWindow(hwnd, SW_MAXIMIZE);
+    ShowWindow(outHwnd, SW_MAXIMIZE);
 
     while (GetMessage(&msg, NULL, 0, 0)) {
       TranslateMessage(&msg);

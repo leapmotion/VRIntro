@@ -80,8 +80,9 @@ int main(int argc, char **argv) {
 
   app.Initialize();
 #if _WIN32
+  HWND mirrorHwnd;
   if (argc >= 2 && strcmp(argv[1], "mirror") == 0) {
-    thread = std::thread(RunMirror, app.GetHwnd());
+    thread = std::thread(RunMirror, app.GetHwnd(), std::ref(mirrorHwnd));
   }
 #else
   SDL_Window_ID = app.GetWindowID();
@@ -90,6 +91,9 @@ int main(int argc, char **argv) {
   RunApplication(app);
 
   if (thread.joinable()) {
+#if _WIN32
+    PostMessage(mirrorHwnd, WM_CLOSE, 0, 0);
+#endif
     thread.join();
   }
   app.Shutdown();

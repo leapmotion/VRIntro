@@ -1,3 +1,3 @@
 #include <windows.h>
 
-void RunMirror(HWND hwnd);
+void RunMirror(HWND parentHwnd, HWND& outHwnd);
