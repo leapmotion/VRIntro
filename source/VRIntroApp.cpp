@@ -245,6 +245,10 @@ EventHandlerAction VRIntroApp::HandleWindowEvent(const SDL_WindowEvent &ev) {
   if (ev.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
     m_Width = ev.data1;
     m_Height = ev.data2;
+    
+    // Render smoothly in different modes
+    glViewport(0,0, m_Width, m_Height);
+    m_SDLController.EndRender();
   }
   return DispatchEventToApplicationLayers<SDL_WindowEvent>(ev, &EventHandler::HandleWindowEvent);
 }
