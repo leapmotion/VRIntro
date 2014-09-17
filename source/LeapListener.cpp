@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "LeapListener.h"
 
 //#include "PrecisionTimer.h"

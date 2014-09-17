@@ -20,3 +20,22 @@ endif()
 # CMAKE_PREFIX_PATH is the path used for searching by FIND_XXX(), with appropriate suffixes added.
 # EXTERNAL_LIBRARY_DIR is a hint for all the find_library calls.
 list(INSERT CMAKE_PREFIX_PATH 0 ${EXTERNAL_LIBRARY_DIR})
+
+
+# Adds a precompiled header
+MACRO(ADD_MSVC_PRECOMPILED_HEADER PrecompiledHeader PrecompiledSource SourcesVar)
+  if(MSVC)
+    set_source_files_properties(${PrecompiledSource}
+        PROPERTIES
+        COMPILE_FLAGS "/Yc${PrecompiledHeader}"
+        )
+    foreach( src_file ${${SourcesVar}} )
+        set_source_files_properties(
+            ${src_file}
+            PROPERTIES
+            COMPILE_FLAGS "/Yu${PrecompiledHeader}"
+            )
+    endforeach( src_file ${${SourcesVar}} )
+    list(APPEND ${SourcesVar} ${PrecompiledHeader} ${PrecompiledSource})
+  endif(MSVC)
+ENDMACRO(ADD_MSVC_PRECOMPILED_HEADER)

@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "HandLayer.h"
 
 #include "GLController.h"

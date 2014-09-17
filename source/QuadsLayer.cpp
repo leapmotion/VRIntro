@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "QuadsLayer.h"
 
 #include "GLController.h"

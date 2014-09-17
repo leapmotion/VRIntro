@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "VRIntroApp.h"
 
 #if _WIN32

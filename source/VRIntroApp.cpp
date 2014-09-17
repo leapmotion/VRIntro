@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "VRIntroApp.h"
 #include "SpheresLayer.h"
 #include "SpaceLayer.h"

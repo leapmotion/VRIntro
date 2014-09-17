@@ -3,11 +3,12 @@
 #include "RenderableEventHandler.h"
 #include "RenderState.h"
 #include "Primitives.h"
-#include "GLShaderMatrices.h"
-#include "GLBuffer.h"
 
 #include "EigenTypes.h"
-#include "Leap.h"
+namespace Leap
+{
+class Frame;
+}
 
 #include <memory>
 

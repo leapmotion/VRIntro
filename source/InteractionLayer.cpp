@@ -1,10 +1,11 @@
+#include "stdafx.h"
 #include "InteractionLayer.h"
 
-#include "Primitives.h"
 #include "Resource.h"
 #include "GLShader.h"
 #include "GLShaderLoader.h"
 #include "GLController.h"
+#include "Leap.h"
 
 InteractionLayer::InteractionLayer(const Vector3f& initialEyePos, const std::string& shaderName) :
   m_Shader(Resource<GLShader>(shaderName)),

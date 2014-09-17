@@ -1,4 +1,6 @@
 #include "stdafx.h"
+
+#include <Windows.h>
 #include "PlatformInitializerWin.h"
 #include "shlwapi.h"
 #include <Objbase.h>

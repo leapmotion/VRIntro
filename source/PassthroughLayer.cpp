@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "PassthroughLayer.h"
 #include "GLController.h"
 #include "GLShader.h"

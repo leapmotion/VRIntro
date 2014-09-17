@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "SpaceLayer.h"
 
 #include "GLController.h"

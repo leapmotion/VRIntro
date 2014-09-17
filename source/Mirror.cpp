@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "Mirror.h"
 
 #include <windows.h>
