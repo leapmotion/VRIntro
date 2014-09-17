@@ -13,7 +13,7 @@ void main() {
   vec2 velProj = out_velocityProj.xy*out_positionProj.w - out_positionProj.xy*out_velocityProj.w;
   vec3 posFactor = out_position.xyz;
   float scale = out_positionProj.w*pow(dot(velProj, velProj)*dot(posFactor, posFactor), -0.25);
-  gl_FragColor = vec4(oColor, 0.01*scale);
+  gl_FragColor = vec4(oColor, 0.015*scale);
 #else
   gl_FragColor = oColor;
 #endif

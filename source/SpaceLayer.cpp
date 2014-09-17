@@ -41,9 +41,7 @@ SpaceLayer::~SpaceLayer() {
 
 void SpaceLayer::Update(TimeDelta real_time_delta) {
   m_OddEven ^= 1;
-  for (int i = 0; i < 2; i++) {
-    UpdateAllPhysics();
-  }
+  UpdateAllPhysics();
   for (int i = 6*m_OddEven, j = 0; j < NUM_STARS; j++) {
     const Vector3f& r = pos[j];
     m_Buf[i++] = r.x();
@@ -61,34 +59,11 @@ void SpaceLayer::Render(TimeDelta real_time_delta) const {
   glDisable(GL_DEPTH_TEST);
   glDepthMask(GL_FALSE);
   RenderPopup();
-  glEnable(GL_BLEND);
-  glLineWidth(1.5f);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+  glLineWidth(1.5);
   int start = SDL_GetTicks();
 
-#if 0 // 12 ms per million particles
-  glColor3f(1, 0, 0);
-
-  glBegin(GL_POINTS);
-  for (int i = 0; i < NUM_GALAXIES; i++) {
-    switch (i) {
-    case 0:
-      glColor4f(1.0f, 1.0f, 0.8f, 0.6f*m_Alpha);
-      break;
-    case 1:
-      glColor4f(1.0f, 0.8f, 1.0f, 0.6f*m_Alpha);
-      break;
-    case 2:
-      glColor4f(0.8f, 1.0f, 1.0f, 0.6f*m_Alpha);
-      break;
-    }
-    for (int j = 0; j < STARS_PER; j++) {
-      int index = i*STARS_PER + j;
-      glVertex3d(pos[index].x(), pos[index].y(), pos[index].z());
-    }
-  }
-  glEnd();
-#else // 4 ms per million particles
-
+  // 4 ms per million particles
   m_Shader->Bind();
   GLShaderMatrices::UploadUniforms(*m_Shader, m_ModelView.cast<double>(), m_Projection.cast<double>(), BindFlags::NONE);
 
@@ -106,7 +81,6 @@ void SpaceLayer::Render(TimeDelta real_time_delta) const {
   m_Buffer.Unbind();
 
   m_Shader->Unbind();
-#endif
   //std::cout << __LINE__ << ":\t SDL_GetTicks() = " << (SDL_GetTicks() - start) << std::endl;
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
@@ -137,6 +111,7 @@ void SpaceLayer::RenderPopup() const {
   m_PopupBuffer.Unbind();
 
   m_PopupShader->Unbind();
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 Vector3f SpaceLayer::GenerateVector(const Vector3f& center, float radius) {
@@ -166,7 +141,7 @@ void SpaceLayer::InitPhysics() {
       m_GalaxyPos[i] = m_EyePos.cast<float>() + m_EyeView.transpose().cast<float>()*Vector3f(0, -0.2f, -1.2f);
     }
     m_GalaxyVel[i] = GenerateVector(-1e-3f*(m_GalaxyPos[i] - 1.1f*m_EyePos.cast<float>()), 0.0004f);
-    m_GalaxyMass[i] = static_cast<float>(STARS_PER)*2e-10f;
+    m_GalaxyMass[i] = static_cast<float>(STARS_PER)*5e-11f;
     m_GalaxyNormal[i] = GenerateVector(Vector3f::Zero(), 1.0).normalized();
 
     for (int j = 0; j < STARS_PER; j++) {
@@ -183,17 +158,13 @@ void SpaceLayer::InitPhysics() {
 }
 
 void SpaceLayer::UpdateV(int type, const Vector3f& p, Vector3f& v, int galaxy) {
-  if (galaxy == -1) {
-    // Origin force
-    //const Vector3f dr = m_EyePos.cast<float>() - p - 100*v;
-    //v += 1e-6f*dr*dr.squaredNorm();
-  } else if (galaxy < NUM_GALAXIES) {
+  if (galaxy < NUM_GALAXIES) {
     const Vector3f dr = m_GalaxyPos[galaxy] - p;
     v += m_GalaxyMass[galaxy]*dr.normalized()/(0.3e-3f + dr.squaredNorm());
-  } else {
-    float multiplier = 1.5e-4f*(m_TipsExtended[galaxy - NUM_GALAXIES] ? 1.0f : 0.1f);
+  } else if (m_TipsExtended[galaxy - NUM_GALAXIES]) {
     const Vector3f dr = m_Tips[galaxy - NUM_GALAXIES].cast<float>() - (p + (0.1f + static_cast<float>(type)*0.0001f)*v);
-    v += multiplier*(dr)/(10e-3f + dr.squaredNorm());
+    const Vector3f dv = 2e-4f*dr/(1e-2f + dr.squaredNorm());
+    v += dv;
   }
 }
 

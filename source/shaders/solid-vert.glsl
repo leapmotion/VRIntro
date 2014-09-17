@@ -22,7 +22,7 @@ void main(void) {
     out_velocityProj.x = 10;
   }
   float colorFactor = 0.02/(0.02 + length(velocity));
-  oColor = vec3(colorFactor, 0.6 - 0.2*colorFactor, 1 - colorFactor);
+  oColor = vec3(colorFactor, 0.6 - 0.2*colorFactor, 1 - 0.8*colorFactor);
 #else
   vec4 out_position = model_view_matrix * vec4(position, 1.0);
   oColor = vec4(1.0, 1.0, 1.0, 0.1/length(out_position.xyz));
