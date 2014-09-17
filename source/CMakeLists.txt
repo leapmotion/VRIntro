@@ -75,7 +75,7 @@ endif()
 
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zi")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:LIBCMT /DEBUG")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:LIBCMT /DEBUG /ignore:4099")
 endif()
 
 # The definition of Components::* targets and automatic finding and linking of all library
