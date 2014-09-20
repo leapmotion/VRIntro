@@ -20,6 +20,7 @@ struct SkeletonHand {
   //stdvectorV3f tips[5];
   Vector3f joints[23];
   Vector3f jointConnections[23];
+  Vector3f avgExtended;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };

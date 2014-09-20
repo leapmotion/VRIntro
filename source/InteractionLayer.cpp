@@ -36,11 +36,17 @@ void InteractionLayer::UpdateLeap(const Leap::Frame& frame, const Matrix4x4f& wo
     outHand.center = palm;
     m_Palms.push_back(palm);
     m_PalmOrientations.push_back(rotation*Matrix3x3f(hand.basis().toArray3x3())*rotation.transpose());
+    Vector3f sumExtended = Vector3f::Zero();
+    int numExtended = 0;
 
     for (int j = 0; j < 5; j++) {
       const Leap::Finger& finger = hand.fingers()[j];
       m_Tips.push_back(rotation*finger.tipPosition().toVector3<Vector3f>() + translation);
       m_TipsExtended.push_back(hand.grabStrength() > 0.9f || finger.isExtended());
+      if (m_TipsExtended.back()) {
+        sumExtended += m_Tips.back();
+        numExtended++;
+      }
       m_TipsLeftRight.push_back(hand.isRight());
       m_TipsIndex.push_back(j);
 
@@ -50,6 +56,8 @@ void InteractionLayer::UpdateLeap(const Leap::Frame& frame, const Matrix4x4f& wo
         outHand.jointConnections[j*3 + k] = rotation*bone.prevJoint().toVector3<Vector3f>() + translation;
       }
     }
+    outHand.avgExtended = numExtended == 0 ? palm : sumExtended/numExtended;
+
     const float thumbDist = (outHand.jointConnections[0] - palm).norm();
     const Vector3f wrist = palm - thumbDist*(palmDir*0.8f + static_cast<float>(hand.isLeft() ? -1 : 1)*palmSide*0.5f);
 
