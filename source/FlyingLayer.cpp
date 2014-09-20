@@ -12,7 +12,7 @@
 FlyingLayer::FlyingLayer(const Vector3f& initialEyePos) :
   InteractionLayer(initialEyePos),
   m_PopupShader(Resource<GLShader>("shaders/transparent")),
-  m_PopupTexture(Resource<GLTexture2>("level4_popup.png")),
+  m_PopupTexture(Resource<GLTexture2>("images/level4_popup.png")),
   m_GridCenter(initialEyePos),
   m_Velocity(Vector3f::Zero()),
   m_RotationAA(Vector3f::Zero()),

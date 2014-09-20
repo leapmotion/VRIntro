@@ -13,7 +13,7 @@ PassthroughLayer::PassthroughLayer() :
   m_colorimage(GLTexture2Params(672, 600, GL_RGBA), GLTexture2PixelDataReference(GL_RGBA, GL_UNSIGNED_BYTE, NULL, 0)),
   m_distortion(GLTexture2Params(64, 64, GL_RG32F), GLTexture2PixelDataReference(GL_RG, GL_FLOAT, NULL, 0)),
   m_PopupShader(Resource<GLShader>("shaders/transparent")),
-  m_PopupTexture(Resource<GLTexture2>("no_images.png")),
+  m_PopupTexture(Resource<GLTexture2>("images/no_images.png")),
   m_Gamma(0.8f),
   m_Brightness(1.0f),
   m_HasData(false) {

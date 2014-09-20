@@ -9,7 +9,7 @@
 SpaceLayer::SpaceLayer(const Vector3f& initialEyePos) :
   InteractionLayer(initialEyePos, "shaders/solid"),
   m_PopupShader(Resource<GLShader>("shaders/transparent")),
-  m_PopupTexture(Resource<GLTexture2>("level3_popup.png")),
+  m_PopupTexture(Resource<GLTexture2>("images/level3_popup.png")),
   m_OddEven(0) {
   m_Buffer.Create(GL_ARRAY_BUFFER);
   m_Buffer.Bind();

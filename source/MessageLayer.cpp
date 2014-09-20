@@ -8,9 +8,9 @@
 
 MessageLayer::MessageLayer(const Vector3f& initialEyePos) :
   InteractionLayer(Vector3f::Zero(), "shaders/transparent"),
-  m_HelpTexture(Resource<GLTexture2>("help.png")),
-  m_LowFPSTexture(Resource<GLTexture2>("lowfps.png")),
-  m_NoOculusTexture(Resource<GLTexture2>("no_oculus.png")) {
+  m_HelpTexture(Resource<GLTexture2>("images/help.png")),
+  m_LowFPSTexture(Resource<GLTexture2>("images/lowfps.png")),
+  m_NoOculusTexture(Resource<GLTexture2>("images/no_oculus.png")) {
 
   static const float edges[] = {
     // Help menu

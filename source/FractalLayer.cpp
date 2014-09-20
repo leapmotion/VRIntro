@@ -8,7 +8,7 @@
 
 FractalLayer::FractalLayer(const Vector3f& initialEyePos) :
   InteractionLayer(Vector3f::Zero(), "shaders/fractal"),
-  m_Texture(Resource<GLTexture2>("random.png")),
+  m_Texture(Resource<GLTexture2>("images/random.png")),
   m_AvgPalm(Vector3f::Zero()),
   m_Time(0) {
 

@@ -112,13 +112,13 @@ define_post_build_resource_copy_rules(
         shaders/solid-vert.glsl
         shaders/transparent-frag.glsl
         shaders/transparent-vert.glsl
-        help.png
-        lowfps.png
-        no_oculus.png
-        level3_popup.png
-        level4_popup.png
-        no_images.png
-        random.png
+        images/help.png
+        images/lowfps.png
+        images/no_oculus.png
+        images/level3_popup.png
+        images/level4_popup.png
+        images/no_images.png
+        images/random.png
         RunMirrored.bat
     ABSOLUTE_PATH_RESOURCES
         ${Components_DIR}/resources/material-frag.glsl
