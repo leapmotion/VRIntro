@@ -61,6 +61,7 @@ void SpaceLayer::Render(TimeDelta real_time_delta) const {
   RenderPopup();
   glBlendFunc(GL_SRC_ALPHA, GL_ONE);
   glLineWidth(1.5);
+  glPointSize(1.0);
   int start = SDL_GetTicks();
 
   // 4 ms per million particles
@@ -75,6 +76,10 @@ void SpaceLayer::Render(TimeDelta real_time_delta) const {
 
   m_Buffer.Write(m_Buf, 12*NUM_STARS*sizeof(float));
   glDrawArrays(GL_LINES, 0, 2*NUM_STARS);
+
+  glVertexAttribPointer(m_Shader->LocationOfAttribute("position"), 3, GL_FLOAT, GL_TRUE, 12*sizeof(float), (GLvoid*)((6*m_OddEven)*sizeof(float)));
+  glVertexAttribPointer(m_Shader->LocationOfAttribute("velocity"), 3, GL_FLOAT, GL_TRUE, 12*sizeof(float), (GLvoid*)((6*m_OddEven + 3)*sizeof(float)));
+  glDrawArrays(GL_POINTS, 0, NUM_STARS);
 
   glDisableVertexAttribArray(m_Shader->LocationOfAttribute("position"));
   glDisableVertexAttribArray(m_Shader->LocationOfAttribute("velocity"));
