@@ -20,6 +20,7 @@ struct SkeletonHand {
   //stdvectorV3f tips[5];
   Vector3f joints[23];
   Vector3f jointConnections[23];
+  Vector3f avgExtended;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
@@ -47,6 +48,8 @@ protected:
   Matrix4x4f m_ModelView;
   Vector3f m_EyePos;
   Matrix3x3f m_EyeView;
+
+  std::vector<SkeletonHand> m_SkeletonHands;
   stdvectorV3f m_Palms;
   std::vector<Matrix3x3f, Eigen::aligned_allocator<Matrix3x3f>> m_PalmOrientations;
   stdvectorV3f m_Tips;
@@ -59,6 +62,4 @@ private:
   void DrawSkeletonHand(const SkeletonHand& hand, float alpha) const;
   void DrawCylinder(const Vector3f& p0, const Vector3f& p1, float radius, float alpha) const;
   void DrawSphere(const Vector3f& p0, float radius, float alpha) const;
-
-  std::vector<SkeletonHand> m_SkeletonHands;
 };

@@ -56,7 +56,7 @@ void SpaceLayer::Update(TimeDelta real_time_delta) {
 }
 
 void SpaceLayer::Render(TimeDelta real_time_delta) const {
-  glDisable(GL_DEPTH_TEST);
+  // glDisable(GL_DEPTH_TEST);
   glDepthMask(GL_FALSE);
   RenderPopup();
   glBlendFunc(GL_SRC_ALPHA, GL_ONE);
@@ -87,7 +87,7 @@ void SpaceLayer::Render(TimeDelta real_time_delta) const {
 
   m_Shader->Unbind();
   //std::cout << __LINE__ << ":\t SDL_GetTicks() = " << (SDL_GetTicks() - start) << std::endl;
-  glEnable(GL_DEPTH_TEST);
+  // glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
 }
 
@@ -166,9 +166,9 @@ void SpaceLayer::UpdateV(int type, const Vector3f& p, Vector3f& v, int galaxy) {
   if (galaxy < NUM_GALAXIES) {
     const Vector3f dr = m_GalaxyPos[galaxy] - p;
     v += m_GalaxyMass[galaxy]*dr.normalized()/(0.3e-3f + dr.squaredNorm());
-  } else if (m_TipsExtended[galaxy - NUM_GALAXIES]) {
-    const Vector3f dr = m_Tips[galaxy - NUM_GALAXIES].cast<float>() - (p + (0.1f + static_cast<float>(type)*0.0001f)*v);
-    const Vector3f dv = 2e-4f*dr/(1e-2f + dr.squaredNorm());
+  } else {
+    const Vector3f dr = m_SkeletonHands[galaxy - NUM_GALAXIES].avgExtended.cast<float>() - (p + (0.1f + static_cast<float>(type)*0.00003f)*v);
+    const Vector3f dv = 1e-3f*dr/(1e-2f + dr.squaredNorm());
     v += dv;
   }
 }
@@ -177,11 +177,11 @@ void SpaceLayer::UpdateAllPhysics() {
   // Update stars
   for (size_t i = 0; i < NUM_STARS; i++) {
     Vector3f tempV = vel[i];
-    for (size_t j = 0; j < NUM_GALAXIES + m_Tips.size(); j++) {
+    for (size_t j = 0; j < NUM_GALAXIES + m_SkeletonHands.size(); j++) {
       UpdateV(i, pos[i], tempV, j);
     }
     const Vector3f tempP = pos[i] + 0.667f*tempV;
-    for (size_t j = 0; j < NUM_GALAXIES + m_Tips.size(); j++) {
+    for (size_t j = 0; j < NUM_GALAXIES + m_SkeletonHands.size(); j++) {
       UpdateV(i, tempP, vel[i], j);
     }
     pos[i] += 0.25*tempV + 0.75*vel[i];
@@ -195,13 +195,13 @@ void SpaceLayer::UpdateAllPhysics() {
   // Update galaxies
   for (size_t i = 0; i < NUM_GALAXIES; i++) {
     Vector3f tempV = m_GalaxyVel[i];
-    for (size_t j = 0; j < NUM_GALAXIES + m_Tips.size(); j++) {
+    for (size_t j = 0; j < NUM_GALAXIES + m_SkeletonHands.size(); j++) {
       if (i != j) { // Galaxy does not affect itself
         UpdateV(0, m_GalaxyPos[i], m_GalaxyVel[i], j);
       }
     }
     const Vector3f tempP = m_GalaxyPos[i] + 0.667f*tempV;
-    for (size_t j = 0; j < NUM_GALAXIES + m_Tips.size(); j++) {
+    for (size_t j = 0; j < NUM_GALAXIES + m_SkeletonHands.size(); j++) {
       if (i != j) { // Galaxy does not affect itself
         UpdateV(0, tempP, m_GalaxyVel[i], j);
       }
