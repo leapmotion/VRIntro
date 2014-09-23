@@ -29,7 +29,7 @@ macro(leap_use_standard_platform_settings)
       set(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE STRING "Mac OS X build architectures" FORCE)
     endif()
     if(NOT CMAKE_OSX_SYSROOT)
-      set(CMAKE_OSX_SYSROOT "macosx10.8" CACHE STRING "Mac OS X build environment" FORCE)
+      set(CMAKE_OSX_SYSROOT "macosx10.9" CACHE STRING "Mac OS X build environment" FORCE)
     endif()
 
     set(CMAKE_OSX_DEPLOYMENT_TARGET "10.7" CACHE STRING "Mac OS X deployment target" FORCE)
