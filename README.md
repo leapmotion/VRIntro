@@ -12,10 +12,11 @@ Press 1 for Grid, 2 for Spheres, 3 for Magical Stars and 4 for Aerobatics.
 Be sure to select "Allow Images" and "Optimize for top-down tracking" in the Leap Motion Control Panel before launching this example.
 
 * This demo supports both the Oculus DK1 and DK2.
-* Requires Leap SDK Version 2.1.2 or newer
-* Please use the 0.4.1 runtime and set the Rift Display Mode to "Extend Desktop to the HMD"
+* Includes exectuables for both Windows and OSX.
+* Please use the 0.4.1+ runtime and set the Rift Display Mode to "Extend Desktop to the HMD"
 * Designed to be used with [Leap Motion VR Developer Mount](https://developer.leapmotion.com/vr).
-* Sorry, this is **Windows Only** for the time being.
+* Requires Leap SDK Version 2.1.3 or newer
+* Source code available now!
 * Works best with discrete graphics cards (NVIDIA, AMD)
 
 ##### How to build (Win32)
