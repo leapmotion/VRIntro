@@ -71,7 +71,7 @@ add_executable(VRIntro ${_add_executable_options} ${VRIntro_SOURCES})
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") # This is the correct way to detect Mac OS X operating system -- see http://www.openguru.com/2009/04/cmake-detecting-platformoperating.html
     set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -Wall -Werror")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -Wall -Werror -Wno-reorder -Wno-unused-variable")
 endif()
 
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
