@@ -6,7 +6,7 @@ class GLShader;
 
 class GridLayer : public InteractionLayer {
 public:
-  GridLayer(const Vector3f& initialEyePos);
+  GridLayer(const EigenTypes::Vector3f& initialEyePos);
   //virtual ~GridLayer ();
 
   virtual void Update(TimeDelta real_time_delta) override;

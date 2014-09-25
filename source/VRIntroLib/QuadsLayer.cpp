@@ -3,7 +3,7 @@
 
 #include "GLController.h"
 
-QuadsLayer::QuadsLayer(const Vector3f& initialEyePos) :
+QuadsLayer::QuadsLayer(const EigenTypes::Vector3f& initialEyePos) :
   InteractionLayer(initialEyePos) {
   // TODO: switch to non-default shader
 }

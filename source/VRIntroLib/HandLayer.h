@@ -6,7 +6,7 @@ class GLShader;
 
 class HandLayer : public InteractionLayer {
 public:
-  HandLayer(const Vector3f& initialEyePos);
+  HandLayer(const EigenTypes::Vector3f& initialEyePos);
   //virtual ~HandLayer ();
 
   virtual void Update(TimeDelta real_time_delta) override;

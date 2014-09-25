@@ -7,7 +7,7 @@ class GLTexture2;
 class FractalLayer : public InteractionLayer
 {
 public:
-  FractalLayer(const Vector3f& initialEyePos);
+  FractalLayer(const EigenTypes::Vector3f& initialEyePos);
   //virtual ~FractalLayer ();
 
   virtual void Update(TimeDelta real_time_delta) override;
@@ -22,5 +22,5 @@ private:
   std::shared_ptr<GLTexture2> m_Texture;
   TimePoint m_Time;
   
-  Vector3f m_AvgPalm;
+  EigenTypes::Vector3f m_AvgPalm;
 };

@@ -6,7 +6,7 @@ class GLTexture2;
 
 class MessageLayer : public InteractionLayer {
 public:
-  MessageLayer(const Vector3f& initialEyePos);
+  MessageLayer(const EigenTypes::Vector3f& initialEyePos);
   //virtual ~MessageLayer ();
 
   virtual void Update(TimeDelta real_time_delta) override {}

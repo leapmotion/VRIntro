@@ -137,10 +137,10 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
   const float OCULUS_BASELINE = 0.064f; // TODO: Get this value directly from the SDK
 
   //TODO: This can be obtained by calling ovrHmd_GetSensorState with ScanoutMidpointSeconds for absolute time.
-  const Matrix4x4f avgView = 0.5f*(m_Oculus.EyeView(0) + m_Oculus.EyeView(1));
-  Matrix4x4f inputTransform = avgView.inverse();
-  Matrix3x3f conventionConv;
-  conventionConv << -Vector3f::UnitX(), -Vector3f::UnitZ(), -Vector3f::UnitY();
+  const EigenTypes::Matrix4x4f avgView = 0.5f*(m_Oculus.EyeView(0) + m_Oculus.EyeView(1));
+  EigenTypes::Matrix4x4f inputTransform = avgView.inverse();
+  EigenTypes::Matrix3x3f conventionConv;
+  conventionConv << -EigenTypes::Vector3f::UnitX(), -EigenTypes::Vector3f::UnitZ(), -EigenTypes::Vector3f::UnitY();
   inputTransform.block<3, 3>(0, 0) *= OCULUS_BASELINE/leap_baseline*conventionConv;
 
   for (auto it = m_Layers.begin(); it != m_Layers.end(); ++it) {
@@ -209,8 +209,8 @@ void VRIntroApp::Render(TimeDelta real_time_delta) const {
   }
 }
 
-void VRIntroApp::RenderEye(TimeDelta real_time_delta, int i, const Matrix4x4f& proj) const {
-  const Matrix4x4f view = m_Oculus.EyeView(i);
+void VRIntroApp::RenderEye(TimeDelta real_time_delta, int i, const EigenTypes::Matrix4x4f& proj) const {
+  const EigenTypes::Matrix4x4f view = m_Oculus.EyeView(i);
 
   m_PassthroughLayer[i]->SetProjection(proj);
   m_PassthroughLayer[i]->Render(real_time_delta);
@@ -353,7 +353,7 @@ TimePoint VRIntroApp::Time() const {
 }
 
 void VRIntroApp::InitializeApplicationLayers() {
-  Vector3f defaultEyePose(0, 1.675f, -5.f);
+  EigenTypes::Vector3f defaultEyePose(0, 1.675f, -5.f);
 
   m_Layers.push_back(std::shared_ptr<GridLayer>(new GridLayer(defaultEyePose)));
   m_Layers.push_back(std::shared_ptr<SpheresLayer>(new SpheresLayer(defaultEyePose)));

@@ -31,7 +31,7 @@ public:
 
   virtual void Update(TimeDelta real_time_delta) override;
   virtual void Render(TimeDelta real_time_delta) const override;
-  void RenderEye(TimeDelta real_time_delta, int i, const Matrix4x4f& proj) const;
+  void RenderEye(TimeDelta real_time_delta, int i, const EigenTypes::Matrix4x4f& proj) const;
 
   virtual EventHandlerAction HandleWindowEvent(const SDL_WindowEvent &ev) override;
   virtual EventHandlerAction HandleKeyboardEvent(const SDL_KeyboardEvent &ev) override;

@@ -3,11 +3,11 @@
 
 #include "GLController.h"
 
-SpheresLayer::SpheresLayer(const Vector3f& initialEyePos) :
+SpheresLayer::SpheresLayer(const EigenTypes::Vector3f& initialEyePos) :
   InteractionLayer(initialEyePos),
   m_Pos(NUM_SPHERES),
-  m_Disp(NUM_SPHERES, Vector3f::Zero()),
-  m_Vel(NUM_SPHERES, Vector3f::Zero()),
+  m_Disp(NUM_SPHERES, EigenTypes::Vector3f::Zero()),
+  m_Vel(NUM_SPHERES, EigenTypes::Vector3f::Zero()),
   m_Colors(NUM_SPHERES),
   m_Mono(NUM_SPHERES),
   m_Radius(NUM_SPHERES),
@@ -26,9 +26,9 @@ SpheresLayer::SpheresLayer(const Vector3f& initialEyePos) :
     float b = (float)rand() / RAND_MAX;
     float dist = 0.55f + (float)rand() / RAND_MAX * 0.2f;
     m_Radius[i] = 0.025f + (float)rand() / RAND_MAX * 0.030f;
-    m_Pos[i] = Vector3f(0.0f, 1.7f, -5.0f) + Vector3f(x, y, z)*dist;
-    m_Colors[i] = Vector3f(r, g, b).normalized();
-    m_Mono[i] = Vector3f::Ones()*m_Colors[i].sum()*0.33f;
+    m_Pos[i] = EigenTypes::Vector3f(0.0f, 1.7f, -5.0f) + EigenTypes::Vector3f(x, y, z)*dist;
+    m_Colors[i] = EigenTypes::Vector3f(r, g, b).normalized();
+    m_Mono[i] = EigenTypes::Vector3f::Ones()*m_Colors[i].sum()*0.33f;
   }
 }
 
@@ -39,8 +39,8 @@ void SpheresLayer::Update(TimeDelta real_time_delta) {
 void SpheresLayer::Render(TimeDelta real_time_delta) const {
   glEnable(GL_BLEND);
   m_Shader->Bind();
-  const Vector3f desiredLightPos(0, 1.5, 0.5);
-  const Vector3f lightPos = m_EyeView*desiredLightPos;
+  const EigenTypes::Vector3f desiredLightPos(0, 1.5, 0.5);
+  const EigenTypes::Vector3f lightPos = m_EyeView*desiredLightPos;
   const int lightPosLoc = m_Shader->LocationOfUniform("light_position");
   glUniform3f(lightPosLoc, lightPos[0], lightPos[1], lightPos[2]);
 
@@ -49,7 +49,7 @@ void SpheresLayer::Render(TimeDelta real_time_delta) const {
 
   for (size_t j = 0; j < NUM_SPHERES; j++) {
     float desaturation = 0.005f / (0.005f + m_Disp[j].squaredNorm());
-    Vector3f color = m_Colors[j]*(1.0f - desaturation) + m_Mono[j]*desaturation;
+    EigenTypes::Vector3f color = m_Colors[j]*(1.0f - desaturation) + m_Mono[j]*desaturation;
 
     m_Sphere.SetRadius(m_Radius[j]);
     m_Sphere.Translation() = (m_Pos[j] + m_Disp[j]).cast<double>();
@@ -101,12 +101,12 @@ void SpheresLayer::ComputePhysics(TimeDelta real_time_delta) {
     static const float A = 0.0015f;
     static const float AA = 0.00005f;
 
-    Vector3f accel = -K*m_Spring*m_Disp[i] -D*m_Damp*m_Vel[i];
+    EigenTypes::Vector3f accel = -K*m_Spring*m_Disp[i] -D*m_Damp*m_Vel[i];
     // std::cout << __LINE__ << ":\t     num_tips = " << (num_tips) << std::endl;
     for (int j = 0; j < num_tips; j++) {
 
       // std::cout << __LINE__ << ":\t       (positions[i] - tips[j]).squaredNorm() = " << ((positions[i] - tips[j]).squaredNorm()) << std::endl;
-      const Vector3f diff = m_Tips[j] - (m_Pos[i] + m_Disp[i]);
+      const EigenTypes::Vector3f diff = m_Tips[j] - (m_Pos[i] + m_Disp[i]);
       float distSq = diff.squaredNorm();
       if (distSq < m_Radius[i]*m_Radius[i]) {
         m_Vel[i] += -diff.normalized();

@@ -6,7 +6,7 @@
 #include "GLTexture2Loader.h"
 #include "GLShaderLoader.h"
 
-SpaceLayer::SpaceLayer(const Vector3f& initialEyePos) :
+SpaceLayer::SpaceLayer(const EigenTypes::Vector3f& initialEyePos) :
   InteractionLayer(initialEyePos, "shaders/solid"),
   m_PopupShader(Resource<GLShader>("shaders/transparent")),
   m_PopupTexture(Resource<GLTexture2>("images/level3_popup.png")),
@@ -43,11 +43,11 @@ void SpaceLayer::Update(TimeDelta real_time_delta) {
   m_OddEven ^= 1;
   UpdateAllPhysics();
   for (int i = 6*m_OddEven, j = 0; j < NUM_STARS; j++) {
-    const Vector3f& r = pos[j];
+    const EigenTypes::Vector3f& r = pos[j];
     m_Buf[i++] = r.x();
     m_Buf[i++] = r.y();
     m_Buf[i++] = r.z();
-    const Vector3f& v = vel[j];
+    const EigenTypes::Vector3f& v = vel[j];
     m_Buf[i++] = v.x();
     m_Buf[i++] = v.y();
     m_Buf[i++] = v.z();
@@ -93,9 +93,9 @@ void SpaceLayer::Render(TimeDelta real_time_delta) const {
 
 void SpaceLayer::RenderPopup() const {
   m_PopupShader->Bind();
-  Matrix4x4f modelView = m_ModelView;
+  EigenTypes::Matrix4x4f modelView = m_ModelView;
   modelView.block<3, 1>(0, 3) += modelView.block<3, 3>(0, 0)*m_EyePos;
-  //modelView.block<3, 3>(0, 0) = Matrix3x3f::Identity();
+  //modelView.block<3, 3>(0, 0) = EigenTypes::Matrix3x3f::Identity();
   GLShaderMatrices::UploadUniforms(*m_PopupShader, modelView.cast<double>(), m_Projection.cast<double>(), BindFlags::NONE);
 
   glActiveTexture(GL_TEXTURE0 + 0);
@@ -119,20 +119,20 @@ void SpaceLayer::RenderPopup() const {
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-Vector3f SpaceLayer::GenerateVector(const Vector3f& center, float radius) {
+EigenTypes::Vector3f SpaceLayer::GenerateVector(const EigenTypes::Vector3f& center, float radius) {
   const float rand_max(RAND_MAX);
   float dx, dy, dz;
-  Vector3f dr;
+  EigenTypes::Vector3f dr;
   do {
     dx = (2.0f*static_cast<float>(rand())/rand_max - 1.0f)*radius;
     dy = (2.0f*static_cast<float>(rand())/rand_max - 1.0f)*radius;
     dz = (2.0f*static_cast<float>(rand())/rand_max - 1.0f)*radius;
-    dr = Vector3f(dx, dy, dz);
+    dr = EigenTypes::Vector3f(dx, dy, dz);
   } while (dr.squaredNorm() > radius*radius);
   return center + dr * (dr.squaredNorm()/(radius*radius)) * (dr.squaredNorm()/(radius*radius));
 }
 
-Vector3f SpaceLayer::InitialVelocity(float mass, const Vector3f& normal, const Vector3f& dr) {
+EigenTypes::Vector3f SpaceLayer::InitialVelocity(float mass, const EigenTypes::Vector3f& normal, const EigenTypes::Vector3f& dr) {
   return std::sqrt(mass/dr.norm())*normal.cross(dr).normalized();
 }
 
@@ -143,15 +143,15 @@ void SpaceLayer::InitPhysics() {
   for (int i = 0; i < NUM_GALAXIES; i++) {
     m_GalaxyPos[i] = GenerateVector(1.2f*m_EyePos.cast<float>(), 1.0f);
     if (i == 0) {
-      m_GalaxyPos[i] = m_EyePos.cast<float>() + m_EyeView.transpose().cast<float>()*Vector3f(0, -0.2f, -1.2f);
+      m_GalaxyPos[i] = m_EyePos.cast<float>() + m_EyeView.transpose().cast<float>()*EigenTypes::Vector3f(0, -0.2f, -1.2f);
     }
     m_GalaxyVel[i] = GenerateVector(-1e-3f*(m_GalaxyPos[i] - 1.1f*m_EyePos.cast<float>()), 0.0004f);
     m_GalaxyMass[i] = static_cast<float>(STARS_PER)*5e-11f;
-    m_GalaxyNormal[i] = GenerateVector(Vector3f::Zero(), 1.0).normalized();
+    m_GalaxyNormal[i] = GenerateVector(EigenTypes::Vector3f::Zero(), 1.0).normalized();
 
     for (int j = 0; j < STARS_PER; j++) {
       const size_t index = i*STARS_PER + j;
-      Vector3f dr = GenerateVector(Vector3f::Zero(), 0.5);
+      EigenTypes::Vector3f dr = GenerateVector(EigenTypes::Vector3f::Zero(), 0.5);
 
       // Project to disc
       dr -= 0.4f*atan(dr.dot(m_GalaxyNormal[i])/0.5f)*m_GalaxyNormal[i];
@@ -162,13 +162,13 @@ void SpaceLayer::InitPhysics() {
   }
 }
 
-void SpaceLayer::UpdateV(int type, const Vector3f& p, Vector3f& v, int galaxy) {
+void SpaceLayer::UpdateV(int type, const EigenTypes::Vector3f& p, EigenTypes::Vector3f& v, int galaxy) {
   if (galaxy < NUM_GALAXIES) {
-    const Vector3f dr = m_GalaxyPos[galaxy] - p;
+    const EigenTypes::Vector3f dr = m_GalaxyPos[galaxy] - p;
     v += m_GalaxyMass[galaxy]*dr.normalized()/(0.3e-3f + dr.squaredNorm());
   } else {
-    const Vector3f dr = m_SkeletonHands[galaxy - NUM_GALAXIES].avgExtended.cast<float>() - (p + (0.1f + static_cast<float>(type)*0.00003f)*v);
-    const Vector3f dv = 1e-3f*dr/(1e-2f + dr.squaredNorm());
+    const EigenTypes::Vector3f dr = m_SkeletonHands[galaxy - NUM_GALAXIES].avgExtended.cast<float>() - (p + (0.1f + static_cast<float>(type)*0.00003f)*v);
+    const EigenTypes::Vector3f dv = 1e-3f*dr/(1e-2f + dr.squaredNorm());
     v += dv;
   }
 }
@@ -176,31 +176,31 @@ void SpaceLayer::UpdateV(int type, const Vector3f& p, Vector3f& v, int galaxy) {
 void SpaceLayer::UpdateAllPhysics() {
   // Update stars
   for (size_t i = 0; i < NUM_STARS; i++) {
-    Vector3f tempV = vel[i];
+    EigenTypes::Vector3f tempV = vel[i];
     for (size_t j = 0; j < NUM_GALAXIES + m_SkeletonHands.size(); j++) {
       UpdateV(i, pos[i], tempV, j);
     }
-    const Vector3f tempP = pos[i] + 0.667f*tempV;
+    const EigenTypes::Vector3f tempP = pos[i] + 0.667f*tempV;
     for (size_t j = 0; j < NUM_GALAXIES + m_SkeletonHands.size(); j++) {
       UpdateV(i, tempP, vel[i], j);
     }
     pos[i] += 0.25*tempV + 0.75*vel[i];
 
     if ((pos[i] - m_EyePos.cast<float>()).squaredNorm() > 50) {
-      pos[i] = m_EyePos.cast<float>() - 10*vel[i] + m_EyeView.transpose().cast<float>()*Vector3f(0, 0.5, 0);
+      pos[i] = m_EyePos.cast<float>() - 10*vel[i] + m_EyeView.transpose().cast<float>()*EigenTypes::Vector3f(0, 0.5, 0);
       vel[i].setZero();
     }
   }
 
   // Update galaxies
   for (size_t i = 0; i < NUM_GALAXIES; i++) {
-    Vector3f tempV = m_GalaxyVel[i];
+    EigenTypes::Vector3f tempV = m_GalaxyVel[i];
     for (size_t j = 0; j < NUM_GALAXIES + m_SkeletonHands.size(); j++) {
       if (i != j) { // Galaxy does not affect itself
         UpdateV(0, m_GalaxyPos[i], m_GalaxyVel[i], j);
       }
     }
-    const Vector3f tempP = m_GalaxyPos[i] + 0.667f*tempV;
+    const EigenTypes::Vector3f tempP = m_GalaxyPos[i] + 0.667f*tempV;
     for (size_t j = 0; j < NUM_GALAXIES + m_SkeletonHands.size(); j++) {
       if (i != j) { // Galaxy does not affect itself
         UpdateV(0, tempP, m_GalaxyVel[i], j);

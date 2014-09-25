@@ -23,28 +23,28 @@ void APIFrameSupplier::PopulateInteractionLayer(InteractionLayer& target, const 
   target.m_TipsIndex.clear();
   target.m_Palms.clear();
   target.m_SkeletonHands.clear();
-  Matrix4x4f worldTransform = Matrix4x4f(worldTransformRaw);
-  Matrix3x3f rotation = worldTransform.block<3, 3>(0, 0);
-  Vector3f translation = worldTransform.block<3, 1>(0, 3);
+  EigenTypes::Matrix4x4f worldTransform = EigenTypes::Matrix4x4f(worldTransformRaw);
+  EigenTypes::Matrix3x3f rotation = worldTransform.block<3, 3>(0, 0);
+  EigenTypes::Vector3f translation = worldTransform.block<3, 1>(0, 3);
 
   for (int i = 0; i < frame.hands().count(); i++) {
     const Leap::Hand& hand = frame.hands()[i];
     SkeletonHand outHand;
     outHand.confidence = hand.confidence();
 
-    const Vector3f palm = rotation*hand.palmPosition().toVector3<Vector3f>() + translation;
-    const Vector3f palmDir = (rotation*hand.direction().toVector3<Vector3f>()).normalized();
-    const Vector3f palmNormal = (rotation*hand.palmNormal().toVector3<Vector3f>()).normalized();
-    const Vector3f palmSide = palmDir.cross(palmNormal).normalized();
+    const EigenTypes::Vector3f palm = rotation*hand.palmPosition().toVector3<EigenTypes::Vector3f>() + translation;
+    const EigenTypes::Vector3f palmDir = (rotation*hand.direction().toVector3<EigenTypes::Vector3f>()).normalized();
+    const EigenTypes::Vector3f palmNormal = (rotation*hand.palmNormal().toVector3<EigenTypes::Vector3f>()).normalized();
+    const EigenTypes::Vector3f palmSide = palmDir.cross(palmNormal).normalized();
     outHand.center = palm;
     target.m_Palms.push_back(palm);
-    target.m_PalmOrientations.push_back(rotation*Matrix3x3f(hand.basis().toArray3x3())*rotation.transpose());
-    Vector3f sumExtended = Vector3f::Zero();
+    target.m_PalmOrientations.push_back(rotation*EigenTypes::Matrix3x3f(hand.basis().toArray3x3())*rotation.transpose());
+    EigenTypes::Vector3f sumExtended = EigenTypes::Vector3f::Zero();
     int numExtended = 0;
 
     for (int j = 0; j < 5; j++) {
       const Leap::Finger& finger = hand.fingers()[j];
-      target.m_Tips.push_back(rotation*finger.tipPosition().toVector3<Vector3f>() + translation);
+      target.m_Tips.push_back(rotation*finger.tipPosition().toVector3<EigenTypes::Vector3f>() + translation);
       target.m_TipsExtended.push_back(hand.grabStrength() > 0.9f || finger.isExtended());
       if (target.m_TipsExtended.back()) {
         sumExtended += target.m_Tips.back();
@@ -55,14 +55,14 @@ void APIFrameSupplier::PopulateInteractionLayer(InteractionLayer& target, const 
 
       for (int k = 0; k < 3; k++) {
         Leap::Bone bone = finger.bone(static_cast<Leap::Bone::Type>(k + 1));
-        outHand.joints[j*3 + k] = rotation*bone.nextJoint().toVector3<Vector3f>() + translation;
-        outHand.jointConnections[j*3 + k] = rotation*bone.prevJoint().toVector3<Vector3f>() + translation;
+        outHand.joints[j*3 + k] = rotation*bone.nextJoint().toVector3<EigenTypes::Vector3f>() + translation;
+        outHand.jointConnections[j*3 + k] = rotation*bone.prevJoint().toVector3<EigenTypes::Vector3f>() + translation;
       }
     }
     outHand.avgExtended = numExtended == 0 ? palm : sumExtended/static_cast<float>(numExtended);
 
     const float thumbDist = (outHand.jointConnections[0] - palm).norm();
-    const Vector3f wrist = palm - thumbDist*(palmDir*0.8f + static_cast<float>(hand.isLeft() ? -1 : 1)*palmSide*0.5f);
+    const EigenTypes::Vector3f wrist = palm - thumbDist*(palmDir*0.8f + static_cast<float>(hand.isLeft() ? -1 : 1)*palmSide*0.5f);
 
     for (int j = 0; j < 4; j++) {
       outHand.joints[15 + j] = outHand.jointConnections[3 * j];
@@ -74,7 +74,7 @@ void APIFrameSupplier::PopulateInteractionLayer(InteractionLayer& target, const 
     outHand.jointConnections[20] = outHand.jointConnections[0];
 
     // Arm
-    const Vector3f elbow = rotation*hand.arm().elbowPosition().toVector3<Vector3f>() + translation;
+    const EigenTypes::Vector3f elbow = rotation*hand.arm().elbowPosition().toVector3<EigenTypes::Vector3f>() + translation;
     outHand.joints[21] = elbow - thumbDist*(hand.isLeft() ? -1 : 1)*palmSide*0.5;
     outHand.jointConnections[21] = wrist;
     outHand.joints[22] = elbow + thumbDist*(hand.isLeft() ? -1 : 1)*palmSide*0.5;

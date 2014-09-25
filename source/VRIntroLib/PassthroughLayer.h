@@ -18,7 +18,7 @@ public:
   void SetImage(const unsigned char* data, int width, int height);
   void SetColorImage(const unsigned char* data);
   void SetDistortion(const float* data);
-  //void SetProjection(const Matrix4x4f& proj) { m_projection = proj; } // HACK until I can do this a better way
+  //void SetProjection(const EigenTypes::Matrix4x4f& proj) { m_projection = proj; } // HACK until I can do this a better way
 
   virtual void Update(TimeDelta real_time_delta) override {}
   virtual void Render(TimeDelta real_time_delta) const override;
@@ -37,7 +37,7 @@ private:
   mutable GLTexture2 m_image;
   mutable GLTexture2 m_colorimage;
   mutable GLTexture2 m_distortion;
-  //Matrix4x4f m_projection
+  //EigenTypes::Matrix4x4f m_projection
   mutable GLBuffer m_Buffer;
   float m_Gamma;
   float m_Brightness;

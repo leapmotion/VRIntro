@@ -3,7 +3,7 @@
 
 #include "GLController.h"
 
-HandLayer::HandLayer(const Vector3f& initialEyePos) :
+HandLayer::HandLayer(const EigenTypes::Vector3f& initialEyePos) :
   InteractionLayer(initialEyePos) {
   // TODO: switch to non-default shader
 }

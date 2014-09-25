@@ -6,10 +6,10 @@
 #include "GLTexture2.h"
 #include "GLTexture2Loader.h"
 
-FractalLayer::FractalLayer(const Vector3f& initialEyePos) :
-  InteractionLayer(Vector3f::Zero(), "shaders/fractal"),
+FractalLayer::FractalLayer(const EigenTypes::Vector3f& initialEyePos) :
+  InteractionLayer(EigenTypes::Vector3f::Zero(), "shaders/fractal"),
   m_Texture(Resource<GLTexture2>("images/random.png")),
-  m_AvgPalm(Vector3f::Zero()),
+  m_AvgPalm(EigenTypes::Vector3f::Zero()),
   m_Time(0) {
 
   static const float edges[] = {
@@ -39,11 +39,11 @@ void FractalLayer::Update(TimeDelta real_time_delta) {
 
   if (m_Palms.size() > 0) {
 
-    Vector3f positionSum = Vector3f::Zero();
+    EigenTypes::Vector3f positionSum = EigenTypes::Vector3f::Zero();
     for (size_t i = 0; i < m_Palms.size(); i++) {
       positionSum += m_EyeView*(m_Palms[i] - m_EyePos);
     }
-    m_AvgPalm = (1 - FILTER)*m_AvgPalm + FILTER*(Vector3f(-0.8f, .156f, 0)+0.2f*positionSum/static_cast<float>(m_Palms.size()));
+    m_AvgPalm = (1 - FILTER)*m_AvgPalm + FILTER*(EigenTypes::Vector3f(-0.8f, .156f, 0)+0.2f*positionSum/static_cast<float>(m_Palms.size()));
   }
 }
 
@@ -51,9 +51,9 @@ void FractalLayer::Render(TimeDelta real_time_delta) const {
   glDepthMask(GL_FALSE);
 
   m_Shader->Bind();
-  Matrix4x4f modelView = m_ModelView;
+  EigenTypes::Matrix4x4f modelView = m_ModelView;
   modelView.block<3, 1>(0, 3) += modelView.block<3, 3>(0, 0)*m_EyePos;
-  modelView.block<3, 3>(0, 0) = Matrix3x3f::Identity();
+  modelView.block<3, 3>(0, 0) = EigenTypes::Matrix3x3f::Identity();
   GLShaderMatrices::UploadUniforms(*m_Shader, modelView.cast<double>(), m_Projection.cast<double>(), BindFlags::NONE);
 
   glActiveTexture(GL_TEXTURE0 + 0);

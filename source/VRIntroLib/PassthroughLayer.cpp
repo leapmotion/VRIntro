@@ -8,7 +8,7 @@
 #include "GLShaderLoader.h"
 
 PassthroughLayer::PassthroughLayer() :
-  InteractionLayer(Vector3f::Zero(), "shaders/passthrough"),
+  InteractionLayer(EigenTypes::Vector3f::Zero(), "shaders/passthrough"),
   m_image(GLTexture2Params(640, 240, GL_LUMINANCE), GLTexture2PixelDataReference(GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL, 0)),
   m_colorimage(GLTexture2Params(672, 600, GL_RGBA), GLTexture2PixelDataReference(GL_RGBA, GL_UNSIGNED_BYTE, NULL, 0)),
   m_distortion(GLTexture2Params(64, 64, GL_RG32F), GLTexture2PixelDataReference(GL_RG, GL_FLOAT, NULL, 0)),
@@ -96,7 +96,7 @@ void PassthroughLayer::SetDistortion(const float* data) {
 void PassthroughLayer::Render(TimeDelta real_time_delta) const {
   if (m_HasData) {
     m_Shader->Bind();
-    GLShaderMatrices::UploadUniforms(*m_Shader, Matrix4x4::Identity(), m_Projection.cast<double>(), BindFlags::NONE);
+    GLShaderMatrices::UploadUniforms(*m_Shader, EigenTypes::Matrix4x4::Identity(), m_Projection.cast<double>(), BindFlags::NONE);
 
     glActiveTexture(GL_TEXTURE0 + 0);
     if (m_UseColor) {
@@ -151,7 +151,7 @@ void PassthroughLayer::Render(TimeDelta real_time_delta) const {
 
 void PassthroughLayer::RenderPopup() const {
   m_PopupShader->Bind();
-  GLShaderMatrices::UploadUniforms(*m_PopupShader, Matrix4x4::Identity(), m_Projection.cast<double>(), BindFlags::NONE);
+  GLShaderMatrices::UploadUniforms(*m_PopupShader, EigenTypes::Matrix4x4::Identity(), m_Projection.cast<double>(), BindFlags::NONE);
 
   glActiveTexture(GL_TEXTURE0 + 0);
   glUniform1i(m_PopupShader->LocationOfUniform("texture"), 0);

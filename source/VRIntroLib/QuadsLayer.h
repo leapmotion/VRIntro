@@ -6,7 +6,7 @@ class GLShader;
 
 class QuadsLayer : public InteractionLayer {
 public:
-  QuadsLayer(const Vector3f& initialEyePos);
+  QuadsLayer(const EigenTypes::Vector3f& initialEyePos);
   //virtual ~QuadsLayer ();
 
   virtual void Update(TimeDelta real_time_delta) override;

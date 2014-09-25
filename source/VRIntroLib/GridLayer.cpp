@@ -4,7 +4,7 @@
 #include "GLController.h"
 #include <math.h>
 
-GridLayer::GridLayer(const Vector3f& initialEyePos) :
+GridLayer::GridLayer(const EigenTypes::Vector3f& initialEyePos) :
   InteractionLayer(initialEyePos),
   m_DivTheta(22),
   m_DivPhi(40),

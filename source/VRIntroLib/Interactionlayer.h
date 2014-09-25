@@ -12,31 +12,31 @@ class GLShader;
 
 struct SkeletonHand {
   float confidence;
-  Vector3f center;
-  //stdvectorV3f tips[5];
-  Vector3f joints[23];
-  Vector3f jointConnections[23];
-  Vector3f avgExtended;
+  EigenTypes::Vector3f center;
+  //EigenTypes::stdvectorV3f tips[5];
+  EigenTypes::Vector3f joints[23];
+  EigenTypes::Vector3f jointConnections[23];
+  EigenTypes::Vector3f avgExtended;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 class InteractionLayer : public RenderableEventHandler {
 public:
-  InteractionLayer(const Vector3f& initialEyePos, const std::string& shaderName = "material");
-  void UpdateEyePos(const Vector3f& eyePos) { m_EyePos = eyePos; }
-  void UpdateEyeView(const Matrix3x3f& eyeView) { m_EyeView = eyeView; }
+  InteractionLayer(const EigenTypes::Vector3f& initialEyePos, const std::string& shaderName = "material");
+  void UpdateEyePos(const EigenTypes::Vector3f& eyePos) { m_EyePos = eyePos; }
+  void UpdateEyeView(const EigenTypes::Matrix3x3f& eyeView) { m_EyeView = eyeView; }
   float& Alpha() { return m_Alpha; }
-  void SetProjection(const Matrix4x4f& value) { m_Projection = value; m_Renderer.GetProjection().Matrix() = value.cast<double>(); }
-  void SetModelView(const Matrix4x4f& value) { m_ModelView = value; m_Renderer.GetModelView().Matrix() = value.cast<double>(); }
+  void SetProjection(const EigenTypes::Matrix4x4f& value) { m_Projection = value; m_Renderer.GetProjection().Matrix() = value.cast<double>(); }
+  void SetModelView(const EigenTypes::Matrix4x4f& value) { m_ModelView = value; m_Renderer.GetModelView().Matrix() = value.cast<double>(); }
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   // Hack: Making these public for now for easier access
   std::vector<SkeletonHand> m_SkeletonHands;
-  stdvectorV3f m_Palms;
-  std::vector<Matrix3x3f, Eigen::aligned_allocator<Matrix3x3f>> m_PalmOrientations;
-  stdvectorV3f m_Tips;
+  EigenTypes::stdvectorV3f m_Palms;
+  std::vector<EigenTypes::Matrix3x3f, Eigen::aligned_allocator<EigenTypes::Matrix3x3f>> m_PalmOrientations;
+  EigenTypes::stdvectorV3f m_Tips;
   std::vector<bool> m_TipsLeftRight;
   std::vector<bool> m_TipsExtended;
   std::vector<int> m_TipsIndex;
@@ -48,15 +48,15 @@ protected:
   mutable Sphere m_Sphere;
   mutable Cylinder m_Cylinder;
 
-  Matrix4x4f m_Projection;
-  Matrix4x4f m_ModelView;
-  Vector3f m_EyePos;
-  Matrix3x3f m_EyeView;
+  EigenTypes::Matrix4x4f m_Projection;
+  EigenTypes::Matrix4x4f m_ModelView;
+  EigenTypes::Vector3f m_EyePos;
+  EigenTypes::Matrix3x3f m_EyeView;
 
   float m_Alpha;
 
 private:
   void DrawSkeletonHand(const SkeletonHand& hand, float alpha) const;
-  void DrawCylinder(const Vector3f& p0, const Vector3f& p1, float radius, float alpha) const;
-  void DrawSphere(const Vector3f& p0, float radius, float alpha) const;
+  void DrawCylinder(const EigenTypes::Vector3f& p0, const EigenTypes::Vector3f& p1, float radius, float alpha) const;
+  void DrawSphere(const EigenTypes::Vector3f& p0, float radius, float alpha) const;
 };

@@ -6,8 +6,8 @@
 #include "GLTexture2.h"
 #include "GLTexture2Loader.h"
 
-MessageLayer::MessageLayer(const Vector3f& initialEyePos) :
-  InteractionLayer(Vector3f::Zero(), "shaders/transparent"),
+MessageLayer::MessageLayer(const EigenTypes::Vector3f& initialEyePos) :
+  InteractionLayer(EigenTypes::Vector3f::Zero(), "shaders/transparent"),
   m_HelpTexture(Resource<GLTexture2>("images/help.png")),
   m_LowFPSTexture(Resource<GLTexture2>("images/lowfps.png")),
   m_NoOculusTexture(Resource<GLTexture2>("images/no_oculus.png")) {
@@ -47,9 +47,9 @@ void MessageLayer::Render(TimeDelta real_time_delta) const {
   glDepthMask(GL_FALSE);
 
   m_Shader->Bind();
-  Matrix4x4f modelView = m_ModelView;
+  EigenTypes::Matrix4x4f modelView = m_ModelView;
   modelView.block<3, 1>(0, 3) += modelView.block<3, 3>(0, 0)*m_EyePos;
-  modelView.block<3, 3>(0, 0) = Matrix3x3f::Identity();
+  modelView.block<3, 3>(0, 0) = EigenTypes::Matrix3x3f::Identity();
   GLShaderMatrices::UploadUniforms(*m_Shader, modelView.cast<double>(), m_Projection.cast<double>(), BindFlags::NONE);
 
   glActiveTexture(GL_TEXTURE0 + 0);
