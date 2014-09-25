@@ -23,6 +23,8 @@
 #if _WIN32
 #pragma comment(lib, "winmm.lib")
 #pragma comment(lib, "Ws2_32.lib")
+
+#include "Mirror.h"
 #endif
 
 #include "Leap.h"
@@ -34,12 +36,32 @@
 #undef Success
 #endif
 
-VRIntroApp::VRIntroApp() :
+VRIntroApp::VRIntroApp(bool showMirror) :
   m_HealthWarningDismissed(false),
   m_HelpToggled(false),
   m_LeapHMDModeWasOn(false),
   m_OculusMode(true),
+  m_ShowMirror(showMirror),
   m_Selected(0) {}
+
+void VRIntroApp::InitMirror() {
+#if _WIN32
+  if (m_ShowMirror) {
+    m_MirrorThread = std::thread(RunMirror, GetHwnd(), std::ref(m_MirrorHWND));
+  }
+#else
+  SDL_Window_ID = app.GetWindowID();
+#endif
+}
+
+void VRIntroApp::ShutdownMirror() {
+  if (m_MirrorThread.joinable()) {
+#if _WIN32
+    PostMessage(m_MirrorHWND, WM_CLOSE, 0, 0);
+#endif
+    m_MirrorThread.join();
+  }
+}
 
 void VRIntroApp::Initialize() {
   PlatformInitializer init;
@@ -82,6 +104,7 @@ void VRIntroApp::Initialize() {
     throw std::runtime_error("Oculus initialization failed");
   }
   
+  InitMirror();
 
   // TODO: Add to components
   ovrHmd_RecenterPose(m_Oculus.GetHMD());
@@ -90,6 +113,7 @@ void VRIntroApp::Initialize() {
 
 void VRIntroApp::Shutdown() {
   ShutdownApplicationLayers();                // Destroy the application layers, from top (last) to bottom (first).
+  ShutdownMirror();
 
   m_Oculus.Destroy();
   FreeImage_DeInitialise();                   // Shut down FreeImage.

@@ -18,11 +18,13 @@
 // Interface class for top-level control of an application.
 class VRIntroApp : public Application {
 public:
-  VRIntroApp();
+  VRIntroApp(bool showMirror = false);
   // Application interface methods.  See Application for comments and details.
 
   virtual void Initialize() override;
   virtual void Shutdown() override;
+  void InitMirror();
+  void ShutdownMirror();
 
   virtual void Update(TimeDelta real_time_delta) override;
   virtual void Render(TimeDelta real_time_delta) const override;
@@ -83,6 +85,10 @@ private:
   TimePoint m_applicationTime;
   std::vector<std::shared_ptr<InteractionLayer>> m_Layers;
   std::shared_ptr<PassthroughLayer> m_PassthroughLayer[2];
+  
+  std::thread m_MirrorThread;
+  HWND m_MirrorHWND;
+  bool m_ShowMirror;
 
   int m_Selected;
   bool m_HealthWarningDismissed;
