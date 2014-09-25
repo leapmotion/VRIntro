@@ -7,11 +7,8 @@ include(Common)
 project(VRIntro)
 
 set(VRIntro_SOURCES
-    main.cpp
     VRIntroApp.cpp
     VRIntroApp.h
-    LeapListener.cpp
-    LeapListener.h
     InteractionLayer.cpp
     InteractionLayer.h
     PassthroughLayer.cpp
@@ -36,10 +33,15 @@ set(VRIntro_SOURCES
     QuadsLayer.h
     PlatformInitializer.h
     PrecisionTimer.h
-    
     IFrameSupplier.h
+)
+
+set(VRIntroExec_SOURCES
+    main.cpp
     APIFrameSupplier.h
     APIFrameSupplier.cpp
+    LeapListener.cpp
+    LeapListener.h
 )
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -71,7 +73,8 @@ if(NOT SHOW_CONSOLE AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
     set(_add_executable_options WIN32)
 endif()
 
-add_executable(VRIntro ${_add_executable_options} ${VRIntro_SOURCES})
+add_library(VRIntroLib STATIC ${VRIntro_SOURCES})
+add_executable(VRIntro ${_add_executable_options} ${VRIntroExec_SOURCES})
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") # This is the correct way to detect Mac OS X operating system -- see http://www.openguru.com/2009/04/cmake-detecting-platformoperating.html
     set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
@@ -90,14 +93,15 @@ endif()
 find_package(Components)
 # The target_link_components function finds and links exactly the minimal set of libraries
 # needed by the specified components.
-target_link_components(VRIntro Application GLController GLShaderLoader GLTexture2Loader Primitives SDLController OculusVR)
-
-target_package(VRIntro Leap)
-target_package(VRIntro Eigen)
+target_link_components(VRIntroLib Application GLController GLShaderLoader GLTexture2Loader Primitives SDLController OculusVR)
+target_package(VRIntroLib Eigen)
 
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
-  target_link_libraries(VRIntro comctl32.lib Dwmapi.lib)
+  target_link_libraries(VRIntroLib comctl32.lib Dwmapi.lib)
 endif()
+
+target_link_libraries(VRIntro VRIntroLib)
+target_package(VRIntro Leap)
 
 ###################################################################################################
 # Resource rules
