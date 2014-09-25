@@ -11,6 +11,7 @@ int main(int argc, char **argv) {
 
   VRIntroApp app(showMirror);
   app.SetFrameSupplier(&supplier);
-  RunApplication(app);
+  app.Run();
+
   return 0;
 }

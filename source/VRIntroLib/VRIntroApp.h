@@ -27,6 +27,7 @@ public:
   void ShutdownMirror();
 
   void SetFrameSupplier(IFrameSupplier* supplier);
+  void Run() { RunApplication(*this); }
 
   virtual void Update(TimeDelta real_time_delta) override;
   virtual void Render(TimeDelta real_time_delta) const override;
