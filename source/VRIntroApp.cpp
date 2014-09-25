@@ -43,7 +43,10 @@ VRIntroApp::VRIntroApp() :
 
 void VRIntroApp::Initialize() {
   PlatformInitializer init;
-  m_Selected = 0;
+  
+  m_LeapController.addListener(m_LeapListener);
+  m_LeapController.setPolicyFlags(static_cast<Leap::Controller::PolicyFlag>(Leap::Controller::POLICY_IMAGES | Leap::Controller::POLICY_OPTIMIZE_HMD));
+
   SDLControllerParams params;
   params.transparentWindow = false;
   params.fullscreen = false;
@@ -79,19 +82,6 @@ void VRIntroApp::Initialize() {
     throw std::runtime_error("Oculus initialization failed");
   }
   
-  m_LeapController.addListener(m_LeapListener);
-
-  // Temporarily turn on head_mounted_display_mode to on if it was off
-  m_LeapHMDModeWasOn = m_LeapController.config().getBool("head_mounted_display_mode");
-
-  int flags = m_LeapController.policyFlags();
-  flags |= Leap::Controller::POLICY_IMAGES;
-
-  m_LeapHMDModeWasOn = (flags & Leap::Controller::POLICY_OPTIMIZE_HMD) != 0;
-  if (!m_LeapHMDModeWasOn) {
-    flags |= Leap::Controller::POLICY_OPTIMIZE_HMD;
-  }
-  m_LeapController.setPolicyFlags(static_cast<Leap::Controller::PolicyFlag>(flags));
 
   // TODO: Add to components
   ovrHmd_RecenterPose(m_Oculus.GetHMD());
@@ -101,17 +91,11 @@ void VRIntroApp::Initialize() {
 void VRIntroApp::Shutdown() {
   ShutdownApplicationLayers();                // Destroy the application layers, from top (last) to bottom (first).
 
-  if (!m_LeapHMDModeWasOn) {
-    int flags = m_LeapController.policyFlags();
-    flags &= ~Leap::Controller::POLICY_OPTIMIZE_HMD;
-    m_LeapController.setPolicyFlags(static_cast<Leap::Controller::PolicyFlag>(flags));
-  }
-  m_LeapController.removeListener(m_LeapListener);
-
   m_Oculus.Destroy();
   FreeImage_DeInitialise();                   // Shut down FreeImage.
   m_GLController.Shutdown();                  // This shuts down the general GL state.
   m_SDLController.Shutdown();                 // This shuts down everything SDL-related.
+  m_LeapController.removeListener(m_LeapListener);
 }
 
 void VRIntroApp::Update(TimeDelta real_time_delta) {
