@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "VRIntroApp.h"
 #include "APIFrameSupplier.h"
+#include "VRIntroLib/VRIntroApp.h"
 
 Uint32 SDL_Window_ID;
 

@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "PassthroughLayer.h"
+#include "VRIntroLib/PassthroughLayer.h"
 #include "APIFrameSupplier.h"
 
 #include "Leap.h"

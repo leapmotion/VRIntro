@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IFrameSupplier.h"
+#include "VRIntroLib/IFrameSupplier.h"
 #include "LeapListener.h"
 #include "Leap.h"
 
