@@ -4,8 +4,6 @@
 #include "GLController.h"
 #include "RenderableEventHandler.h"
 #include "SDLController.h"
-#include "LeapListener.h"
-#include "Leap.h"
 #include "OculusVR.h"
 #include "PassthroughLayer.h"
 #include "RenderState.h"
@@ -14,6 +12,8 @@
 #include <vector>
 #include <mutex>
 #include <thread>
+
+class IFrameSupplier;
 
 // Interface class for top-level control of an application.
 class VRIntroApp : public Application {
@@ -25,6 +25,8 @@ public:
   virtual void Shutdown() override;
   void InitMirror();
   void ShutdownMirror();
+
+  void SetFrameSupplier(IFrameSupplier* supplier);
 
   virtual void Update(TimeDelta real_time_delta) override;
   virtual void Render(TimeDelta real_time_delta) const override;
@@ -76,15 +78,13 @@ private:
     return EventHandlerAction::PASS_ON;
   }
 
-  LeapListener m_LeapListener;
-  Leap::Controller m_LeapController;
-
   mutable OculusVR m_Oculus;
   SDLController m_SDLController;
   GLController m_GLController;
   TimePoint m_applicationTime;
   std::vector<std::shared_ptr<InteractionLayer>> m_Layers;
   std::shared_ptr<PassthroughLayer> m_PassthroughLayer[2];
+  IFrameSupplier* m_FrameSupplier;
   
   std::thread m_MirrorThread;
   HWND m_MirrorHWND;
@@ -93,7 +93,6 @@ private:
   int m_Selected;
   bool m_HealthWarningDismissed;
   bool m_HelpToggled;
-  bool m_LeapHMDModeWasOn;
   bool m_OculusMode;
 
   int m_Width;

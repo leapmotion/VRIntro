@@ -5,10 +5,6 @@
 #include "Primitives.h"
 
 #include "EigenTypes.h"
-namespace Leap
-{
-class Frame;
-}
 
 #include <memory>
 
@@ -28,7 +24,6 @@ struct SkeletonHand {
 class InteractionLayer : public RenderableEventHandler {
 public:
   InteractionLayer(const Vector3f& initialEyePos, const std::string& shaderName = "material");
-  void UpdateLeap(const Leap::Frame& frame, const Matrix4x4f& worldTransform);
   void UpdateEyePos(const Vector3f& eyePos) { m_EyePos = eyePos; }
   void UpdateEyeView(const Matrix3x3f& eyeView) { m_EyeView = eyeView; }
   float& Alpha() { return m_Alpha; }
@@ -36,6 +31,15 @@ public:
   void SetModelView(const Matrix4x4f& value) { m_ModelView = value; m_Renderer.GetModelView().Matrix() = value.cast<double>(); }
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  // Hack: Making these public for now for easier access
+  std::vector<SkeletonHand> m_SkeletonHands;
+  stdvectorV3f m_Palms;
+  std::vector<Matrix3x3f, Eigen::aligned_allocator<Matrix3x3f>> m_PalmOrientations;
+  stdvectorV3f m_Tips;
+  std::vector<bool> m_TipsLeftRight;
+  std::vector<bool> m_TipsExtended;
+  std::vector<int> m_TipsIndex;
 
 protected:
   void DrawSkeletonHands() const;
@@ -49,13 +53,6 @@ protected:
   Vector3f m_EyePos;
   Matrix3x3f m_EyeView;
 
-  std::vector<SkeletonHand> m_SkeletonHands;
-  stdvectorV3f m_Palms;
-  std::vector<Matrix3x3f, Eigen::aligned_allocator<Matrix3x3f>> m_PalmOrientations;
-  stdvectorV3f m_Tips;
-  std::vector<bool> m_TipsLeftRight;
-  std::vector<bool> m_TipsExtended;
-  std::vector<int> m_TipsIndex;
   float m_Alpha;
 
 private:

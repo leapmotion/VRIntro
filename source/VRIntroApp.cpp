@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "IFrameSupplier.h"
 #include "VRIntroApp.h"
 #include "SpheresLayer.h"
 #include "SpaceLayer.h"
@@ -27,8 +28,6 @@
 #include "Mirror.h"
 #endif
 
-#include "Leap.h"
-
 // There is a really dumb compile error on Linux: "Eigen/src/Core/util/Constants.h:369:2:
 // error: #error The preprocessor symbol 'Success' is defined, possibly by the X11 header file X.h",
 // so this undef is necessary until we can figure out a better solution.
@@ -39,7 +38,6 @@
 VRIntroApp::VRIntroApp(bool showMirror) :
   m_HealthWarningDismissed(false),
   m_HelpToggled(false),
-  m_LeapHMDModeWasOn(false),
   m_OculusMode(true),
   m_ShowMirror(showMirror),
   m_Selected(0) {}
@@ -63,11 +61,12 @@ void VRIntroApp::ShutdownMirror() {
   }
 }
 
+void VRIntroApp::SetFrameSupplier(IFrameSupplier* supplier) {
+  m_FrameSupplier = supplier;
+}
+
 void VRIntroApp::Initialize() {
   PlatformInitializer init;
-  
-  m_LeapController.addListener(m_LeapListener);
-  m_LeapController.setPolicyFlags(static_cast<Leap::Controller::PolicyFlag>(Leap::Controller::POLICY_IMAGES | Leap::Controller::POLICY_OPTIMIZE_HMD));
 
   SDLControllerParams params;
   params.transparentWindow = false;
@@ -119,7 +118,6 @@ void VRIntroApp::Shutdown() {
   FreeImage_DeInitialise();                   // Shut down FreeImage.
   m_GLController.Shutdown();                  // This shuts down the general GL state.
   m_SDLController.Shutdown();                 // This shuts down everything SDL-related.
-  m_LeapController.removeListener(m_LeapListener);
 }
 
 void VRIntroApp::Update(TimeDelta real_time_delta) {
@@ -128,22 +126,10 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
   assert(real_time_delta >= 0.0);
   m_applicationTime += real_time_delta;         // Increment the application time by the delta.
 
-  //m_LeapListener.WaitForFrame();
-  const Leap::Frame& frame = m_LeapController.frame();
-
-  float leap_baseline = 40.0f;
+  float leap_baseline = m_FrameSupplier->IsDragonfly() ? 64.0f : 40.0f;
   // Set passthrough images
-  const Leap::ImageList& images = frame.images();
-  if (images.count() == 2) {
-    for (int i = 0; i < 2; i++) {
-      if (images[i].width() == 640) {
-        m_PassthroughLayer[i]->SetImage(images[i].data(), images[i].width(), images[i].height());
-      } else {
-        m_PassthroughLayer[i]->SetColorImage(images[i].data());
-        leap_baseline = 64.0f;
-      }
-      m_PassthroughLayer[i]->SetDistortion(images[i].distortion());
-    }
+  for (int i = 0; i < 2; i++) {
+    m_FrameSupplier->PopulatePassthroughLayer(*m_PassthroughLayer[i], i);
   }
 
   // Calculate where each point of interest would have to be if a 6.4-cm baseline Leap centered exactly at the eyeballs saw the frame seen. It will be off by a factor of 1.6.
@@ -160,7 +146,7 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
   for (auto it = m_Layers.begin(); it != m_Layers.end(); ++it) {
     InteractionLayer &layer = **it;
     if (layer.Alpha() > 0.01f) {
-      layer.UpdateLeap(frame, inputTransform);
+      m_FrameSupplier->PopulateInteractionLayer(layer, inputTransform);
       layer.UpdateEyePos(avgView.inverse().block<3, 1>(0, 3));
       layer.UpdateEyeView(avgView.block<3, 3>(0, 0));
       layer.Update(real_time_delta);              // Update each application layer, from back to front.
@@ -178,7 +164,8 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
     m_HelpToggled = true;
     messageLayer->SetVisible(0, false);
   }
-  messageLayer->SetVisible(1, m_LeapListener.GetFPSEstimate() < 59);
+  messageLayer->SetVisible(1, false);
+//  messageLayer->SetVisible(1, m_LeapListener.GetFPSEstimate() < 59);
   messageLayer->SetVisible(2, !m_OculusMode);
   double elapsed = timer.Stop();
   //std::cout << __LINE__ << ":\t   Update() = " << (elapsed) << std::endl;
