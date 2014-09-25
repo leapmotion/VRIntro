@@ -30,21 +30,19 @@ set(VRIntroLib_SOURCES
     IFrameSupplier.h
 )
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    set(VRIntroLib_SOURCES
-        ${VRIntroLib_SOURCES}
-        PlatformInitializerMac.mm
-        PlatformInitializerMac.h
-    )
-elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
-    set(VRIntroLib_SOURCES
-        ${VRIntroLib_SOURCES}
-        PlatformInitializerWin.cpp
-        PlatformInitializerWin.h
-        Mirror.h
-        Mirror.cpp
-    )
-endif()
+add_windows_sources(
+  VRIntroLib_SOURCES
+  PlatformInitializerWin.cpp
+  PlatformInitializerWin.h
+  Mirror.h
+  Mirror.cpp
+)
+
+add_mac_sources(
+  VRIntroLib_SOURCES
+  PlatformInitializerMac.mm
+  PlatformInitializerMac.h
+)
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" VRIntroLib_SOURCES)
 

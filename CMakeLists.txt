@@ -5,4 +5,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake-module")
 
 project(VRIntro)
 
+include(ConditionalSources)
+
 add_subdirectory(source)
