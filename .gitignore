@@ -6,10 +6,11 @@ CMakeFiles
 VRIntro.sdf
 VRIntro.opensdf
 VRIntro.sln
-Win32
 cmake_install.cmake
 CMakeCache.txt
 ipch
 VRIntro.v12.suo
 Debug
 Release
+bin
+lib
