@@ -8,7 +8,7 @@ class APIFrameSupplier : public virtual IFrameSupplier {
 public:
   APIFrameSupplier();
   ~APIFrameSupplier();
-  virtual void PopulateInteractionLayer(InteractionLayer& target, const Matrix4x4f& worldTransform) const override;
+  virtual void PopulateInteractionLayer(InteractionLayer& target, const float* worldTransformRaw) const override;
   virtual void PopulatePassthroughLayer(PassthroughLayer& target, int i) const override;
   virtual bool IsDragonfly() const override;
 

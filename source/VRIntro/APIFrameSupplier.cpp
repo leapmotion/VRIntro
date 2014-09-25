@@ -14,7 +14,7 @@ APIFrameSupplier::~APIFrameSupplier() {
   m_LeapController.removeListener(m_LeapListener);
 }
 
-void APIFrameSupplier::PopulateInteractionLayer(InteractionLayer& target, const Matrix4x4f& worldTransform) const {
+void APIFrameSupplier::PopulateInteractionLayer(InteractionLayer& target, const float* worldTransformRaw) const {
   const Leap::Frame& frame = m_LeapController.frame();
 
   target.m_Tips.clear();
@@ -23,6 +23,7 @@ void APIFrameSupplier::PopulateInteractionLayer(InteractionLayer& target, const 
   target.m_TipsIndex.clear();
   target.m_Palms.clear();
   target.m_SkeletonHands.clear();
+  Matrix4x4f worldTransform = Matrix4x4f(worldTransformRaw);
   Matrix3x3f rotation = worldTransform.block<3, 3>(0, 0);
   Vector3f translation = worldTransform.block<3, 1>(0, 3);
 
