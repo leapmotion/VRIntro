@@ -34,7 +34,24 @@ include(DefinePostBuildResourceCopyRules)
 define_post_build_resource_copy_rules(
     TARGET
         VRIntro
+    RELATIVE_PATH_BASE
+        $<TARGET_FILE_DIR:VRIntro>
     RELATIVE_PATH_RESOURCES
+        ../VRIntroLib/shaders/fractal-frag.glsl
+        ../VRIntroLib/shaders/fractal-vert.glsl
+        ../VRIntroLib/shaders/passthrough-frag.glsl
+        ../VRIntroLib/shaders/passthrough-vert.glsl
+        ../VRIntroLib/shaders/solid-frag.glsl
+        ../VRIntroLib/shaders/solid-vert.glsl
+        ../VRIntroLib/shaders/transparent-frag.glsl
+        ../VRIntroLib/shaders/transparent-vert.glsl
+        ../VRIntroLib/images/help.png
+        ../VRIntroLib/images/lowfps.png
+        ../VRIntroLib/images/no_oculus.png
+        ../VRIntroLib/images/level3_popup.png
+        ../VRIntroLib/images/level4_popup.png
+        ../VRIntroLib/images/no_images.png
+        ../VRIntroLib/images/random.png
         RunMirrored.bat
     ABSOLUTE_PATH_RESOURCES
         ${Components_DIR}/resources/material-frag.glsl
