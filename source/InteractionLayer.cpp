@@ -56,7 +56,7 @@ void InteractionLayer::UpdateLeap(const Leap::Frame& frame, const Matrix4x4f& wo
         outHand.jointConnections[j*3 + k] = rotation*bone.prevJoint().toVector3<Vector3f>() + translation;
       }
     }
-    outHand.avgExtended = numExtended == 0 ? palm : sumExtended/numExtended;
+    outHand.avgExtended = numExtended == 0 ? palm : (Vector3f)(sumExtended/numExtended);
 
     const float thumbDist = (outHand.jointConnections[0] - palm).norm();
     const Vector3f wrist = palm - thumbDist*(palmDir*0.8f + static_cast<float>(hand.isLeft() ? -1 : 1)*palmSide*0.5f);
