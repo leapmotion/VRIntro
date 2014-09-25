@@ -2,7 +2,7 @@
 
 #include "EigenTypes.h"
 
-class Interactionlayer;
+class InteractionLayer;
 class PassthroughLayer;
 
 class IFrameSupplier {
