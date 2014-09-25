@@ -1,6 +1,6 @@
 include(Common)
 
-set(VRIntro_SOURCES
+set(VRIntroLib_SOURCES
     VRIntroApp.cpp
     VRIntroApp.h
     InteractionLayer.cpp
@@ -31,14 +31,14 @@ set(VRIntro_SOURCES
 )
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    set(VRIntro_SOURCES
-        ${VRIntro_SOURCES}
+    set(VRIntroLib_SOURCES
+        ${VRIntroLib_SOURCES}
         PlatformInitializerMac.mm
         PlatformInitializerMac.h
     )
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
-    set(VRIntro_SOURCES
-        ${VRIntro_SOURCES}
+    set(VRIntroLib_SOURCES
+        ${VRIntroLib_SOURCES}
         PlatformInitializerWin.cpp
         PlatformInitializerWin.h
         Mirror.h
@@ -46,7 +46,7 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
     )
 endif()
 
-ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" VRIntro_SOURCES)
+ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" VRIntroLib_SOURCES)
 
 option(SHOW_CONSOLE "Display console window for debugging" OFF)
 
@@ -59,7 +59,7 @@ if(NOT SHOW_CONSOLE AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
     set(_add_executable_options WIN32)
 endif()
 
-add_library(VRIntroLib STATIC ${VRIntro_SOURCES})
+add_library(VRIntroLib STATIC ${VRIntroLib_SOURCES})
 target_link_components(VRIntroLib Application GLController GLShaderLoader GLTexture2Loader Primitives SDLController OculusVR)
 target_package(VRIntroLib Eigen)
 

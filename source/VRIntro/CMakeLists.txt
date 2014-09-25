@@ -1,6 +1,6 @@
 include(Common)
 
-set(VRIntroExec_SOURCES
+set(VRIntro_SOURCES
     main.cpp
     APIFrameSupplier.h
     APIFrameSupplier.cpp
@@ -20,8 +20,8 @@ if(${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:LIBCMT /ignore:4099")
 endif()
 
-ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" VRIntroExec_SOURCES)
-add_executable(VRIntro ${_add_executable_options} ${VRIntroExec_SOURCES})
+ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" VRIntro_SOURCES)
+add_executable(VRIntro ${_add_executable_options} ${VRIntro_SOURCES})
 target_link_libraries(VRIntro VRIntroLib)
 target_package(VRIntro Leap)
 
