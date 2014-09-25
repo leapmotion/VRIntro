@@ -64,3 +64,33 @@ target_package(VRIntroLib Eigen)
 if(WIN32)
   target_link_libraries(VRIntroLib comctl32.lib Dwmapi.lib)
 endif()
+
+
+###################################################################################################
+# Resource rules
+###################################################################################################
+
+include(DefinePostBuildResourceCopyRules)
+define_post_build_resource_copy_rules(
+    TARGET
+        VRIntroLib
+    RELATIVE_PATH_RESOURCES
+        shaders/fractal-frag.glsl
+        shaders/fractal-vert.glsl
+        shaders/passthrough-frag.glsl
+        shaders/passthrough-vert.glsl
+        shaders/solid-frag.glsl
+        shaders/solid-vert.glsl
+        shaders/transparent-frag.glsl
+        shaders/transparent-vert.glsl
+        images/help.png
+        images/lowfps.png
+        images/no_oculus.png
+        images/level3_popup.png
+        images/level4_popup.png
+        images/no_images.png
+        images/random.png
+    ABSOLUTE_PATH_RESOURCES
+        ${Components_DIR}/resources/material-frag.glsl
+        ${Components_DIR}/resources/matrix-transformed-vert.glsl
+)
