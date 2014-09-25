@@ -14,3 +14,7 @@ Debug
 Release
 bin
 lib
+install_manifest.txt
+VRIntroConfig.cmake
+VRIntroVersion.cmake
+VRIntroTargets.cmake

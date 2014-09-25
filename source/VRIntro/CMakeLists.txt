@@ -25,7 +25,6 @@ add_executable(VRIntro ${_add_executable_options} ${VRIntro_SOURCES})
 target_link_libraries(VRIntro VRIntroLib)
 target_package(VRIntro Leap)
 
-
 ###################################################################################################
 # Resource rules
 ###################################################################################################

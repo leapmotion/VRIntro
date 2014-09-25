@@ -1,0 +1,10 @@
+# - Config file for the websocketpp package
+# It defines the following variables
+#  vrintro_FOUND - indicates that the module was found
+#  vrintro_INCLUDE_DIR - include directories
+
+include(${CMAKE_CURRENT_LIST_DIR}/VRIntroTargets.cmake)
+
+set(vrintro_FOUND TRUE)
+set(vrintro_INCLUDE_DIR "@INCLUDE_INSTALL_DIR@")
+set(vrintro_LIBRARIES VRIntroLib)
