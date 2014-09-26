@@ -86,12 +86,15 @@ private:
   std::vector<std::shared_ptr<InteractionLayer>> m_Layers;
   std::shared_ptr<PassthroughLayer> m_PassthroughLayer[2];
   IFrameSupplier* m_FrameSupplier;
+  Uint32 SDL_Window_ID;
   
   std::thread m_MirrorThread;
+#if _WIN32
   HWND m_MirrorHWND;
+#endif
   bool m_ShowMirror;
 
-  int m_Selected;
+  int  m_Selected;
   bool m_HealthWarningDismissed;
   bool m_HelpToggled;
   bool m_OculusMode;

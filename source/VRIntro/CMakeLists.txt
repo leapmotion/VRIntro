@@ -10,6 +10,12 @@ set(VRIntro_SOURCES
 
 option(SHOW_CONSOLE "Display console window for debugging" OFF)
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") # This is the correct way to detect Mac OS X operating system -- see http://www.openguru.com/2009/04/cmake-detecting-platformoperating.html
+    set(_add_executable_options "MACOSX_BUNDLE")
+    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -Wall -Werror -Wno-reorder -Wno-unused-variable -Wno-unused-private-field")
+endif()
+
 if(NOT SHOW_CONSOLE AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
     set(_add_executable_options WIN32)
 endif()
