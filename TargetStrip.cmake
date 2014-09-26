@@ -4,7 +4,7 @@
 macro(TARGET_STRIP Target)
   set(STRIPPED_EXE_LINKER_FLAGS "-Xlinker -unexported_symbol -Xlinker \"*\" -Xlinker -dead_strip -Xlinker -dead_strip_dylibs")
   if(MSVC)
-    if(USE_PRODUCTION_FLAGS)
+    if(CMAKE_CXX_FLAGS_RELEASE)
       set_target_properties(${Target} PROPERTIES LINK_FLAGS_DEBUG "/INCREMENTAL:NO /NODEFAULTLIB:MSVCRT")
     else()
       set_target_properties(${Target} PROPERTIES LINK_FLAGS_DEBUG "/NODEFAULTLIB:MSVCRT")
