@@ -14,6 +14,29 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") # This is the correct way to detect Ma
     set(_add_executable_options "MACOSX_BUNDLE")
     set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -Wall -Werror -Wno-reorder -Wno-unused-variable -Wno-unused-private-field")
+
+    # Locate all recourses
+
+    set(VRINTRO_SOURCE_DIR ${PROJECT_SOURCE_DIR}/source/VRIntro)
+    
+    file(GLOB COPY_IMG_RESOURCES  ${VRINTRO_SOURCE_DIR}/images/*)
+    set_source_files_properties(
+      ${COPY_IMG_RESOURCES}
+      PROPERTIES
+      MACOSX_PACKAGE_LOCATION Resources/images
+    )
+    
+    file(GLOB COPY_COMPONENTS_GLSL ${Components_DIR}/resources/*)
+    file(GLOB COPY_VRINTRO_GLSL ${VRINTRO_SOURCE_DIR}/shaders/*)
+    set(COPY_GLSL_RESOURCES 
+        ${COPY_COMPONENTS_GLSL}
+	${COPY_VRINTRO_GLSL}
+    )
+    set_source_files_properties(
+      ${COPY_GLSL_RESOURCES}
+      PROPERTIES
+      MACOSX_PACKAGE_LOCATION Resources/shaders
+    )
 endif()
 
 if(NOT SHOW_CONSOLE AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
@@ -27,14 +50,19 @@ if(${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
 endif()
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" VRIntro_SOURCES)
-add_executable(VRIntro ${_add_executable_options} ${VRIntro_SOURCES})
+add_executable(VRIntro 
+		${_add_executable_options} 
+		${VRIntro_SOURCES}
+                ${COPY_IMG_RESOURCES}
+                ${COPY_GLSL_RESOURCES}
+)
 target_link_libraries(VRIntro VRIntroLib)
 target_package(VRIntro Leap)
 
 ###################################################################################################
 # Resource rules
 ###################################################################################################
-
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
 include(DefinePostBuildResourceCopyRules)
 define_post_build_resource_copy_rules(
     TARGET
@@ -62,3 +90,4 @@ define_post_build_resource_copy_rules(
         ${Components_DIR}/resources/material-frag.glsl
         ${Components_DIR}/resources/matrix-transformed-vert.glsl
 )
+endif()
