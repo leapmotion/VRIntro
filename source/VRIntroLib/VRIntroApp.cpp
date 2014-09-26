@@ -126,6 +126,7 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
   assert(real_time_delta >= 0.0);
   m_applicationTime += real_time_delta;         // Increment the application time by the delta.
 
+  m_FrameSupplier->Lock();
   float leap_baseline = m_FrameSupplier->IsDragonfly() ? 64.0f : 40.0f;
   // Set passthrough images
   for (int i = 0; i < 2; i++) {
@@ -152,6 +153,7 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
       layer.Update(real_time_delta);              // Update each application layer, from back to front.
     }
   }
+  m_FrameSupplier->Unlock();
 
   // Automatically make message and menu disappear after some time
   if (m_applicationTime > 4.0f && !m_HealthWarningDismissed) {

@@ -10,7 +10,7 @@
 PassthroughLayer::PassthroughLayer() :
   InteractionLayer(EigenTypes::Vector3f::Zero(), "shaders/passthrough"),
   m_image(GLTexture2Params(640, 240, GL_LUMINANCE), GLTexture2PixelDataReference(GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL, 0)),
-  m_colorimage(GLTexture2Params(672, 600, GL_RGBA), GLTexture2PixelDataReference(GL_RGBA, GL_UNSIGNED_BYTE, NULL, 0)),
+  m_colorimage(GLTexture2Params(672, 496, GL_RGBA), GLTexture2PixelDataReference(GL_RGBA, GL_UNSIGNED_BYTE, NULL, 0)),
   m_distortion(GLTexture2Params(64, 64, GL_RG32F), GLTexture2PixelDataReference(GL_RG, GL_FLOAT, NULL, 0)),
   m_PopupShader(Resource<GLShader>("shaders/transparent")),
   m_PopupTexture(Resource<GLTexture2>("images/no_images.png")),
