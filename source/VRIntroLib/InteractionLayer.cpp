@@ -41,8 +41,8 @@ void InteractionLayer::DrawSkeletonHands() const {
 
 void InteractionLayer::DrawSkeletonHand(const SkeletonHand& hand, float alpha) const {
   for (int i = 0; i < 23; i++) {
-    DrawSphere(hand.joints[i], 10e-3f, alpha);
-    DrawCylinder(hand.joints[i], hand.jointConnections[i], 7e-3f, alpha);
+    DrawSphere(hand.joints[i], m_FingerRadius, alpha);
+    DrawCylinder(hand.joints[i], hand.jointConnections[i], 0.7f*m_FingerRadius, alpha);
   }
 }
 

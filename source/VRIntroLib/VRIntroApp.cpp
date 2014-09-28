@@ -148,6 +148,7 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
     InteractionLayer &layer = **it;
     if (layer.Alpha() > 0.01f) {
       m_FrameSupplier->PopulateInteractionLayer(layer, inputTransform.eval().data());
+      layer.SetFingerRadius(6.25f*OCULUS_BASELINE/leap_baseline);
       layer.UpdateEyePos(avgView.inverse().block<3, 1>(0, 3));
       layer.UpdateEyeView(avgView.block<3, 3>(0, 0));
       layer.Update(real_time_delta);              // Update each application layer, from back to front.

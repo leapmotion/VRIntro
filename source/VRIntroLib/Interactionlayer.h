@@ -29,6 +29,7 @@ public:
   float& Alpha() { return m_Alpha; }
   void SetProjection(const EigenTypes::Matrix4x4f& value) { m_Projection = value; m_Renderer.GetProjection().Matrix() = value.cast<double>(); }
   void SetModelView(const EigenTypes::Matrix4x4f& value) { m_ModelView = value; m_Renderer.GetModelView().Matrix() = value.cast<double>(); }
+  void SetFingerRadius(float value) { m_FingerRadius = value; }
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -47,6 +48,7 @@ protected:
   std::shared_ptr<GLShader> m_Shader;
   mutable Sphere m_Sphere;
   mutable Cylinder m_Cylinder;
+  float m_FingerRadius;
 
   EigenTypes::Matrix4x4f m_Projection;
   EigenTypes::Matrix4x4f m_ModelView;
