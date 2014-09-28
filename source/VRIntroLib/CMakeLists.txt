@@ -64,5 +64,5 @@ target_link_components(VRIntroLib Application GLController GLShaderLoader GLText
 target_package(VRIntroLib Eigen)
 
 if(WIN32)
-  target_link_libraries(VRIntroLib comctl32.lib Dwmapi.lib)
+  target_link_libraries(VRIntroLib comctl32.lib Dwmapi.lib Shlwapi.lib)
 endif()
