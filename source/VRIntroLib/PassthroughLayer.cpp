@@ -112,7 +112,7 @@ void PassthroughLayer::Render(TimeDelta real_time_delta) const {
     glUniform2f(m_Shader->LocationOfUniform("ray_offset"), 0.5f, 0.5f);
     glUniform1i(m_Shader->LocationOfUniform("texture"), 0);
     glUniform1i(m_Shader->LocationOfUniform("distortion"), 1);
-    glUniform1f(m_Shader->LocationOfUniform("gamma"), m_Gamma);
+    glUniform1f(m_Shader->LocationOfUniform("gamma"), m_Gamma*(m_UseColor ? 0.72f : 1.0f));
     glUniform1f(m_Shader->LocationOfUniform("brightness"), m_Alpha*m_Brightness);
     glUniform1f(m_Shader->LocationOfUniform("use_color"), m_UseColor ? 1.0f : 0.0f);
 

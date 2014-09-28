@@ -17,9 +17,9 @@ uniform float use_color;
 // debayer
 float width = 672.0;
 float height = 600.0;
-float rscale = 1.23;
-float gscale = 1.04;
-float bscale = 0.73;
+float rscale = 1.6;
+float gscale = 1.0;
+float bscale = 0.5;
 
 float corr_ir_g = 0.2;
 float corr_ir_rb = 0.2;
@@ -74,7 +74,10 @@ void main(void) {
    
     const mat4 transformation = mat4(5.6220, -1.5456, 0.3634, -0.1106, -1.6410, 3.1944, -1.7204, 0.0189, 0.1410, 0.4896, 10.8399, -0.1053, -3.7440, -1.9080, -8.6066, 1.0000);
     const mat4 conservative = mat4(5.6220, 0.0000, 0.3634, 0.0000, 0.0000, 3.1944, 0.0000, 0.0189, 0.1410, 0.4896, 10.8399, 0.0000, 0.0000, 0.0000, 0.0000, 1.0000);
-   
+
+    const mat4 transformation_filtered = mat4(5.0670, -1.2312, 0.8625, -0.0507, -1.5210, 3.1104, -2.0194, 0.0017, -0.8310, -0.3000, 13.1744, -0.1052, -2.4540, -1.3848, -10.9618, 1.0000);
+    const mat4 conservative_filtered = mat4(5.0670, 0.0000, 0.8625, 0.0000, 0.0000, 3.1104, 0.0000, 0.0017, 0.0000, 0.0000, 13.1744, 0.0000, 0.0000, 0.0000, 0.0000, 1.0000);
+
     vec4 input_lf = vec4(r_lf, g_lf, b_lf, ir_lf);
    
     // input_lf = bilateral_a*bilateral(texCoord, input_lf) + (1-bilateral_a)*input_lf;
@@ -82,8 +85,8 @@ void main(void) {
     input_lf.g += ir_hf*corr_ir_g + r_hf*corr_g_rb + b_hf*corr_g_rb;
     input_lf.b += ir_hf*corr_ir_rb + r_hf*corr_r_b + g_hf*corr_g_rb;
    
-    vec4 output_lf = transformation*input_lf;
-    vec4 output_lf_fudge = conservative*input_lf;
+    vec4 output_lf = transformation_filtered*input_lf;
+    vec4 output_lf_fudge = conservative_filtered*input_lf;
     //vec4 output_lf_gray = gray*input_lf;
    
     float fudge_threshold = 0.5;
@@ -114,7 +117,7 @@ void main(void) {
    
     //gl_FragColor.rgb = show_ir > 0.5 ? vec3(pow(ir_out, gamma)): pow(gl_FragColor.rgb, vec3(gamma));
     
-    gl_FragColor.rgb = pow(gl_FragColor.rgb, vec3(gamma));
+    gl_FragColor.rgb = brightness*pow(gl_FragColor.rgb, vec3(0.55));
 
   } else {
     gl_FragColor.rgb = brightness*vec3(pow(texture2D(texture, texCoord).r, gamma));
