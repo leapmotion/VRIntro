@@ -6,6 +6,7 @@
 #include "SDLController.h"
 #include "OculusVR.h"
 #include "PassthroughLayer.h"
+#include "MessageLayer.h"
 #include "RenderState.h"
 
 #include <memory>
@@ -53,7 +54,7 @@ public:
 private:
   static const int CONTENT_LAYERS = 5;
   static const int HAND_LAYER = CONTENT_LAYERS;
-  static const int HELP_LAYER = CONTENT_LAYERS + 1;
+  static const int MESSAGE_LAYERS = CONTENT_LAYERS + 1;
 
   void InitializeApplicationLayers();
   void ShutdownApplicationLayers();
@@ -79,14 +80,15 @@ private:
     return EventHandlerAction::PASS_ON;
   }
 
-  mutable OculusVR m_Oculus;
-  SDLController m_SDLController;
-  GLController m_GLController;
-  TimePoint m_applicationTime;
-  std::vector<std::shared_ptr<InteractionLayer>> m_Layers;
-  std::shared_ptr<PassthroughLayer> m_PassthroughLayer[2];
-  IFrameSupplier* m_FrameSupplier;
-  Uint32 SDL_Window_ID;
+  mutable OculusVR  m_Oculus;
+  SDLController     m_SDLController;
+  GLController      m_GLController;
+  TimePoint         m_applicationTime;
+  std::vector<std::shared_ptr<InteractionLayer>>  m_Layers;
+  std::shared_ptr<PassthroughLayer>               m_PassthroughLayer[2];
+  IFrameSupplier*                                 m_FrameSupplier;
+  Uint32                                          SDL_Window_ID;
+  MessageLayer*                                   messageLayer;
   
   std::thread m_MirrorThread;
 #if _WIN32

@@ -10,7 +10,8 @@ MessageLayer::MessageLayer(const EigenTypes::Vector3f& initialEyePos) :
   InteractionLayer(EigenTypes::Vector3f::Zero(), "shaders/transparent"),
   m_HelpTexture(Resource<GLTexture2>("images/help.png")),
   m_LowFPSTexture(Resource<GLTexture2>("images/lowfps.png")),
-  m_NoOculusTexture(Resource<GLTexture2>("images/no_oculus.png")) {
+  m_NoOculusTexture(Resource<GLTexture2>("images/no_oculus.png")),
+  m_NoImagesTexture(Resource<GLTexture2>("images/no_images.png")) {
 
   static const float edges[] = {
     // Help menu
@@ -30,6 +31,12 @@ MessageLayer::MessageLayer(const EigenTypes::Vector3f& initialEyePos) :
     -0.288f, +0.184f, -0.5f, 0, 1,
     +0.288f, -0.184f, -0.5f, 1, 0,
     +0.288f, +0.184f, -0.5f, 1, 1,
+    
+    // No Images warning
+    -0.4f, -0.3f, -0.6f, 0, 0,
+    -0.4f, +0.3f, -0.6f, 0, 1,
+    +0.4f, -0.3f, -0.6f, 1, 0,
+    +0.4f, +0.3f, -0.6f, 1, 1,
   };
 
   m_Buffer.Create(GL_ARRAY_BUFFER);
@@ -37,8 +44,9 @@ MessageLayer::MessageLayer(const EigenTypes::Vector3f& initialEyePos) :
   m_Buffer.Allocate(edges, sizeof(edges), GL_STATIC_DRAW);
   m_Buffer.Unbind();
 
-  m_Visible[0] = true;
-  for (int i = 1; i < NUM_MESSAGES; i++) {
+  m_Visible[0] = false;
+  m_Visible[1] = true;
+  for (int i = 2; i < NUM_MESSAGES; i++) {
     m_Visible[i] = false;
   }
 }
@@ -82,12 +90,15 @@ void MessageLayer::Render(TimeDelta real_time_delta) const {
 void MessageLayer::DrawMessage(int index) const {
   switch (index) {
   case 0:
-    m_HelpTexture->Bind();
+    m_NoImagesTexture->Bind();
     break;
   case 1:
-    m_LowFPSTexture->Bind();
+    m_HelpTexture->Bind();
     break;
   case 2:
+    m_LowFPSTexture->Bind();
+    break;
+  case 3:
     m_NoOculusTexture->Bind();
     break;
   default:

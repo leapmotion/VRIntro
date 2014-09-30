@@ -162,16 +162,25 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
     m_HealthWarningDismissed = true;
   }
 
-  MessageLayer* messageLayer = static_cast<MessageLayer*>(&*m_Layers[HELP_LAYER]);
-  if (m_applicationTime > 15.0f && !m_HelpToggled) {
-    m_HelpToggled = true;
-    messageLayer->SetVisible(0, false);
+  messageLayer = static_cast<MessageLayer*>(&*m_Layers[MESSAGE_LAYERS]);
+  if(m_PassthroughLayer[0]->m_HasData){
+    if (m_applicationTime > 15.0f && !m_HelpToggled) {
+      m_HelpToggled = true;
+      messageLayer->SetVisible(1, false);
+    }
   }
-  messageLayer->SetVisible(1, false);
-//  messageLayer->SetVisible(1, m_LeapListener.GetFPSEstimate() < 59);
-  messageLayer->SetVisible(2, !m_OculusMode);
+  else{
+    // Leap is not attached or frames are not going through
+    messageLayer->SetVisible(0, true);
+  }
+  
+  messageLayer->SetVisible(2, false);
+//messageLayer->SetVisible(2, m_LeapListener.GetFPSEstimate() < 59);
+  messageLayer->SetVisible(3, !m_OculusMode);
+  
   double elapsed = timer.Stop();
-  //std::cout << __LINE__ << ":\t   Update() = " << (elapsed) << std::endl;
+//std::cout << __LINE__ << ":\t   Update() = " << (elapsed) << std::endl;
+
 }
 
 void VRIntroApp::Render(TimeDelta real_time_delta) const {
@@ -273,7 +282,7 @@ EventHandlerAction VRIntroApp::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) 
       // Help menu
       m_HelpToggled = true;
       {
-        MessageLayer* messageLayer = static_cast<MessageLayer*>(&*m_Layers[HELP_LAYER]);
+        messageLayer = static_cast<MessageLayer*>(&*m_Layers[MESSAGE_LAYERS]);
         messageLayer->SetVisible(0, !messageLayer->GetVisible(0));
       }
       break;
@@ -368,10 +377,10 @@ void VRIntroApp::InitializeApplicationLayers() {
   m_Layers.push_back(std::shared_ptr<MessageLayer>(new MessageLayer(defaultEyePose)));
   // m_Layers.push_back(std::shared_ptr<MessageLayer>(new MessageLayer(defaultEyePose)));
   //m_Layers.push_back(std::shared_ptr<QuadsLayer>(new QuadsLayer(defaultEyePose)));
-
+  
   m_Layers[CONTENT_LAYERS]->Alpha() = 1;
   m_Layers[CONTENT_LAYERS + 1]->Alpha() = 1;
-
+  
   for (int i = 0; i < 2; i++) {
     m_PassthroughLayer[i] = std::shared_ptr<PassthroughLayer>(new PassthroughLayer());
     m_PassthroughLayer[i]->Alpha() = 1.0f;

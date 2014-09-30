@@ -25,7 +25,7 @@ public:
   EventHandlerAction HandleKeyboardEvent(const SDL_KeyboardEvent &ev) override;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
+  bool m_HasData;
 private:
   void RenderPopup() const;
 
@@ -41,6 +41,5 @@ private:
   mutable GLBuffer m_Buffer;
   float m_Gamma;
   float m_Brightness;
-  bool m_HasData;
   bool m_UseColor;
 };
