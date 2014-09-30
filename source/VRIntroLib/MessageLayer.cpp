@@ -14,6 +14,12 @@ MessageLayer::MessageLayer(const EigenTypes::Vector3f& initialEyePos) :
   m_NoImagesTexture(Resource<GLTexture2>("images/no_images.png")) {
 
   static const float edges[] = {
+    // No Images warning
+    -0.4f, -0.3f, -0.6f, 0, 0,
+    -0.4f, +0.3f, -0.6f, 0, 1,
+    +0.4f, -0.3f, -0.6f, 1, 0,
+    +0.4f, +0.3f, -0.6f, 1, 1,
+    
     // Help menu
     -0.224f, -0.264f, -0.5f, 0, 0,
     -0.224f, +0.264f, -0.5f, 0, 1,
@@ -26,17 +32,11 @@ MessageLayer::MessageLayer(const EigenTypes::Vector3f& initialEyePos) :
     +0.288f, -0.12f, -0.5f, 1, 0,
     +0.288f, +0.12f, -0.5f, 1, 1,
 
-    // Low FPS warning
+    // No Oculus warning
     -0.288f, -0.184f, -0.5f, 0, 0,
     -0.288f, +0.184f, -0.5f, 0, 1,
     +0.288f, -0.184f, -0.5f, 1, 0,
     +0.288f, +0.184f, -0.5f, 1, 1,
-    
-    // No Images warning
-    -0.4f, -0.3f, -0.6f, 0, 0,
-    -0.4f, +0.3f, -0.6f, 0, 1,
-    +0.4f, -0.3f, -0.6f, 1, 0,
-    +0.4f, +0.3f, -0.6f, 1, 1,
   };
 
   m_Buffer.Create(GL_ARRAY_BUFFER);
