@@ -283,7 +283,7 @@ EventHandlerAction VRIntroApp::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) 
       m_HelpToggled = true;
       {
         messageLayer = static_cast<MessageLayer*>(&*m_Layers[MESSAGE_LAYERS]);
-        messageLayer->SetVisible(0, !messageLayer->GetVisible(0));
+        messageLayer->SetVisible(1, !messageLayer->GetVisible(1));
       }
       break;
     case SDLK_1:
