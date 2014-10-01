@@ -13,9 +13,10 @@ PassthroughLayer::PassthroughLayer() :
   m_colorimage(GLTexture2Params(672, 496, GL_RGBA), GLTexture2PixelDataReference(GL_RGBA, GL_UNSIGNED_BYTE, NULL, 0)),
   m_distortion(GLTexture2Params(64, 64, GL_RG32F), GLTexture2PixelDataReference(GL_RG, GL_FLOAT, NULL, 0)),
   m_PopupShader(Resource<GLShader>("shaders/transparent")),
-//  m_PopupTexture(Resource<GLTexture2>("images/no_images.png")),
+  //  m_PopupTexture(Resource<GLTexture2>("images/no_images.png")),
   m_Gamma(0.8f),
   m_Brightness(1.0f),
+  m_IRMode(0),
   m_HasData(false) {
   m_Buffer.Create(GL_ARRAY_BUFFER);
 
@@ -79,13 +80,13 @@ void PassthroughLayer::SetImage(const unsigned char* data, int width, int height
   } else {
     m_image.UpdateTexture(data);
   }
-  m_UseColor = false;
+  m_UseRGBI = false;
   m_HasData = true;
 }
 
 void PassthroughLayer::SetColorImage(const unsigned char* data) {
   m_colorimage.UpdateTexture(data);
-  m_UseColor = true;
+  m_UseRGBI = true;
   m_HasData = true;
 }
 
@@ -99,7 +100,7 @@ void PassthroughLayer::Render(TimeDelta real_time_delta) const {
     GLShaderMatrices::UploadUniforms(*m_Shader, EigenTypes::Matrix4x4::Identity(), m_Projection.cast<double>(), BindFlags::NONE);
 
     glActiveTexture(GL_TEXTURE0 + 0);
-    if (m_UseColor) {
+    if (m_UseRGBI) {
       m_colorimage.Bind();
     } else {
       m_image.Bind();
@@ -112,9 +113,12 @@ void PassthroughLayer::Render(TimeDelta real_time_delta) const {
     glUniform2f(m_Shader->LocationOfUniform("ray_offset"), 0.5f, 0.5f);
     glUniform1i(m_Shader->LocationOfUniform("texture"), 0);
     glUniform1i(m_Shader->LocationOfUniform("distortion"), 1);
-    glUniform1f(m_Shader->LocationOfUniform("gamma"), m_Gamma*(m_UseColor ? 0.72f : 1.0f));
+    glUniform1f(m_Shader->LocationOfUniform("gamma"), m_Gamma*(m_UseRGBI ? 0.7f : 1.0f));
     glUniform1f(m_Shader->LocationOfUniform("brightness"), m_Alpha*m_Brightness);
-    glUniform1f(m_Shader->LocationOfUniform("use_color"), m_UseColor ? 1.0f : 0.0f);
+    glUniform1f(m_Shader->LocationOfUniform("use_color"), m_UseRGBI ? 1.0f : 0.0f);
+
+    static int i = 0;
+    glUniform1f(m_Shader->LocationOfUniform("ir_mode"), ((m_IRMode + (++i & 1)) & 2) > 0 ? 1.0f : 0.0f);
 
 #if 0
     const float edges[] = {-4, -4, -1, -4, 4, -1, 4, -4, -1, 4, 4, -1};
@@ -134,7 +138,7 @@ void PassthroughLayer::Render(TimeDelta real_time_delta) const {
     glEnd();
 #endif
 
-    if (m_UseColor) {
+    if (m_UseRGBI) {
       m_colorimage.Unbind();
     } else {
       m_image.Unbind();
@@ -174,20 +178,24 @@ void PassthroughLayer::RenderPopup() const {
 }
 
 EventHandlerAction PassthroughLayer::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) {
-  switch (ev.keysym.sym) {
-  case '[':
-    m_Gamma = std::max(0.f, m_Gamma - 0.04f);
-    return EventHandlerAction::CONSUME;
-  case ']':
-    m_Gamma = std::min(1.2f, m_Gamma + 0.04f);
-    return EventHandlerAction::CONSUME;
-  case SDLK_INSERT:
-    m_Brightness = std::max(0.f, m_Brightness + 0.02f);
-    return EventHandlerAction::CONSUME;
-  case SDLK_DELETE:
-    m_Brightness = std::min(2.f, m_Brightness - 0.02f);
-    return EventHandlerAction::CONSUME;
-  default:
-    return EventHandlerAction::PASS_ON;
+  if (ev.type == SDL_KEYDOWN) {
+    switch (ev.keysym.sym) {
+    case '[':
+      m_Gamma = std::max(0.f, m_Gamma - 0.04f);
+      return EventHandlerAction::CONSUME;
+    case ']':
+      m_Gamma = std::min(1.2f, m_Gamma + 0.04f);
+      return EventHandlerAction::CONSUME;
+    case SDLK_INSERT:
+      m_Brightness = std::min(2.f, m_Brightness + 0.02f);
+      return EventHandlerAction::CONSUME;
+    case SDLK_DELETE:
+      m_Brightness = std::max(0.f, m_Brightness - 0.02f);
+      return EventHandlerAction::CONSUME;
+    case '.':
+      m_IRMode++;
+    default:
+      return EventHandlerAction::PASS_ON;
+    }
   }
 }

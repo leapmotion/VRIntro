@@ -75,7 +75,7 @@ void VRIntroApp::Initialize() {
   params.windowTitle = "Leap Motion VR Intro BETA (F11 to fullscreen)";
 
   m_Oculus.InitHMD();
-  if ( ! m_Oculus.isDebug() ){
+  if (!m_Oculus.isDebug()){
     params.windowHeight = m_Oculus.GetHMDHeight();
     params.windowWidth = m_Oculus.GetHMDWidth();
   }
@@ -176,7 +176,7 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
   
   messageLayer->SetVisible(2, false);
 //messageLayer->SetVisible(2, m_LeapListener.GetFPSEstimate() < 59);
-  messageLayer->SetVisible(3, !m_OculusMode);
+  messageLayer->SetVisible(3, m_Oculus.isDebug());
   
   double elapsed = timer.Stop();
 //std::cout << __LINE__ << ":\t   Update() = " << (elapsed) << std::endl;

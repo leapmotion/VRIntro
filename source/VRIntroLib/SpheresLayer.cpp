@@ -24,8 +24,8 @@ SpheresLayer::SpheresLayer(const EigenTypes::Vector3f& initialEyePos) :
     float r = (float)rand() / RAND_MAX;
     float g = (float)rand() / RAND_MAX;
     float b = (float)rand() / RAND_MAX;
-    float dist = 0.55f + (float)rand() / RAND_MAX * 0.2f;
-    m_Radius[i] = 0.025f + (float)rand() / RAND_MAX * 0.030f;
+    float dist = 0.40f + (float)rand() / RAND_MAX * 0.2f;
+    m_Radius[i] = 0.020f + (float)rand() / RAND_MAX * 0.03f;
     m_Pos[i] = EigenTypes::Vector3f(0.0f, 1.7f, -5.0f) + EigenTypes::Vector3f(x, y, z)*dist;
     m_Colors[i] = EigenTypes::Vector3f(r, g, b).normalized();
     m_Mono[i] = EigenTypes::Vector3f::Ones()*m_Colors[i].sum()*0.33f;
