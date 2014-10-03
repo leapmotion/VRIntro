@@ -28,6 +28,8 @@ set(VRIntroLib_SOURCES
   PlatformInitializer.h
   PrecisionTimer.h
   IFrameSupplier.h
+  MathUtility.h
+  MathUtility.cpp
 )
 
 add_windows_sources(

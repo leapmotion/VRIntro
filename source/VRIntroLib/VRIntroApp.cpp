@@ -291,6 +291,7 @@ EventHandlerAction VRIntroApp::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) 
     case SDLK_3:
     case SDLK_4:
     case SDLK_5:
+    case SDLK_6:
       // Content layer
       if (!(SDL_GetModState() & KMOD_CTRL)) {
         for (int i = 0; i < CONTENT_LAYERS; i++) {
@@ -372,11 +373,11 @@ void VRIntroApp::InitializeApplicationLayers() {
   m_Layers.push_back(std::shared_ptr<SpaceLayer>(new SpaceLayer(defaultEyePose)));
   m_Layers.push_back(std::shared_ptr<FlyingLayer>(new FlyingLayer(defaultEyePose)));
   m_Layers.push_back(std::shared_ptr<FractalLayer>(new FractalLayer(defaultEyePose)));
+  m_Layers.push_back(std::shared_ptr<QuadsLayer>(new QuadsLayer(defaultEyePose)));
 
   m_Layers.push_back(std::shared_ptr<HandLayer>(new HandLayer(defaultEyePose)));
   m_Layers.push_back(std::shared_ptr<MessageLayer>(new MessageLayer(defaultEyePose)));
   // m_Layers.push_back(std::shared_ptr<MessageLayer>(new MessageLayer(defaultEyePose)));
-  //m_Layers.push_back(std::shared_ptr<QuadsLayer>(new QuadsLayer(defaultEyePose)));
   
   m_Layers[CONTENT_LAYERS]->Alpha() = 1;
   m_Layers[CONTENT_LAYERS + 1]->Alpha() = 1;

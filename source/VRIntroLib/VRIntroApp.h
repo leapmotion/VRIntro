@@ -52,7 +52,7 @@ public:
   #endif
 
 private:
-  static const int CONTENT_LAYERS = 5;
+  static const int CONTENT_LAYERS = 6;
   static const int HAND_LAYER = CONTENT_LAYERS;
   static const int MESSAGE_LAYERS = CONTENT_LAYERS + 1;
 
