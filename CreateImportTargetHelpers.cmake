@@ -68,8 +68,10 @@ function(map_var_to_prop target property var )
     endif()
   endforeach()
   
-  #set the default to a nice generator expression.
-  if(NOT ${var})
+  #set the default to a nice generator expression if it is not in the blacklist
+  set(_genexpr_unsupported_properties "IMPORTED_LOCATION")
+  list(FIND _genexpr_unsupported_properties _find_result ${property})
+  if(NOT ${var} AND (_find_result EQUAL -1))
     set(_defaultprop)
     foreach(_config DEBUG RELEASE)
       if(${var}_${_config})
@@ -82,6 +84,9 @@ function(map_var_to_prop target property var )
   if(map_var_to_prop_REQUIRED AND NOT _found)
     message(FATAL_ERROR "${target}: required variable ${var}${var_suffix} is undefined.")
   endif()
+  
+  get_target_property(_fullprop ${target} ${property})
+  verbose_message("${target}:${property} = ${_fullprop}")
 endfunction()
 
 #acceptable libtypes are SHARED, STATIC, INTERFACE, and UNKNOWN
