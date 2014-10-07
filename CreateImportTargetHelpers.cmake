@@ -68,6 +68,17 @@ function(map_var_to_prop target property var )
     endif()
   endforeach()
   
+  #set the default to a nice generator expression.
+  if(NOT ${var})
+    set(_defaultprop)
+    foreach(_config DEBUG RELEASE)
+      if(${var}_${_config})
+        set(_defaultprop ${_defaultprop}$<$<CONFIG:${_config}>:${${var}_${_config}}>)
+      endif()
+    endforeach()
+    set_property(TARGET ${target} PROPERTY ${property} ${_defaultprop})
+  endif()
+
   if(map_var_to_prop_REQUIRED AND NOT _found)
     message(FATAL_ERROR "${target}: required variable ${var}${var_suffix} is undefined.")
   endif()
