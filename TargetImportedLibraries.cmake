@@ -72,7 +72,7 @@ function(target_imported_libraries target)
 		  if(NOT _imported_location_debug AND NOT _imported_location_release)
 			message(FATAL_ERROR "No IMPORTED_LOCATION specified for SHARED import target ${_import_lib}")
 		  endif()
-		  set(_imported_location "$<$<CONFIG:DEBUG>:${_imported_location_debug}>$<CONFIG:RELEASE>:${_imported_location_release}>")
+		  set(_imported_location "$<$<CONFIG:DEBUG>:${_imported_location_debug}>$<$<CONFIG:RELEASE>:${_imported_location_release}>")
         endif()
 
         verbose_message("Adding copy command for ${_import_lib}: ${_imported_location}")
