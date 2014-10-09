@@ -13,13 +13,15 @@ uniform sampler2D distortion;
 uniform float gamma;
 uniform float brightness;
 uniform float use_color;
+uniform float ir_mode;
 
 // debayer
 float width = 672.0;
 float height = 600.0;
-float rscale = 1.6;
+float rscale = 1.5;
 float gscale = 1.0;
 float bscale = 0.5;
+float irscale = 1.2;
 
 float corr_ir_g = 0.2;
 float corr_ir_rb = 0.2;
@@ -105,19 +107,20 @@ void main(void) {
     gl_FragColor.r = rfudge*output_lf_fudge.r + (1-rfudge)*output_lf.r;
     gl_FragColor.g = gfudge*output_lf_fudge.g + (1-gfudge)*output_lf.g;
     gl_FragColor.b = bfudge*output_lf_fudge.b + (1-bfudge)*output_lf.b;
+    float ir_out = irfudge*output_lf_fudge.a + (1-irfudge)*output_lf.a;
    
     gl_FragColor.r *= rscale;
     gl_FragColor.g *= gscale;
     gl_FragColor.b *= bscale;
+    ir_out *= irscale;
    
     //float avgrgb = 0.33333*(input_lf.r + input_lf.g + input_lf.b) - 0.9*input_lf.a;
     //float threshold = min(1, avgrgb*100);
     //threshold *= threshold;
     //gl_FragColor.rgb = output_lf_gray.rgb*(1 - threshold) + gl_FragColor.rgb*(threshold);
-   
-    //gl_FragColor.rgb = show_ir > 0.5 ? vec3(pow(ir_out, gamma)): pow(gl_FragColor.rgb, vec3(gamma));
     
-    gl_FragColor.rgb = brightness*pow(gl_FragColor.rgb, vec3(0.55));
+    gl_FragColor.rgb = ir_mode > 0.5 ? vec3(ir_out) : gl_FragColor.rgb;
+    gl_FragColor.rgb = 1.05*brightness*pow(gl_FragColor.rgb, vec3(gamma));
 
   } else {
     gl_FragColor.rgb = brightness*vec3(pow(texture2D(texture, texCoord).r, gamma));
