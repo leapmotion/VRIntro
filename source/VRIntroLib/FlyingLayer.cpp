@@ -163,6 +163,7 @@ void FlyingLayer::RenderPopup() const {
 
   glActiveTexture(GL_TEXTURE0 + 0);
   glUniform1i(m_PopupShader->LocationOfUniform("texture"), 0);
+  glUniform1f(m_PopupShader->LocationOfUniform("alpha"), 1.0f);
 
   m_PopupBuffer.Bind();
   glEnableVertexAttribArray(m_PopupShader->LocationOfAttribute("position"));

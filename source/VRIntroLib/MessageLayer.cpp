@@ -62,6 +62,7 @@ void MessageLayer::Render(TimeDelta real_time_delta) const {
 
   glActiveTexture(GL_TEXTURE0 + 0);
   glUniform1i(m_Shader->LocationOfUniform("texture"), 0);
+  glUniform1f(m_Shader->LocationOfUniform("alpha"), 1.0f);
 
   m_Buffer.Bind();
   glEnableVertexAttribArray(m_Shader->LocationOfAttribute("position"));
