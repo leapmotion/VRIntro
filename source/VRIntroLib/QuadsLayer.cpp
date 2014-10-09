@@ -75,20 +75,22 @@ QuadsLayer::QuadsLayer(const EigenTypes::Vector3f& initialEyePos) :
 }
 
 void QuadsLayer::Update(TimeDelta real_time_delta) {
-  static const float FADE = 0.97f;
+  //static const float FADE = 0.97f;
 
   // Find the farther hand and use it
   EigenTypes::Vector3f wand = EigenTypes::Vector3f::Zero();
+  float confidence;
 
   for (size_t i = 0; i < m_SkeletonHands.size(); i++) {
-    const EigenTypes::Vector3f &thisHand = Pane::m_HeadTilt.transpose()*(m_SkeletonHands[i].avgExtended.cast<float>() - m_EyePos);
+    const EigenTypes::Vector3f &thisHand = Pane::m_HeadTilt*(m_SkeletonHands[i].avgExtended.cast<float>() - m_EyePos);
     if (thisHand.squaredNorm() > wand.squaredNorm()) {
       wand = thisHand;
+      confidence = m_SkeletonHands[i].confidence;
     }
   }
   EigenTypes::Vector2f clutch = wand.isZero() ? EigenTypes::Vector2f::Zero() : Pane::UnwarpToYTheta(wand);
 
-  float clutchStrength = exp(std::min(0.0f, 25.f*(wand.norm() - Pane::m_Radius)));
+  float clutchStrength = exp(std::min(0.0f, 25.f*(wand.norm() + 0.005f - Pane::m_Radius)));
   EigenTypes::Vector2f clutchMovement = clutch - m_LastYTheta;
 
   if (clutchMovement.x() > static_cast<float>(M_PI)) {
@@ -96,7 +98,9 @@ void QuadsLayer::Update(TimeDelta real_time_delta) {
   } else if (clutchMovement.x() < -static_cast<float>(M_PI)) {
     clutchMovement.x() += 2*static_cast<float>(M_PI);
   }
-  m_DeltaYTheta = clutchStrength*clutchMovement + (1 - clutchStrength)*(FADE*m_DeltaYTheta + 0.025f*(1-FADE)*EigenTypes::Vector2f(-Pane::m_Stride, 1)/(1 + Pane::m_Stride*Pane::m_Stride));
+
+  const float FADE = clutchStrength/(0.1 + clutchStrength);
+  m_DeltaYTheta = FADE*m_DeltaYTheta + (1-FADE)*(clutchStrength*clutchMovement + (1 - clutchStrength)*(0.025f*EigenTypes::Vector2f(-Pane::m_Stride, 1)/(1 + Pane::m_Stride*Pane::m_Stride)));
   Pane::m_Pan += m_DeltaYTheta;
   m_LastYTheta = clutch;
   float panYLimit = 2*static_cast<float>(M_PI)*m_StripWidth/(1 + Pane::m_Stride*Pane::m_Stride);
@@ -120,6 +124,7 @@ void QuadsLayer::Render(TimeDelta real_time_delta) const {
 
   glActiveTexture(GL_TEXTURE0 + 0);
   glUniform1i(m_Shader->LocationOfUniform("texture"), 0);
+  glUniform1f(m_Shader->LocationOfUniform("alpha"), 0.8f);
 
   m_Buffer.Bind();
   m_Buffer.Write(Pane::m_RenderBuffer.data(), 4*sizeof(TextureVertex)*m_Panes.size());
