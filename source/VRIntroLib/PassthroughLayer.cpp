@@ -9,6 +9,7 @@
 
 PassthroughLayer::PassthroughLayer() :
   InteractionLayer(EigenTypes::Vector3f::Zero(), "shaders/passthrough"),
+  m_RealHeight(240),
   m_image(GLTexture2Params(640, 240, GL_LUMINANCE), GLTexture2PixelDataReference(GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL, 0)),
   m_colorimage(GLTexture2Params(672, 496, GL_RGBA), GLTexture2PixelDataReference(GL_RGBA, GL_UNSIGNED_BYTE, NULL, 0)),
   m_distortion(GLTexture2Params(64, 64, GL_RG32F), GLTexture2PixelDataReference(GL_RG, GL_FLOAT, NULL, 0)),
@@ -60,25 +61,34 @@ PassthroughLayer::~PassthroughLayer() {
 }
 
 void PassthroughLayer::SetImage(const unsigned char* data, int width, int height) {
-  GLTexture2Params params = m_image.Params();
+  const GLTexture2Params& params = m_image.Params();
 
   // We have to resize our texture when image sizes change
-  if (width != params.Width() || height != params.Height()) {
+  if (height != m_RealHeight) {
     m_image.Bind();
-    params.SetWidth(width);
-    params.SetHeight(height);
+    m_RealHeight = height;
     glTexImage2D(params.Target(),
                  0,
                  params.InternalFormat(),
                  params.Width(),
-                 params.Height(),
+                 m_RealHeight,
                  0,
                  GL_LUMINANCE, // HACK because we don't have api-level access for glTexImage2D after construction, only glTexSubImage2D
                  GL_UNSIGNED_BYTE,
                  data);
     m_image.Unbind();
   } else {
-    m_image.UpdateTexture(data);
+    m_image.Bind();
+    glTexSubImage2D(params.Target(),
+                 0,
+                 0,
+                 0,
+                 params.Width(),
+                 m_RealHeight,
+                 GL_LUMINANCE, // HACK because we don't have api-level access for glTexImage2D after construction, only glTexSubImage2D
+                 GL_UNSIGNED_BYTE,
+                 data);
+    m_image.Unbind();
   }
   m_UseRGBI = false;
   m_HasData = true;
@@ -159,6 +169,7 @@ void PassthroughLayer::RenderPopup() const {
 
   glActiveTexture(GL_TEXTURE0 + 0);
   glUniform1i(m_PopupShader->LocationOfUniform("texture"), 0);
+  glUniform1f(m_PopupShader->LocationOfUniform("alpha"), 1.0f);
 
   m_PopupBuffer.Bind();
   glEnableVertexAttribArray(m_PopupShader->LocationOfAttribute("position"));

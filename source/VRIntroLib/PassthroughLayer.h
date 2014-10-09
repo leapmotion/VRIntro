@@ -44,4 +44,7 @@ private:
   float m_Brightness;
   bool m_UseRGBI;
   int m_IRMode;
+
+  // Hack for robust mode
+  int m_RealHeight;
 };
