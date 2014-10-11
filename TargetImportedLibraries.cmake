@@ -59,20 +59,20 @@ function(target_imported_libraries target)
 
       get_target_property(_type ${_import_lib} TYPE)
       get_target_property(_imported ${_import_lib} IMPORTED)
-      if((${_type} STREQUAL SHARED_LIBRARY) AND ${_imported})
+      if(${_type} STREQUAL SHARED_LIBRARY AND ${_imported})
         
         set(_found_configs_expr)
         set(_imported_location)
         
-		#if only the _<Config> variants are set, create a generator expression.
+        #if only the _<Config> variants are set, create a generator expression.
         get_target_property(_imported_location ${_import_lib} IMPORTED_LOCATION)
         if(NOT _imported_location)
-		  get_target_property(_imported_location_debug ${_import_lib} IMPORTED_LOCATION_DEBUG)
-		  get_target_property(_imported_location_release ${_import_lib} IMPORTED_LOCATION_RELEASE)
-		  if(NOT _imported_location_debug AND NOT _imported_location_release)
-			message(FATAL_ERROR "No IMPORTED_LOCATION specified for SHARED import target ${_import_lib}")
-		  endif()
-		  set(_imported_location "$<$<CONFIG:DEBUG>:${_imported_location_debug}>$<$<CONFIG:RELEASE>:${_imported_location_release}>")
+          get_target_property(_imported_location_debug ${_import_lib} IMPORTED_LOCATION_DEBUG)
+          get_target_property(_imported_location_release ${_import_lib} IMPORTED_LOCATION_RELEASE)
+          if(NOT _imported_location_debug AND NOT _imported_location_release)
+            message(FATAL_ERROR "No IMPORTED_LOCATION specified for SHARED import target ${_import_lib}")
+          endif()
+          set(_imported_location "$<$<CONFIG:DEBUG>:${_imported_location_debug}>$<$<CONFIG:RELEASE>:${_imported_location_release}>")
         endif()
 
         verbose_message("Adding copy command for ${_import_lib}: ${_imported_location}")
@@ -84,8 +84,8 @@ function(target_imported_libraries target)
           get_target_property(_is_bundle ${target} MACOSX_BUNDLE)
           if(_is_bundle)
             add_custom_command(TARGET ${target} POST_BUILD
-              COMMAND ${CMAKE_COMMAND} -E make_directory \"$<TARGET_FILE_DIR:${target}>/../Frameworks/\"
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different \"${_imported_location}\" \"$<TARGET_FILE_DIR:${target}>/../Frameworks/\"
+              COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${target}>/../Frameworks/"
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_imported_location}" "$<TARGET_FILE_DIR:${target}>/../Frameworks/"
               COMMAND install_name_tool -change @loader_path/libLeap.dylib @loader_path/../Frameworks/libLeap.dylib "$<TARGET_FILE:${target}>")
             #call install_name_tool and fixup the dylib paths here:
           endif()
