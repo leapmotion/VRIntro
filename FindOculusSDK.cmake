@@ -41,3 +41,8 @@ find_package_handle_standard_args(OculusSDK DEFAULT_MSG OculusSDK_ROOT_DIR Oculu
 include(CreateImportTargetHelpers)
 
 generate_import_target(OculusSDK STATIC)
+
+if(WIN32)
+  #Oculus dev kit relies on winmm and winsock2
+  target_link_libraries(OculusSDK::OculusSDK INTERFACE winmm Ws2_32)
+endif()
