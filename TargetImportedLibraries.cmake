@@ -26,7 +26,7 @@ function(target_imported_libraries target)
   cmake_parse_arguments(target_imported_libraries "" "LINK_TYPE" "" ${ARGV})
   
   set(_library_list ${target_imported_libraries_UNPARSED_ARGUMENTS})
-  target_link_libraries(${target} ${target_link_libraries_LINK_TYPE} ${_library_list})
+  target_link_libraries(${target} ${target_imported_libraries_LINK_TYPE} ${_library_list})
 
   #early out if the target isn't an EXECUTABLE
   get_target_property(_target_type ${target} TYPE)
