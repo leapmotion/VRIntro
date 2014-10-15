@@ -33,10 +33,10 @@ MessageLayer::MessageLayer(const EigenTypes::Vector3f& initialEyePos) :
     +0.288f, +0.12f, -0.5f, 1, 1,
 
     // No Oculus warning
-    -0.288f, -0.184f, -0.5f, 0, 0,
-    -0.288f, +0.184f, -0.5f, 0, 1,
-    +0.288f, -0.184f, -0.5f, 1, 0,
-    +0.288f, +0.184f, -0.5f, 1, 1,
+    -0.288f, -0.184f, -0.3f, 0, 0,
+    -0.288f, +0.184f, -0.3f, 0, 1,
+    +0.288f, -0.184f, -0.3f, 1, 0,
+    +0.288f, +0.184f, -0.3f, 1, 1,
   };
 
   m_Buffer.Create(GL_ARRAY_BUFFER);

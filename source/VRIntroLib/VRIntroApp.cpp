@@ -75,34 +75,34 @@ void VRIntroApp::Initialize() {
   params.windowTitle = "Leap Motion VR Intro BETA (F11 to fullscreen)";
 
   m_Oculus.InitHMD();
-  if (!m_Oculus.isDebug()){
-    params.windowHeight = m_Oculus.GetHMDHeight();
+  if (!m_Oculus.isDebug()) {
     params.windowWidth = m_Oculus.GetHMDWidth();
+    params.windowHeight = m_Oculus.GetHMDHeight();
+  } else {
+    params.windowWidth = 640;
+    params.windowHeight = 720;
   }
-  else{
-    m_OculusMode = false;
-  }
-  
+
   m_applicationTime = TimePoint(0.0);         // Start the application time at zero.
-  
+
   m_SDLController.Initialize(params);         // This initializes everything SDL-related.
   m_Width = m_SDLController.GetParams().windowWidth;
   m_Height = m_SDLController.GetParams().windowHeight;
 
   m_GLController.Initialize();                // This initializes the general GL state.
   FreeImage_Initialise();
-  
+
   if (glewInit() != GLEW_OK) {
     throw std::runtime_error("Glew initialization failed");
   }
-  
+
 #if _WIN32
   m_Oculus.SetHWND(m_SDLController.GetHWND());
 #endif
   if (!m_Oculus.Init()) {
     throw std::runtime_error("Oculus initialization failed");
   }
-  
+
   InitMirror();
 
   // TODO: Add to components
@@ -163,23 +163,22 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
   }
 
   messageLayer = static_cast<MessageLayer*>(&*m_Layers[MESSAGE_LAYERS]);
-  if(m_PassthroughLayer[0]->m_HasData){
+  if (m_PassthroughLayer[0]->m_HasData) {
     if (m_applicationTime > 15.0f && !m_HelpToggled) {
       m_HelpToggled = true;
       messageLayer->SetVisible(1, false);
     }
-  }
-  else{
+  } else {
     // Leap is not attached or frames are not going through
     messageLayer->SetVisible(0, true);
   }
-  
+
   messageLayer->SetVisible(2, false);
-//messageLayer->SetVisible(2, m_LeapListener.GetFPSEstimate() < 59);
-  messageLayer->SetVisible(3, m_Oculus.isDebug());
-  
+  //messageLayer->SetVisible(2, m_LeapListener.GetFPSEstimate() < 59);
+  messageLayer->SetVisible(3, m_Oculus.isDebug() && m_OculusMode);
+
   double elapsed = timer.Stop();
-//std::cout << __LINE__ << ":\t   Update() = " << (elapsed) << std::endl;
+  //std::cout << __LINE__ << ":\t   Update() = " << (elapsed) << std::endl;
 
 }
 
@@ -252,7 +251,7 @@ EventHandlerAction VRIntroApp::HandleWindowEvent(const SDL_WindowEvent &ev) {
   if (ev.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
     m_Width = ev.data1;
     m_Height = ev.data2;
-    
+
     // Render smoothly in different modes
     glViewport(0,0, m_Width, m_Height);
     m_SDLController.EndRender();
@@ -378,10 +377,10 @@ void VRIntroApp::InitializeApplicationLayers() {
   m_Layers.push_back(std::shared_ptr<HandLayer>(new HandLayer(defaultEyePose)));
   m_Layers.push_back(std::shared_ptr<MessageLayer>(new MessageLayer(defaultEyePose)));
   // m_Layers.push_back(std::shared_ptr<MessageLayer>(new MessageLayer(defaultEyePose)));
-  
+
   m_Layers[CONTENT_LAYERS]->Alpha() = 1;
   m_Layers[CONTENT_LAYERS + 1]->Alpha() = 1;
-  
+
   for (int i = 0; i < 2; i++) {
     m_PassthroughLayer[i] = std::shared_ptr<PassthroughLayer>(new PassthroughLayer());
     m_PassthroughLayer[i]->Alpha() = 1.0f;
