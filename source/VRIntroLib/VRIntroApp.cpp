@@ -286,6 +286,7 @@ EventHandlerAction VRIntroApp::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) 
         messageLayer->SetVisible(1, !messageLayer->GetVisible(1));
       }
       break;
+    case SDLK_0:
     case SDLK_1:
     case SDLK_2:
     case SDLK_3:
@@ -299,7 +300,9 @@ EventHandlerAction VRIntroApp::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) 
         }
       }
       // Dim passthrough if in flying stage
-      SelectLayer(ev.keysym.sym - SDLK_1);
+      if (ev.keysym.sym != SDLK_0) {
+        SelectLayer(ev.keysym.sym - SDLK_1);
+      }
       for (int i = 0; i < 2; i++) {
         float alpha;
         if (ev.keysym.sym == SDLK_3) {
