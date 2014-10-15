@@ -11,6 +11,7 @@ public:
   virtual void PopulateInteractionLayer(InteractionLayer& target, const float* worldTransformRaw) const override;
   virtual void PopulatePassthroughLayer(PassthroughLayer& target, int i) const override;
   virtual bool IsDragonfly() const override;
+  virtual double GetFPSEstimate() const override;
 
   virtual void Lock() override {}
   virtual void Unlock() override {}

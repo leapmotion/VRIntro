@@ -105,3 +105,7 @@ bool APIFrameSupplier::IsDragonfly() const {
 
   return images.count() == 2 && images[0].width() != 640;
 }
+
+double APIFrameSupplier::GetFPSEstimate() const {
+  return m_LeapController.frame().currentFramesPerSecond();
+}
