@@ -14,6 +14,7 @@ uniform float gamma;
 uniform float brightness;
 uniform float use_color;
 uniform float ir_mode;
+uniform float cripple_mode;
 
 // debayer
 float width = 672.0;
@@ -34,6 +35,13 @@ vec2 b_offset = vec2(0.5, 0);
 
 void main(void) {
   vec2 texCoord = texture2D(distortion, frag_ray).xy;
+
+  // 60 degree FOV 16:9 aspect ratio single camera setup         
+  if (cripple_mode > 0.5 && (frag_ray.x < 0.3717 || frag_ray.x > 0.6283 || frag_ray.y < 0.4278 || frag_ray.y > 0.5722)) {
+    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    return;
+  }
+
   if (use_color > 0.5) {
     // Unwarp the point. Correct oculus distortion, if applicable
     texCoord.x *= 4.0; // HACK!!!

@@ -39,6 +39,7 @@ VRIntroApp::VRIntroApp(bool showMirror) :
   m_HealthWarningDismissed(false),
   m_HelpToggled(false),
   m_OculusMode(true),
+  m_CrippleMode(false),
   m_ShowMirror(showMirror),
   m_Selected(0),
   m_Zoom(1.0f),
@@ -132,7 +133,8 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
   float leap_baseline = m_FrameSupplier->IsDragonfly() ? 64.0f : 40.0f;
   // Set passthrough images
   for (int i = 0; i < 2; i++) {
-    m_FrameSupplier->PopulatePassthroughLayer(*m_PassthroughLayer[i], i);
+    m_FrameSupplier->PopulatePassthroughLayer(*m_PassthroughLayer[i], m_CrippleMode ? 0 : i);
+    m_PassthroughLayer[i]->SetCrippleMode(m_CrippleMode);
   }
 
   // Calculate where each point of interest would have to be if a 6.4-cm baseline Leap centered exactly at the eyeballs saw the frame seen. It will be off by a factor of 1.6.
@@ -221,7 +223,7 @@ void VRIntroApp::Render(TimeDelta real_time_delta) const {
 }
 
 void VRIntroApp::RenderEye(TimeDelta real_time_delta, int i, const EigenTypes::Matrix4x4f& proj) const {
-  const EigenTypes::Matrix4x4f view = m_Oculus.EyeView(i);
+  const EigenTypes::Matrix4x4f view = m_Oculus.EyeView(m_CrippleMode ? 0 : i);
   const EigenTypes::Matrix4x4f zoomMat = EigenTypes::Vector4f(m_Zoom, m_Zoom, 1, 1).asDiagonal();
 
   m_PassthroughLayer[i]->SetProjection(zoomMat*proj);
@@ -277,6 +279,9 @@ EventHandlerAction VRIntroApp::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) 
     case 'h':
       // Hand
       SelectLayer(HAND_LAYER);
+      break;
+    case 'c':
+      m_CrippleMode = !m_CrippleMode;
       break;
     case SDLK_F1:
       // Help menu

@@ -18,6 +18,7 @@ public:
   void SetImage(const unsigned char* data, int width, int height);
   void SetColorImage(const unsigned char* data);
   void SetDistortion(const float* data);
+  void SetCrippleMode(bool value) { m_CrippleMode = value; }
   //void SetProjection(const EigenTypes::Matrix4x4f& proj) { m_projection = proj; } // HACK until I can do this a better way
 
   virtual void Update(TimeDelta real_time_delta) override {}
@@ -44,6 +45,7 @@ private:
   float m_Brightness;
   bool m_UseRGBI;
   int m_IRMode;
+  bool m_CrippleMode;
 
   // Hack for robust mode
   int m_RealHeight;

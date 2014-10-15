@@ -80,14 +80,14 @@ void PassthroughLayer::SetImage(const unsigned char* data, int width, int height
   } else {
     m_image.Bind();
     glTexSubImage2D(params.Target(),
-                 0,
-                 0,
-                 0,
-                 params.Width(),
-                 m_RealHeight,
-                 GL_LUMINANCE, // HACK because we don't have api-level access for glTexImage2D after construction, only glTexSubImage2D
-                 GL_UNSIGNED_BYTE,
-                 data);
+                    0,
+                    0,
+                    0,
+                    params.Width(),
+                    m_RealHeight,
+                    GL_LUMINANCE, // HACK because we don't have api-level access for glTexImage2D after construction, only glTexSubImage2D
+                    GL_UNSIGNED_BYTE,
+                    data);
     m_image.Unbind();
   }
   m_UseRGBI = false;
@@ -129,6 +129,7 @@ void PassthroughLayer::Render(TimeDelta real_time_delta) const {
 
     static int i = 0;
     glUniform1f(m_Shader->LocationOfUniform("ir_mode"), ((m_IRMode + (++i & 1)) & 2) > 0 ? 1.0f : 0.0f);
+    glUniform1f(m_Shader->LocationOfUniform("cripple_mode"), m_CrippleMode ? 1.0f : 0.0f);
 
 #if 0
     const float edges[] = {-4, -4, -1, -4, 4, -1, 4, -4, -1, 4, 4, -1};
@@ -205,8 +206,10 @@ EventHandlerAction PassthroughLayer::HandleKeyboardEvent(const SDL_KeyboardEvent
       return EventHandlerAction::CONSUME;
     case '.':
       m_IRMode++;
+      return EventHandlerAction::CONSUME;
     default:
       return EventHandlerAction::PASS_ON;
     }
   }
+  return EventHandlerAction::PASS_ON;
 }

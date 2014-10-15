@@ -100,6 +100,7 @@ private:
   bool m_HealthWarningDismissed;
   bool m_HelpToggled;
   bool m_OculusMode;
+  bool m_CrippleMode;
 
   int m_Width;
   int m_Height;
