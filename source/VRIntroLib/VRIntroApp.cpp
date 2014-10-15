@@ -40,7 +40,9 @@ VRIntroApp::VRIntroApp(bool showMirror) :
   m_HelpToggled(false),
   m_OculusMode(true),
   m_ShowMirror(showMirror),
-  m_Selected(0) {}
+  m_Selected(0),
+  m_Zoom(1.0f),
+  m_Scale(1.0f) {}
 
 void VRIntroApp::InitMirror() {
 #if _WIN32
@@ -142,13 +144,13 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
   EigenTypes::Matrix4x4f inputTransform = avgView.inverse();
   EigenTypes::Matrix3x3f conventionConv;
   conventionConv << -EigenTypes::Vector3f::UnitX(), -EigenTypes::Vector3f::UnitZ(), -EigenTypes::Vector3f::UnitY();
-  inputTransform.block<3, 3>(0, 0) *= OCULUS_BASELINE/leap_baseline*conventionConv;
+  inputTransform.block<3, 3>(0, 0) *= m_Scale*OCULUS_BASELINE/leap_baseline*conventionConv;
 
   for (auto it = m_Layers.begin(); it != m_Layers.end(); ++it) {
     InteractionLayer &layer = **it;
     if (layer.Alpha() > 0.01f) {
       m_FrameSupplier->PopulateInteractionLayer(layer, inputTransform.eval().data());
-      layer.SetFingerRadius(6.25f*OCULUS_BASELINE/leap_baseline);
+      layer.SetFingerRadius(m_Scale*6.25f*OCULUS_BASELINE/leap_baseline);
       layer.UpdateEyePos(avgView.inverse().block<3, 1>(0, 3));
       layer.UpdateEyeView(avgView.block<3, 3>(0, 0));
       layer.Update(real_time_delta);              // Update each application layer, from back to front.
@@ -220,8 +222,9 @@ void VRIntroApp::Render(TimeDelta real_time_delta) const {
 
 void VRIntroApp::RenderEye(TimeDelta real_time_delta, int i, const EigenTypes::Matrix4x4f& proj) const {
   const EigenTypes::Matrix4x4f view = m_Oculus.EyeView(i);
+  const EigenTypes::Matrix4x4f zoomMat = EigenTypes::Vector4f(m_Zoom, m_Zoom, 1, 1).asDiagonal();
 
-  m_PassthroughLayer[i]->SetProjection(proj);
+  m_PassthroughLayer[i]->SetProjection(zoomMat*proj);
   m_PassthroughLayer[i]->Render(real_time_delta);
 
   glEnable(GL_DEPTH_TEST);
@@ -232,7 +235,7 @@ void VRIntroApp::RenderEye(TimeDelta real_time_delta, int i, const EigenTypes::M
     // Set individual shader's state
     InteractionLayer &layer = **it;
     if (layer.Alpha() > 0.01f) {
-      layer.SetProjection(proj);
+      layer.SetProjection(zoomMat*proj);
       layer.SetModelView(view);
       // Set default shader's state
       glMatrixMode(GL_PROJECTION);
@@ -328,6 +331,24 @@ EventHandlerAction VRIntroApp::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) 
     case SDLK_F11:
       m_SDLController.ToggleFullscreen();
       //SDL_GetWindowSize(m_SDLController.GetWindow(), &m_Width, &m_Height);
+      break;
+    case SDLK_HOME:
+    case SDLK_F7:
+      m_Zoom *= 0.99009901f;
+      break;
+    case SDLK_END:
+    case SDLK_F8:
+      m_Zoom *= 1.01f;
+      break;
+    case SDLK_PAGEUP:
+      m_Scale *= 1.01f;
+      break;
+    case SDLK_PAGEDOWN:
+      m_Scale *= 0.99009901f;
+      break;
+    case SDLK_BACKSPACE:
+      m_Zoom = 1.0f;
+      m_Scale = 1.0f;
       break;
     case 0x1b:
       exit(0);

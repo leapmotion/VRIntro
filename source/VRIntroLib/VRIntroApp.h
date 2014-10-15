@@ -103,4 +103,7 @@ private:
 
   int m_Width;
   int m_Height;
+
+  float m_Zoom;
+  float m_Scale;
 };
