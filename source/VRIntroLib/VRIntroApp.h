@@ -101,6 +101,7 @@ private:
   bool m_HelpToggled;
   bool m_OculusMode;
   bool m_CrippleMode;
+  bool m_CroppleMode;
 
   int m_Width;
   int m_Height;
