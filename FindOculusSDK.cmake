@@ -19,7 +19,8 @@
 
 find_path(OculusSDK_ROOT_DIR NAMES "LibOVR/Include/OVR.h" PATH_SUFFIXES OculusSDK)
 
-set(OculusSDK_INCLUDE_DIR ${OculusSDK_ROOT_DIR}/LibOVR/Include)
+#We include the src directory as well since we need OVR_CAPI_GL/D3D
+set(OculusSDK_INCLUDE_DIR "${OculusSDK_ROOT_DIR}/LibOVR/Include" "${OculusSDK_ROOT_DIR}/LibOVR/Src")
 
 if(MSVC)
   find_library(OculusSDK_LIBRARY_RELEASE "libovr.lib" HINTS "${OculusSDK_ROOT_DIR}/LibOVR/Lib/Win32/VS2013" PATH_SUFFIXES lib)
