@@ -48,6 +48,7 @@ protected:
   std::shared_ptr<GLShader> m_Shader;
   mutable Sphere m_Sphere;
   mutable Cylinder m_Cylinder;
+  mutable Box m_Box;
   float m_FingerRadius;
 
   EigenTypes::Matrix4x4f m_Projection;

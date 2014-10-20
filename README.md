@@ -23,9 +23,10 @@ Be sure to select "Allow Images" and "Optimize for top-down tracking" in the Lea
 
 1. Get CMake 3.0+ and Microsoft Visual Studio 2013
 2. Download libraries here https://leapmotion.box.com/s/hy6cq89y2gze2o97s8t1
-3. Extract the zip file into a local folder
+2. Download Bullet source & compiled libraries for Win32 (Mac is not built) here https://leapmotion.box.com/s/63fgigan6ee72r08zcks
+3. Extract the zip files into a local folder
 4. Obtain Oculus Rift SDK 0.4.1+, and the latest LeapSDK, and copy "OculusSDK" and "LeapSDK" into the folder mentioned in step 3
-5. Run CMake and set the source directory to /source in this repo
+5. Run CMake and set the source directory to the root of in this repo
 6. Set EXTERNAL_LIBRARY_DIR to the folder mentioned in step 3
 7. Open the generated VRIntro.sln file, and build
 8. Copy any needed DLLs (SDL, SFML) from within the libraries folder to your binary folder. (We are planning to automate this soon!)

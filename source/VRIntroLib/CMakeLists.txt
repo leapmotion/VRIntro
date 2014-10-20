@@ -30,6 +30,8 @@ set(VRIntroLib_SOURCES
   IFrameSupplier.h
   MathUtility.h
   MathUtility.cpp
+  PhysicsLayer.h
+  PhysicsLayer.cpp
 )
 
 add_windows_sources(
@@ -64,6 +66,7 @@ endif()
 add_library(VRIntroLib STATIC ${VRIntroLib_SOURCES})
 target_link_components(VRIntroLib Application GLController GLShaderLoader GLTexture2Loader Primitives SDLController OculusVR)
 target_package(VRIntroLib Eigen)
+target_package(VRIntroLib Bullet)
 
 if(WIN32)
   target_link_libraries(VRIntroLib comctl32.lib Dwmapi.lib Shlwapi.lib)
