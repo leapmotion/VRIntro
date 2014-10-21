@@ -18,6 +18,8 @@ struct SkeletonHand {
   EigenTypes::Vector3f jointConnections[23];
   EigenTypes::Vector3f avgExtended;
 
+  int id;
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 

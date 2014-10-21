@@ -30,6 +30,7 @@ void APIFrameSupplier::PopulateInteractionLayer(InteractionLayer& target, const 
   for (int i = 0; i < frame.hands().count(); i++) {
     const Leap::Hand& hand = frame.hands()[i];
     SkeletonHand outHand;
+    outHand.id = hand.id();
     outHand.confidence = hand.confidence();
 
     const EigenTypes::Vector3f palm = rotation*hand.palmPosition().toVector3<EigenTypes::Vector3f>() + translation;
