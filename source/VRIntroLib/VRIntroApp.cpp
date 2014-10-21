@@ -402,6 +402,7 @@ void VRIntroApp::InitializeApplicationLayers() {
   m_Layers.push_back(std::shared_ptr<FlyingLayer>(new FlyingLayer(defaultEyePose)));
   m_Layers.push_back(std::shared_ptr<FractalLayer>(new FractalLayer(defaultEyePose)));
   m_Layers.push_back(std::shared_ptr<QuadsLayer>(new QuadsLayer(defaultEyePose)));
+  assert(m_Layers.size() == PHYSICS_LAYER);
   m_Layers.push_back(std::shared_ptr<PhysicsLayer>(new PhysicsLayer(defaultEyePose)));
 
   assert(m_Layers.size() == CONTENT_LAYERS);
