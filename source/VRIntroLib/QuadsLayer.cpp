@@ -2,6 +2,8 @@
 #include "QuadsLayer.h"
 #include "GLController.h"
 
+#include <float.h>
+
 float Pane::m_Gap = 0.25f;
 float Pane::m_Stride = 16.0f;
 float Pane::m_Radius = 0.40f;
@@ -32,6 +34,8 @@ EigenTypes::Vector2f Pane::UnwarpToYTheta(const EigenTypes::Vector3f& c) {
 
 std::vector<std::string> get_all_files_names_within_folder(std::string folder) {
   std::vector<std::string> names;
+    
+#if _WIN32
   char search_path[200];
   sprintf(search_path, "%s\\*.*", folder.c_str());
   WIN32_FIND_DATA fd;
@@ -49,6 +53,7 @@ std::vector<std::string> get_all_files_names_within_folder(std::string folder) {
     } while (::FindNextFile(hFind, &fd));
     ::FindClose(hFind);
   }
+#endif
   return names;
 }
 
