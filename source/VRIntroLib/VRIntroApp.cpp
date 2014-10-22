@@ -178,7 +178,7 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
     messageLayer->SetVisible(0, true);
   }
 
-  messageLayer->SetVisible(2, m_FrameSupplier->GetFPSEstimate() < 59);
+  messageLayer->SetVisible(2, m_FrameSupplier->GetFPSEstimate() < 30);
   messageLayer->SetVisible(3, m_Oculus.isDebug() && m_OculusMode);
 
   double elapsed = timer.Stop();
