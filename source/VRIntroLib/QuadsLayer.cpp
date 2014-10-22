@@ -80,7 +80,7 @@ QuadsLayer::QuadsLayer(const EigenTypes::Vector3f& initialEyePos) :
 }
 
 void QuadsLayer::Update(TimeDelta real_time_delta) {
-  //static const float FADE = 0.97f;
+  static const float FADE = 0.97f;
 
   // Find the farther hand and use it
   EigenTypes::Vector3f wand = EigenTypes::Vector3f::Zero();
@@ -104,8 +104,9 @@ void QuadsLayer::Update(TimeDelta real_time_delta) {
     clutchMovement.x() += 2*static_cast<float>(M_PI);
   }
 
-  const float FADE = clutchStrength/(0.1 + clutchStrength);
-  m_DeltaYTheta = FADE*m_DeltaYTheta + (1-FADE)*(clutchStrength*clutchMovement + (1 - clutchStrength)*(0.025f*EigenTypes::Vector2f(-Pane::m_Stride, 1)/(1 + Pane::m_Stride*Pane::m_Stride)));
+  m_DeltaYTheta = clutchStrength*clutchMovement + (1 - clutchStrength)*(FADE*m_DeltaYTheta + 0.025f*(1-FADE)*EigenTypes::Vector2f(-Pane::m_Stride, 1)/(1 + Pane::m_Stride*Pane::m_Stride));
+
+//  m_DeltaYTheta = FADE*m_DeltaYTheta + (1-FADE)*(clutchStrength*clutchMovement + (1 - clutchStrength)*(0.025f*EigenTypes::Vector2f(-Pane::m_Stride, 1)/(1 + Pane::m_Stride*Pane::m_Stride)));
   Pane::m_Pan += m_DeltaYTheta;
   m_LastYTheta = clutch;
   float panYLimit = 2*static_cast<float>(M_PI)*m_StripWidth/(1 + Pane::m_Stride*Pane::m_Stride);
