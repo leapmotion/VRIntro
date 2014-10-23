@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "Config.h"
 #include "IFrameSupplier.h"
 #include "VRIntroApp.h"
 #include "SpheresLayer.h"
@@ -402,7 +403,11 @@ void VRIntroApp::InitializeApplicationLayers() {
   m_Layers.push_back(std::shared_ptr<FlyingLayer>(new FlyingLayer(defaultEyePose)));
   m_Layers.push_back(std::shared_ptr<FractalLayer>(new FractalLayer(defaultEyePose)));
   m_Layers.push_back(std::shared_ptr<QuadsLayer>(new QuadsLayer(defaultEyePose)));
+#if USE_BULLET == 1
   m_Layers.push_back(std::shared_ptr<PhysicsLayer>(new PhysicsLayer(defaultEyePose)));
+#else
+  m_Layers.push_back(std::shared_ptr<GridLayer>(new GridLayer(defaultEyePose)));
+#endif
 
   assert(m_Layers.size() == CONTENT_LAYERS);
 
