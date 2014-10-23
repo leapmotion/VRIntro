@@ -26,16 +26,17 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") # This is the correct way to detect Ma
       MACOSX_PACKAGE_LOCATION Resources/images
     )
     
-    file(GLOB COPY_COMPONENTS_GLSL ${Components_DIR}/resources/*)
-    file(GLOB COPY_VRINTRO_GLSL ${VRINTRO_SOURCE_DIR}/shaders/*)
-    set(COPY_GLSL_RESOURCES 
-        ${COPY_COMPONENTS_GLSL}
-	${COPY_VRINTRO_GLSL}
-    )
+    file(GLOB COPY_COMPONENTS_GLSL_RESOURCES ${Components_DIR}/resources/*)
+    file(GLOB COPY_VRINTRO_GLSL_RESOURCES ${VRINTRO_SOURCE_DIR}/shaders/*)
     set_source_files_properties(
-      ${COPY_GLSL_RESOURCES}
+      ${COPY_VRINTRO_GLSL_RESOURCES}
       PROPERTIES
       MACOSX_PACKAGE_LOCATION Resources/shaders
+    )
+    set_source_files_properties(
+      ${COPY_COMPONENTS_GLSL_RESOURCES}
+      PROPERTIES
+      MACOSX_PACKAGE_LOCATION Resources
     )
 endif()
 
@@ -54,7 +55,8 @@ add_executable(VRIntro
 		${_add_executable_options} 
 		${VRIntro_SOURCES}
                 ${COPY_IMG_RESOURCES}
-                ${COPY_GLSL_RESOURCES}
+                ${COPY_VRINTRO_GLSL_RESOURCES}
+                ${COPY_COMPONENTS_GLSL_RESOURCES}
 )
 target_link_libraries(VRIntro VRIntroLib)
 target_package(VRIntro Leap)
