@@ -113,9 +113,9 @@ void FlyingLayer::Render(TimeDelta real_time_delta) const {
   int zShift = 2*static_cast<int>(0.5f*centerpoint.z() + 0.5f);
   glLineWidth(m_LineThickness);
   glBegin(GL_LINES);
-  for (int i = -60 + xShift; i < 60 + xShift; i+=2) {
-    for (int j = -50 + yShift; j < 70 + yShift; j+=20) {
-      for (int k = -60 + zShift; k < 60 + zShift; k+=2) {
+  for (int i = -50 + xShift; i < 50 + xShift; i+=2) {
+    for (int j = -30 + yShift; j < 50 + yShift; j+=20) {
+      for (int k = -50 + zShift; k < 50 + zShift; k+=2) {
         EigenTypes::Vector3f a(static_cast<float>(i), static_cast<float>(j), static_cast<float>(k));
         EigenTypes::Vector3f b(static_cast<float>(i + 2), static_cast<float>(j), static_cast<float>(k));
         //EigenTypes::Vector3f c(static_cast<float>(i), static_cast<float>(j + 2), static_cast<float>(k));
@@ -130,12 +130,6 @@ void FlyingLayer::Render(TimeDelta real_time_delta) const {
 
         glColor4f(1.0f, 1.0f, 1.0f, m_Alpha*bColor);
         glVertex3fv((b).eval().data());
-
-        //glColor4f(1.0f, 1.0f, 1.0f, aColor);
-        //glVertex3fv((a).eval().data());
-
-        //glColor4f(1.0f, 1.0f, 1.0f, cColor);
-        //glVertex3fv((c).eval().data());
 
         glColor4f(1.0f, 1.0f, 1.0f, m_Alpha*aColor);
         glVertex3fv((a).eval().data());
