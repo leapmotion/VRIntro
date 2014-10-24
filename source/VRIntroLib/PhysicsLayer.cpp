@@ -27,7 +27,8 @@ public:
     btRigidBody* m_Body;
     std::shared_ptr<btCollisionShape> m_SharedShape;
 
-    ShapeType m_ShapeType;
+    ShapeType m_ShapeType; // unused now
+    bool m_Visible;
   };
 
   void init();
@@ -37,8 +38,8 @@ public:
 
   void utilSetupScene(const EigenTypes::Vector3f& refPosition);
 
-  void utilAddCube(const EigenTypes::Vector3f& position);
-  btRigidBody* utilAddFingerSphere(const EigenTypes::Vector3f& position);
+  void utilAddCube(const EigenTypes::Vector3f& position, const EigenTypes::Vector3f& halfExtents);
+  btRigidBody* utilAddFingerSphere(const EigenTypes::Vector3f& position, float radius);
   void utilAddGround();
 
   void utilResetScene(const EigenTypes::Vector3f& refPosition);
@@ -158,27 +159,40 @@ void BulletWrapper::utilSetupScene(const EigenTypes::Vector3f& refPosition)
 {
    // setup walls 
 
-  for (int y = 0; y < 7; y++)
-    for (int x = 0; x < 9; x++)
+  float halfSize = 0.05f;
+  EigenTypes::Vector3f boxHalfExtents(halfSize, halfSize, halfSize);
+
+  float spacing = 2.f * halfSize;
+
+  float zDist = 0.5f;
+  // for Dragonfly
+  zDist = 0.6f * zDist;
+
+  int halfCountX = std::min(4, int((zDist-halfSize)/spacing));
+  int halfCountY = 3;
+
+
+  for (int y = -halfCountY; y <= halfCountY; y++)
+    for (int x = -halfCountX; x <= halfCountX; x++)
     {
-      utilAddCube(refPosition + EigenTypes::Vector3f(-0.2f + 0.05f * x, -0.15 + 0.05f * y, -0.5f));
+      utilAddCube(refPosition + EigenTypes::Vector3f(spacing * x, spacing * y, -zDist), boxHalfExtents);
 
-      utilAddCube(refPosition + EigenTypes::Vector3f(-0.2f + 0.05f * x, -0.15 + 0.05f * y, 0.5f));
+      utilAddCube(refPosition + EigenTypes::Vector3f(spacing * x, spacing * y, zDist), boxHalfExtents);
 
-      utilAddCube(refPosition + EigenTypes::Vector3f(0.5f, - 0.15 + 0.05f * y, -0.2f + 0.05f * x));
+      utilAddCube(refPosition + EigenTypes::Vector3f(zDist, spacing * y, spacing * x), boxHalfExtents);
 
-      utilAddCube(refPosition + EigenTypes::Vector3f(-0.5f, -0.15 + 0.05f * y, -0.2f + 0.05f * x));
+      utilAddCube(refPosition + EigenTypes::Vector3f(-zDist, spacing * y, spacing * x), boxHalfExtents);
     }
 
 
 }
 
-void BulletWrapper::utilAddCube(const EigenTypes::Vector3f& position)
+void BulletWrapper::utilAddCube(const EigenTypes::Vector3f& position, const EigenTypes::Vector3f& halfExtents)
 {
   m_BodyDatas.resize(m_BodyDatas.size() + 1);
   BodyData& bodyData = m_BodyDatas.back();
 
-  bodyData.m_SharedShape.reset(new btBoxShape(btVector3(0.025f, 0.025f, 0.025f)));
+  bodyData.m_SharedShape.reset(new btBoxShape(ToBullet(halfExtents)));
 
   btDefaultMotionState* fallMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(position.x(), position.y(), position.z())));
 
@@ -188,15 +202,16 @@ void BulletWrapper::utilAddCube(const EigenTypes::Vector3f& position)
   btRigidBody::btRigidBodyConstructionInfo fallRigidBodyCI(mass, fallMotionState, bodyData.m_SharedShape.get(), fallInertia);
   bodyData.m_Body = new btRigidBody(fallRigidBodyCI);
   bodyData.m_ShapeType = SHAPE_TYPE_BOX;
+  bodyData.m_Visible = true;
   m_DynamicsWorld->addRigidBody(bodyData.m_Body);
 }
 
-btRigidBody* BulletWrapper::utilAddFingerSphere(const EigenTypes::Vector3f& position)
+btRigidBody* BulletWrapper::utilAddFingerSphere(const EigenTypes::Vector3f& position, float radius)
 {
   m_BodyDatas.resize(m_BodyDatas.size() + 1);
   BodyData& bodyData = m_BodyDatas.back();
 
-  bodyData.m_SharedShape.reset(new btSphereShape(0.01f));
+  bodyData.m_SharedShape.reset(new btSphereShape(radius));
 
   btDefaultMotionState* fallMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(position.x(), position.y(), position.z())));
   btScalar mass = 1;
@@ -204,6 +219,7 @@ btRigidBody* BulletWrapper::utilAddFingerSphere(const EigenTypes::Vector3f& posi
   bodyData.m_SharedShape->calculateLocalInertia(mass, fallInertia);
   btRigidBody::btRigidBodyConstructionInfo fallRigidBodyCI(mass, fallMotionState, bodyData.m_SharedShape.get(), fallInertia);
   bodyData.m_ShapeType = SHAPE_TYPE_SPHERE;
+  bodyData.m_Visible = false;
   bodyData.m_Body = new btRigidBody(fallRigidBodyCI);
   m_DynamicsWorld->addRigidBody(bodyData.m_Body);
   return bodyData.m_Body;
@@ -311,7 +327,7 @@ void BulletWrapper::createHandRepresentation(const SkeletonHand& skeletonHand, B
   for (int i = 0; i < k_NumJoints; i++)
   {
     EigenTypes::Vector3f pos = skeletonHand.joints[i];
-    btRigidBody* body = utilAddFingerSphere(pos);
+    btRigidBody* body = utilAddFingerSphere(pos, 0.01f);
     handRepresentation.m_Bodies.push_back(body);
   }
 }
@@ -409,35 +425,41 @@ void PhysicsLayer::Render(TimeDelta real_time_delta) const {
   const std::vector<BulletWrapper::BodyData>& bodyDatas = m_BulletWrapper->getBodyDatas();
   for (unsigned int bi = 0; bi < bodyDatas.size(); bi++)
   {
-    btTransform trans;
-    bodyDatas[bi].m_Body->getMotionState()->getWorldTransform(trans);
+    const BulletWrapper::BodyData& bodyData = bodyDatas[bi];
 
-    switch (bodyDatas[bi].m_Body->getCollisionShape()->getShapeType())
+    if (bodyData.m_Visible)
     {
-    case BOX_SHAPE_PROXYTYPE:
-      m_Box.SetSize(EigenTypes::Vector3f(0.05f, 0.05f, 0.05f).cast<double>());
-      m_Box.Translation() = FromBullet(trans.getOrigin()).cast<double>();
-      //m_Box.LinearTransformation() = Eigen::AngleAxis<double>(0.25f * M_PI, EigenTypes::Vector3::UnitZ()).toRotationMatrix();
-      m_Box.LinearTransformation() = FromBullet(trans.getRotation()).toRotationMatrix();
+      btTransform trans;
+      bodyData.m_Body->getMotionState()->getWorldTransform(trans);
 
-      m_Box.Material().SetDiffuseLightColor(Color(1.0f, 1.0f, 1.0f, m_Alpha));
-      m_Box.Material().SetAmbientLightColor(Color(0.5f, 0.5f, 0.5f, m_Alpha));
-      PrimitiveBase::DrawSceneGraph(m_Box, m_Renderer);
-      break;
-    case SPHERE_SHAPE_PROXYTYPE:
-      if (false)
+      btCollisionShape* shape = bodyData.m_Body->getCollisionShape();
+      switch (shape->getShapeType())
       {
-        m_Sphere.SetRadius(0.01f);// SetSize(EigenTypes::Vector3f(0.05f, 0.05f, 0.05f).cast<double>());
-        m_Sphere.Translation() = FromBullet(trans.getOrigin()).cast<double>();
-        m_Sphere.LinearTransformation() = FromBullet(trans.getRotation()).toRotationMatrix();
-        m_Sphere.Material().SetDiffuseLightColor(Color(1.0f, 1.0f, 1.0f, m_Alpha));
-        m_Sphere.Material().SetAmbientLightColor(Color(0.5f, 0.5f, 0.5f, m_Alpha));
-        PrimitiveBase::DrawSceneGraph(m_Sphere, m_Renderer);
-      }
-      break;
-    }
-//
+      case BOX_SHAPE_PROXYTYPE:
+        {
+          const btBoxShape* boxShape = static_cast<btBoxShape*>(shape);
+          m_Box.SetSize(2.0f * FromBullet(boxShape->getHalfExtentsWithMargin()).cast<double>());
+          m_Box.Translation() = FromBullet(trans.getOrigin()).cast<double>();
+          m_Box.LinearTransformation() = FromBullet(trans.getRotation()).toRotationMatrix();
 
+          m_Box.Material().SetDiffuseLightColor(Color(1.0f, 1.0f, 1.0f, m_Alpha));
+          m_Box.Material().SetAmbientLightColor(Color(0.5f, 0.5f, 0.5f, m_Alpha));
+          PrimitiveBase::DrawSceneGraph(m_Box, m_Renderer);
+          break;
+        }
+      case SPHERE_SHAPE_PROXYTYPE:
+        {
+          const btSphereShape* sphereShape = static_cast<btSphereShape*>(shape);
+          m_Sphere.SetRadius(sphereShape->getRadius());
+          m_Sphere.Translation() = FromBullet(trans.getOrigin()).cast<double>();
+          m_Sphere.LinearTransformation() = FromBullet(trans.getRotation()).toRotationMatrix();
+          m_Sphere.Material().SetDiffuseLightColor(Color(1.0f, 1.0f, 1.0f, m_Alpha));
+          m_Sphere.Material().SetAmbientLightColor(Color(0.5f, 0.5f, 0.5f, m_Alpha));
+          PrimitiveBase::DrawSceneGraph(m_Sphere, m_Renderer);
+          break;
+        }
+      }
+    }
   }
 
 
