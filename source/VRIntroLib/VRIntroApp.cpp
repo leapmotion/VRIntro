@@ -42,6 +42,7 @@ VRIntroApp::VRIntroApp(bool showMirror) :
   m_HelpToggled(false),
   m_OculusMode(true),
   m_CrippleMode(false),
+  m_CroppleMode(false),
   m_ShowMirror(showMirror),
   m_Selected(0),
   m_Zoom(1.0f),
@@ -136,7 +137,7 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
   // Set passthrough images
   for (int i = 0; i < 2; i++) {
     m_FrameSupplier->PopulatePassthroughLayer(*m_PassthroughLayer[i], m_CrippleMode ? 0 : i);
-    m_PassthroughLayer[i]->SetCrippleMode(m_CrippleMode);
+    m_PassthroughLayer[i]->SetCrippleMode(m_CroppleMode);
   }
 
   // Calculate where each point of interest would have to be if a 6.4-cm baseline Leap centered exactly at the eyeballs saw the frame seen. It will be off by a factor of 1.6.
@@ -179,7 +180,7 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
     messageLayer->SetVisible(0, true);
   }
 
-  messageLayer->SetVisible(2, m_FrameSupplier->GetFPSEstimate() < 59);
+  messageLayer->SetVisible(2, m_FrameSupplier->GetFPSEstimate() < 30);
   messageLayer->SetVisible(3, m_Oculus.isDebug() && m_OculusMode);
 
   double elapsed = timer.Stop();
@@ -285,6 +286,9 @@ EventHandlerAction VRIntroApp::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) 
     case 'c':
       m_CrippleMode = !m_CrippleMode;
       break;
+    case 'v':
+      m_CroppleMode = !m_CroppleMode;
+      break;
     case SDLK_F1:
       // Help menu
       m_HelpToggled = true;
@@ -352,9 +356,11 @@ EventHandlerAction VRIntroApp::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) 
       m_Zoom *= 1.01f;
       break;
     case SDLK_PAGEUP:
+    case SDLK_F9:
       m_Scale *= 1.01f;
       break;
     case SDLK_PAGEDOWN:
+    case SDLK_F10:
       m_Scale *= 0.99009901f;
       break;
     case SDLK_BACKSPACE:
