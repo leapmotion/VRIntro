@@ -362,6 +362,11 @@ PhysicsLayer::~PhysicsLayer() {
   delete m_BulletWrapper;
 }
 
+void PhysicsLayer::OnSelected()
+{
+  if (m_BulletWrapper) m_BulletWrapper->utilResetScene(m_EyePos);
+}
+
 void PhysicsLayer::Update(TimeDelta real_time_delta) {
   // Late physics setup (to get valid reference position)
   if (!m_BulletWrapper)
@@ -407,9 +412,9 @@ void PhysicsLayer::Render(TimeDelta real_time_delta) const {
     btTransform trans;
     bodyDatas[bi].m_Body->getMotionState()->getWorldTransform(trans);
 
-    switch (bodyDatas[bi].m_ShapeType)
+    switch (bodyDatas[bi].m_Body->getCollisionShape()->getShapeType())
     {
-    case BulletWrapper::SHAPE_TYPE_BOX:
+    case BOX_SHAPE_PROXYTYPE:
       m_Box.SetSize(EigenTypes::Vector3f(0.05f, 0.05f, 0.05f).cast<double>());
       m_Box.Translation() = FromBullet(trans.getOrigin()).cast<double>();
       //m_Box.LinearTransformation() = Eigen::AngleAxis<double>(0.25f * M_PI, EigenTypes::Vector3::UnitZ()).toRotationMatrix();
@@ -419,7 +424,7 @@ void PhysicsLayer::Render(TimeDelta real_time_delta) const {
       m_Box.Material().SetAmbientLightColor(Color(0.5f, 0.5f, 0.5f, m_Alpha));
       PrimitiveBase::DrawSceneGraph(m_Box, m_Renderer);
       break;
-    case BulletWrapper::SHAPE_TYPE_SPHERE:
+    case SPHERE_SHAPE_PROXYTYPE:
       if (false)
       {
         m_Sphere.SetRadius(0.01f);// SetSize(EigenTypes::Vector3f(0.05f, 0.05f, 0.05f).cast<double>());

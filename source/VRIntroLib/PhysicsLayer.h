@@ -9,6 +9,7 @@ public:
   PhysicsLayer(const EigenTypes::Vector3f& initialEyePos);
   virtual ~PhysicsLayer ();
 
+  virtual void OnSelected();
   virtual void Update(TimeDelta real_time_delta) override;
   virtual void Render(TimeDelta real_time_delta) const override;
   EventHandlerAction HandleKeyboardEvent(const SDL_KeyboardEvent &ev) override;

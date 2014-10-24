@@ -32,6 +32,8 @@ public:
   void SetProjection(const EigenTypes::Matrix4x4f& value) { m_Projection = value; m_Renderer.GetProjection().Matrix() = value.cast<double>(); }
   void SetModelView(const EigenTypes::Matrix4x4f& value) { m_ModelView = value; m_Renderer.GetModelView().Matrix() = value.cast<double>(); }
   void SetFingerRadius(float value) { m_FingerRadius = value; }
+  
+  virtual void OnSelected() {}
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 

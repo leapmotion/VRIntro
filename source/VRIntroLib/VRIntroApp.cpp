@@ -441,4 +441,7 @@ void VRIntroApp::SelectLayer(int i) {
   m_Selected = i % m_Layers.size();
   float& alpha = m_Layers[m_Selected]->Alpha();
   alpha = alpha < 0.3f ? 1.0f : 0.0f;
+
+  static int lastSelected = -1;
+  if (lastSelected != m_Selected) { m_Layers[m_Selected]->OnSelected(); lastSelected = m_Selected; }
 }
