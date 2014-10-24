@@ -59,7 +59,7 @@ QuadsLayer::QuadsLayer(const EigenTypes::Vector3f& initialEyePos) :
   m_StripWidth(0.0f) {
 
   std::vector<std::string> filenames = get_all_files_names_within_folder("gallery");
-  for (int i = 0; i < filenames.size(); i++) {
+  for (unsigned int i = 0; i < filenames.size(); i++) {
     try {
       m_Panes.push_back(std::shared_ptr<Pane>(new Pane(i, m_StripWidth, filenames[i].c_str())));
     } catch (std::runtime_error &e) {

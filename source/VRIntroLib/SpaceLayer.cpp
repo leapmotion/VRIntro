@@ -178,7 +178,7 @@ void SpaceLayer::UpdateV(int type, const EigenTypes::Vector3f& p, EigenTypes::Ve
 
 void SpaceLayer::UpdateAllPhysics() {
   // Update stars
-  for (size_t i = 0; i < m_StarsToShow; i++) {
+  for (int i = 0; i < m_StarsToShow; i++) {
     int type = static_cast<int>(static_cast<float>(i)*NUM_STARS/m_StarsToShow);
     EigenTypes::Vector3f tempV = vel[i];
     for (size_t j = 0; j < NUM_GALAXIES + m_SkeletonHands.size(); j++) {

@@ -139,7 +139,7 @@ void BulletWrapper::utilAddGround()
 
 void BulletWrapper::utilResetScene(const EigenTypes::Vector3f& refPosition)
 {
-  for (int i = 0; i < m_HandRepresentations.size(); i++)
+  for (unsigned int i = 0; i < m_HandRepresentations.size(); i++)
   {
     destroyHandRepresentationFromWorld(m_HandRepresentations[i]);
   }
@@ -468,11 +468,16 @@ void PhysicsLayer::Render(TimeDelta real_time_delta) const {
 }
 
 EventHandlerAction PhysicsLayer::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) {
+
+  EventHandlerAction resultingEventHandlerAction = EventHandlerAction::CONSUME;
+
   switch (ev.keysym.sym) {
     case 'r':
       if (m_BulletWrapper) m_BulletWrapper->utilResetScene(m_EyePos);
       break;
     default:
-      return EventHandlerAction::PASS_ON;
+      resultingEventHandlerAction = EventHandlerAction::PASS_ON;
   }
+
+  return resultingEventHandlerAction;
 }
