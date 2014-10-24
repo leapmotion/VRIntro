@@ -416,7 +416,7 @@ void PhysicsLayer::Render(TimeDelta real_time_delta) const {
       m_Box.LinearTransformation() = FromBullet(trans.getRotation()).toRotationMatrix();
 
       m_Box.Material().SetDiffuseLightColor(Color(1.0f, 1.0f, 1.0f, m_Alpha));
-      m_Box.Material().SetAmbientLightColor(Color(1.0f, 1.0f, 1.0f, m_Alpha));
+      m_Box.Material().SetAmbientLightColor(Color(0.5f, 0.5f, 0.5f, m_Alpha));
       PrimitiveBase::DrawSceneGraph(m_Box, m_Renderer);
       break;
     case BulletWrapper::SHAPE_TYPE_SPHERE:
@@ -426,7 +426,7 @@ void PhysicsLayer::Render(TimeDelta real_time_delta) const {
         m_Sphere.Translation() = FromBullet(trans.getOrigin()).cast<double>();
         m_Sphere.LinearTransformation() = FromBullet(trans.getRotation()).toRotationMatrix();
         m_Sphere.Material().SetDiffuseLightColor(Color(1.0f, 1.0f, 1.0f, m_Alpha));
-        m_Sphere.Material().SetAmbientLightColor(Color(1.0f, 1.0f, 1.0f, m_Alpha));
+        m_Sphere.Material().SetAmbientLightColor(Color(0.5f, 0.5f, 0.5f, m_Alpha));
         PrimitiveBase::DrawSceneGraph(m_Sphere, m_Renderer);
       }
       break;
