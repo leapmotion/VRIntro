@@ -47,7 +47,10 @@ public:
   void removeAllBodies();
   void removeBody(btRigidBody* body);
 
+  void utilSyncHeadRepresentation(const EigenTypes::Vector3f& headPosition, float deltaTime);
   void utilSyncHandRepresentations(const std::vector<SkeletonHand>& m_SkeletonHands, float deltaTime);
+
+  void utilBounceBodiesAt2mAway();
 
   const std::vector<BodyData>& getBodyDatas() const { return m_BodyDatas; }
 
@@ -79,6 +82,8 @@ public:
   void destroyHandRepresentationFromWorld(BulletWrapper::BulletHandRepresentation& handRepresentation);
   
   std::vector<BulletHandRepresentation> m_HandRepresentations;
+
+  btRigidBody* m_HeadRepresentation;
 };
 
 
@@ -184,6 +189,8 @@ void BulletWrapper::utilSetupScene(const EigenTypes::Vector3f& refPosition)
       utilAddCube(refPosition + EigenTypes::Vector3f(-zDist, spacing * y, spacing * x), boxHalfExtents);
     }
 
+  // Add head representation
+  m_HeadRepresentation = utilAddFingerSphere(refPosition, 0.1f);
 
 }
 
@@ -260,6 +267,16 @@ void BulletWrapper::removeBody(btRigidBody* bodyToRemove)
   }
 }
 
+void BulletWrapper::utilSyncHeadRepresentation(const EigenTypes::Vector3f& headPosition, float deltaTime)
+{
+  // apply velocities or apply positions
+  btVector3 target = ToBullet(headPosition);
+  btVector3 current = m_HeadRepresentation->getWorldTransform().getOrigin();
+  btVector3 targetVelocity = (target - current) / deltaTime;
+  m_HeadRepresentation->setLinearVelocity(targetVelocity);
+  m_HeadRepresentation->setAngularVelocity(btVector3(0, 0, 0));
+}
+
 void BulletWrapper::utilSyncHandRepresentations(const std::vector<SkeletonHand>& skeletonHands, float deltaTime)
 {
   // Add new, remove unneded, update persisting HandRepresentations
@@ -318,6 +335,31 @@ void BulletWrapper::utilSyncHandRepresentations(const std::vector<SkeletonHand>&
     }
   }
 
+}
+
+void BulletWrapper::utilBounceBodiesAt2mAway()
+{
+  btVector3 headPosition = m_HeadRepresentation->getWorldTransform().getOrigin();
+
+  for (int i = 0; i < m_BodyDatas.size(); i++)
+  {
+    btRigidBody* body = m_BodyDatas[i].m_Body;
+    btVector3 position = body->getWorldTransform().getOrigin();
+
+    if ((position - headPosition).length2() > 2.0f * 2.0f)
+    {
+      // ensure velocity is not away from center
+      btVector3 velocity = body->getLinearVelocity();
+      btVector3 toCenter = (headPosition - position).normalized();
+
+      float dot = velocity.dot(toCenter);
+      if (dot < 0.0f)
+      {
+        velocity -= 2.0f * dot * toCenter;
+        body->setLinearVelocity(velocity);
+      }
+    }
+  }
 }
 
 void BulletWrapper::createHandRepresentation(const SkeletonHand& skeletonHand, BulletWrapper::BulletHandRepresentation& handRepresentation)
@@ -399,6 +441,8 @@ void PhysicsLayer::Update(TimeDelta real_time_delta) {
   while (accumulatedDeltaTime > fixedTimeStep)
   {
     m_BulletWrapper->utilSyncHandRepresentations(m_SkeletonHands, (float)fixedTimeStep);
+    m_BulletWrapper->utilSyncHeadRepresentation(m_EyePos, (float)fixedTimeStep);
+    m_BulletWrapper->utilBounceBodiesAt2mAway();
     m_BulletWrapper->step(fixedTimeStep);
     accumulatedDeltaTime -= fixedTimeStep;
   }
