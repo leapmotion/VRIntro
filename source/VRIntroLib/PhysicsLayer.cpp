@@ -210,6 +210,7 @@ void BulletWrapper::utilAddCube(const EigenTypes::Vector3f& position, const Eige
   bodyData.m_Body = new btRigidBody(fallRigidBodyCI);
   bodyData.m_ShapeType = SHAPE_TYPE_BOX;
   bodyData.m_Visible = true;
+  bodyData.m_Body->setActivationState(DISABLE_DEACTIVATION);
   m_DynamicsWorld->addRigidBody(bodyData.m_Body);
 }
 
@@ -228,6 +229,7 @@ btRigidBody* BulletWrapper::utilAddFingerSphere(const EigenTypes::Vector3f& posi
   bodyData.m_ShapeType = SHAPE_TYPE_SPHERE;
   bodyData.m_Visible = false;
   bodyData.m_Body = new btRigidBody(fallRigidBodyCI);
+  bodyData.m_Body->setActivationState(DISABLE_DEACTIVATION);
   m_DynamicsWorld->addRigidBody(bodyData.m_Body);
   return bodyData.m_Body;
 }
