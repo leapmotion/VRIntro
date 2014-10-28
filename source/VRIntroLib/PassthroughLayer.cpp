@@ -10,9 +10,9 @@
 PassthroughLayer::PassthroughLayer() :
   InteractionLayer(EigenTypes::Vector3f::Zero(), "shaders/passthrough"),
   m_RealHeight(240),
-  m_image(GLTexture2Params(640, 240, GL_LUMINANCE), GLTexture2PixelDataReference(GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL, 0)),
-  m_colorimage(GLTexture2Params(608, 540, GL_RGBA), GLTexture2PixelDataReference(GL_RGBA, GL_UNSIGNED_BYTE, NULL, 0)),
-  m_distortion(GLTexture2Params(64, 64, GL_RG32F), GLTexture2PixelDataReference(GL_RG, GL_FLOAT, NULL, 0)),
+  m_image(GLTexture2Params(640, 240, GL_LUMINANCE), GLTexture2PixelDataReference(GL_LUMINANCE, GL_UNSIGNED_BYTE, (const void*) NULL, 0)),
+  m_colorimage(GLTexture2Params(608, 540, GL_RGBA), GLTexture2PixelDataReference(GL_RGBA, GL_UNSIGNED_BYTE, (const void*) NULL, 0)),
+  m_distortion(GLTexture2Params(64, 64, GL_RG32F), GLTexture2PixelDataReference(GL_RG, GL_FLOAT, (const void*) NULL, 0)),
   m_PopupShader(Resource<GLShader>("shaders/transparent")),
   //  m_PopupTexture(Resource<GLTexture2>("images/no_images.png")),
   m_Gamma(0.8f),
@@ -95,13 +95,13 @@ void PassthroughLayer::SetImage(const unsigned char* data, int width, int height
 }
 
 void PassthroughLayer::SetColorImage(const unsigned char* data) {
-  m_colorimage.UpdateTexture(data);
+  m_colorimage.UpdateTexture(GLTexture2PixelDataReference(GL_LUMINANCE, GL_UNSIGNED_BYTE, data, 0));
   m_UseRGBI = true;
   m_HasData = true;
 }
 
 void PassthroughLayer::SetDistortion(const float* data) {
-  m_distortion.UpdateTexture(data);
+  m_distortion.UpdateTexture(GLTexture2PixelDataReference(GL_RG, GL_FLOAT, data, 0));
 }
 
 void PassthroughLayer::Render(TimeDelta real_time_delta) const {
