@@ -29,3 +29,13 @@ Be sure to select "Allow Images" and "Optimize for top-down tracking" in the Lea
 6. Set EXTERNAL_LIBRARY_DIR to the folder mentioned in step 3
 7. Open the generated VRIntro.sln file, and build
 8. Copy any needed DLLs (SDL, SFML) from within the libraries folder to your binary folder. (We are planning to automate this soon!)
+
+##### How to build (OSX)
+
+1. Get CMake 3.0+ and Xcode 6.0+
+2. Download libraries here https://leapmotion.box.com/s/5gmz97ldcxaf3d5sneob
+3. Extract the zip file into a local folder
+4. Obtain Oculus Rift SDK 0.4.1+, and the latest LeapSDK, and copy "OculusSDK" and "LeapSDK" into the folder mentioned in step 3
+5. cd into the VRintro repository and run ccmake. Set the source directory to ./VRIntro
+6. Set EXTERNAL_LIBRARY_DIR to the folder mentioned in step 3
+7. Open the generated VRIntro.xcodeproj file, and build
