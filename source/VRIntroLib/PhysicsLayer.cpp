@@ -26,7 +26,6 @@ public:
   {
     COLLISION_GROUP_HAND = 1,
     COLLISION_GROUP_DYNAMIC = 2,
-
   };
 
   struct BodyData
@@ -46,7 +45,7 @@ public:
   void utilSetupScene(const EigenTypes::Vector3f& refPosition);
 
   void utilAddCube(const EigenTypes::Vector3f& position, const EigenTypes::Vector3f& halfExtents);
-  btRigidBody* utilAddFingerSphere(const EigenTypes::Vector3f& position, float radius);
+  btRigidBody* utilAddFingerSphere(const EigenTypes::Vector3f& position, float radius, bool visible = false);
   void utilAddGround();
 
   void utilResetScene(const EigenTypes::Vector3f& refPosition);
@@ -59,7 +58,7 @@ public:
 
   void utilBounceBodiesAt2mAway();
 
-  btRigidBody* utilFindClosestBody(const EigenTypes::Vector3f& point);
+  btRigidBody* utilFindClosestBody(const EigenTypes::Vector3f& point, const EigenTypes::Vector3f& acceptedHalfSpaceDirection);
 
   const std::vector<BodyData>& getBodyDatas() const { return m_BodyDatas; }
 
@@ -227,7 +226,8 @@ void BulletWrapper::utilSetupScene(const EigenTypes::Vector3f& refPosition)
     }
 
   // Add head representation
-  m_HeadRepresentation = utilAddFingerSphere(refPosition, 0.1f);
+  const bool notVisible = false;
+  m_HeadRepresentation = utilAddFingerSphere(refPosition, 0.1f, notVisible);
 
 }
 
@@ -251,7 +251,7 @@ void BulletWrapper::utilAddCube(const EigenTypes::Vector3f& position, const Eige
   m_DynamicsWorld->addRigidBody(bodyData.m_Body, COLLISION_GROUP_DYNAMIC, COLLISION_GROUP_DYNAMIC | COLLISION_GROUP_HAND);
 }
 
-btRigidBody* BulletWrapper::utilAddFingerSphere(const EigenTypes::Vector3f& position, float radius)
+btRigidBody* BulletWrapper::utilAddFingerSphere(const EigenTypes::Vector3f& position, float radius, bool visible)
 {
   m_BodyDatas.resize(m_BodyDatas.size() + 1);
   BodyData& bodyData = m_BodyDatas.back();
@@ -264,7 +264,7 @@ btRigidBody* BulletWrapper::utilAddFingerSphere(const EigenTypes::Vector3f& posi
   bodyData.m_SharedShape->calculateLocalInertia(mass, fallInertia);
   btRigidBody::btRigidBodyConstructionInfo fallRigidBodyCI(mass, fallMotionState, bodyData.m_SharedShape.get(), fallInertia);
   bodyData.m_ShapeType = SHAPE_TYPE_SPHERE;
-  bodyData.m_Visible = false;
+  bodyData.m_Visible = visible;
   bodyData.m_Body = new btRigidBody(fallRigidBodyCI);
   bodyData.m_Body->setActivationState(DISABLE_DEACTIVATION);
   m_DynamicsWorld->addRigidBody(bodyData.m_Body, COLLISION_GROUP_HAND, COLLISION_GROUP_DYNAMIC);
@@ -405,7 +405,7 @@ void BulletWrapper::utilBounceBodiesAt2mAway()
   }
 }
 
-btRigidBody* BulletWrapper::utilFindClosestBody(const EigenTypes::Vector3f& point)
+btRigidBody* BulletWrapper::utilFindClosestBody(const EigenTypes::Vector3f& point, const EigenTypes::Vector3f& acceptedHalfSpaceDirection )
 {
   btRigidBody* closest = NULL;
   float minDist2 = 10000.0f;
@@ -417,12 +417,40 @@ btRigidBody* BulletWrapper::utilFindClosestBody(const EigenTypes::Vector3f& poin
       btRigidBody* body = m_BodyDatas[i].m_Body;
       btVector3 position = body->getWorldTransform().getOrigin();
 
-      float dist2 = (position - ToBullet(point)).length2();
-      if (dist2 < minDist2)
+      btVector3 handToBody = position - ToBullet(point);
+      float dot = handToBody.dot(ToBullet(acceptedHalfSpaceDirection));
+      float dist2 = handToBody.length2();
+
+      const bool hardCutOff = true;
+      if (hardCutOff)
       {
-        minDist2 = dist2;
-        closest = body;
+        if (0.0f < dot)
+        {
+          if (dist2 < minDist2)
+          {
+            minDist2 = dist2;
+            closest = body;
+          }
+        }
       }
+      else
+      {
+        // Alternative
+        if (0.0f < dot)
+        {
+          float sin2 = std::sqrt(1 - dot * dot);
+          float sin8 = sin2 * sin2 * sin2 * sin2;
+          float sin32 = sin8 * sin8 *sin8 *sin8;
+          dist2 *= 1 / (sin32 + 0.000001);
+        }
+        if (dist2 < minDist2)
+        {
+          minDist2 = dist2;
+          closest = body;
+        }
+      }
+
+
     }
   }
 
@@ -473,14 +501,17 @@ void BulletWrapper::updateHandRepresentation(const SkeletonHand& skeletonHand, B
 
 void BulletWrapper::updateObjectHolding(const SkeletonHand& skeletonHand, BulletHandRepresentation& handRepresentation, float deltaTime)
 {
-  if (skeletonHand.pinchStrength == 1.0f && handRepresentation.m_HeldBody == NULL)
+  const float strengthThreshold = 0.8f;
+  if (skeletonHand.grabStrength >= strengthThreshold && handRepresentation.m_HeldBody == NULL)
   {
     // Find body to pick
-    btRigidBody* closestBody = utilFindClosestBody(skeletonHand.getManipulationPoint());
+    EigenTypes::Vector3f underHandDirection = -skeletonHand.rotation * EigenTypes::Vector3f::UnitY();
+
+    btRigidBody* closestBody = utilFindClosestBody(skeletonHand.getManipulationPoint(), underHandDirection);
     handRepresentation.m_HeldBody = closestBody;
   }
 
-  if (skeletonHand.pinchStrength < 1.0f)
+  if (skeletonHand.grabStrength < strengthThreshold)
   {
     // Let body go
     handRepresentation.m_HeldBody = NULL;
@@ -496,7 +527,7 @@ void BulletWrapper::updateObjectHolding(const SkeletonHand& skeletonHand, Bullet
     //handRepresentation.m_HeldBody->setCollisionFlags(0);
 
     // apply velocities or apply positions
-    btVector3 target = ToBullet(skeletonHand.getManipulationPoint() - skeletonHand.rotation * EigenTypes::Vector3f(0.1f, 0.1f, 0.1f));
+    btVector3 target = ToBullet(skeletonHand.getManipulationPoint());// - skeletonHand.rotation * EigenTypes::Vector3f(0.1f, 0.1f, 0.1f));
 
     btVector3 current = handRepresentation.m_HeldBody->getWorldTransform().getOrigin();
     btVector3 targetVelocity = 0.5f * (target - current) / deltaTime;
@@ -544,7 +575,7 @@ void PhysicsLayer::Update(TimeDelta real_time_delta) {
   static float accumulatedDeltaTime = 0.0f;
   float fixedTimeStep = 1.0f / 60.0f;
   accumulatedDeltaTime += (float)real_time_delta;
-  while (accumulatedDeltaTime > fixedTimeStep)
+  if (accumulatedDeltaTime > fixedTimeStep)
   {
     m_BulletWrapper->utilSyncHandRepresentations(m_SkeletonHands, (float)fixedTimeStep);
     m_BulletWrapper->utilSyncHeadRepresentation(m_EyePos, (float)fixedTimeStep);
@@ -552,6 +583,8 @@ void PhysicsLayer::Update(TimeDelta real_time_delta) {
     m_BulletWrapper->step(fixedTimeStep);
     accumulatedDeltaTime -= fixedTimeStep;
   }
+
+  while (accumulatedDeltaTime > 10 * fixedTimeStep) { accumulatedDeltaTime -= fixedTimeStep; }
 
 
   //static std::vector<float> times;
@@ -612,6 +645,38 @@ void PhysicsLayer::Render(TimeDelta real_time_delta) const {
     }
   }
 
+  if (false)
+  {
+    // Debug draw Basis
+    for (size_t i = 0; i < m_SkeletonHands.size(); i++)
+    {
+      const SkeletonHand& hand = m_SkeletonHands[i];
+      EigenTypes::Vector3f arrowEnd[3];
+      arrowEnd[0] = hand.center + 0.1f * hand.rotation * EigenTypes::Vector3f::UnitX();
+      arrowEnd[1] = hand.center + 0.1f * hand.rotation * EigenTypes::Vector3f::UnitY();
+      arrowEnd[2] = hand.center + 0.1f * hand.rotation * EigenTypes::Vector3f::UnitZ();
+
+      glLineWidth(1.0f);
+
+      glColor4f(1, 0, 0, 1);
+      glBegin(GL_LINES);
+      glVertex3f(hand.center.x(), hand.center.y(), hand.center.z());
+      glVertex3f(arrowEnd[0].x(), arrowEnd[0].y(), arrowEnd[0].z());
+      glEnd();
+
+      glColor4f(0, 1, 0, 1);
+      glBegin(GL_LINES);
+      glVertex3f(hand.center.x(), hand.center.y(), hand.center.z());
+      glVertex3f(arrowEnd[1].x(), arrowEnd[1].y(), arrowEnd[1].z());
+      glEnd();
+
+      glColor4f(0, 0, 1, 1);
+      glBegin(GL_LINES);
+      glVertex3f(hand.center.x(), hand.center.y(), hand.center.z());
+      glVertex3f(arrowEnd[2].x(), arrowEnd[2].y(), arrowEnd[2].z());
+      glEnd();
+    }
+  }
 
 
   m_Shader->Unbind();

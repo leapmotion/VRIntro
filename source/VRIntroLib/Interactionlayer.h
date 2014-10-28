@@ -18,7 +18,7 @@ struct SkeletonHand {
   float confidence;
 
   // Pinch strength, from API
-  float pinchStrength;
+  float grabStrength;
 
   // Palm's position
   EigenTypes::Vector3f center;
