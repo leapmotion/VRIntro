@@ -13,13 +13,20 @@
 class BulletWrapper
 {
 public:
-  BulletWrapper() { zero(); }
+  BulletWrapper() { zero(); s_LastHeldBody = NULL; m_FramesTilLastHeldBodyReset = 0; }
   ~BulletWrapper() { destroy(); }
 
   enum ShapeType
   {
     SHAPE_TYPE_SPHERE,
     SHAPE_TYPE_BOX
+  };
+
+  enum CollisionGroups
+  {
+    COLLISION_GROUP_HAND = 1,
+    COLLISION_GROUP_DYNAMIC = 2,
+
   };
 
   struct BodyData
@@ -52,6 +59,8 @@ public:
 
   void utilBounceBodiesAt2mAway();
 
+  btRigidBody* utilFindClosestBody(const EigenTypes::Vector3f& point);
+
   const std::vector<BodyData>& getBodyDatas() const { return m_BodyDatas; }
 
 private:
@@ -72,20 +81,47 @@ public:
 
   struct BulletHandRepresentation
   {
+    // Hand Id, from Leap API
     int m_Id;
+
+    // Sphere bodies representing the hand's joints.
     std::vector<btRigidBody*> m_Bodies;
+
+    // Held body, if pinching is active. Null otherwise.
+    btRigidBody* m_HeldBody;
   };
 
   void createHandRepresentation(const SkeletonHand& skeletonHand, BulletWrapper::BulletHandRepresentation& handRepresentation);
-  void updateHandRepresentation(const SkeletonHand& skeletonHand, BulletWrapper::BulletHandRepresentation& handRepresentation, float deltaTime);
-
   void destroyHandRepresentationFromWorld(BulletWrapper::BulletHandRepresentation& handRepresentation);
+
+  void updateHandRepresentation(const SkeletonHand& skeletonHand, BulletWrapper::BulletHandRepresentation& handRepresentation, float deltaTime);
+  void updateObjectHolding(const SkeletonHand& skeletonHand, BulletHandRepresentation& handRepresentation, float deltaTime);
+
   
   std::vector<BulletHandRepresentation> m_HandRepresentations;
 
   btRigidBody* m_HeadRepresentation;
+
+  int m_FramesTilLastHeldBodyReset;
+  static btRigidBody* s_LastHeldBody;
+
+  static void MyNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo)
+  {
+    const btBroadphaseProxy* proxy = s_LastHeldBody ? s_LastHeldBody->getBroadphaseProxy(): NULL;
+
+    if (collisionPair.m_pProxy0 == proxy || collisionPair.m_pProxy1 == proxy)
+    {
+      // cancel collision
+      return;
+    }
+
+    // Do your collision logic here
+    // Only dispatch the Bullet collision information if you want the physics to continue
+    dispatcher.defaultNearCallback(collisionPair, dispatcher, dispatchInfo);
+  }
 };
 
+btRigidBody* BulletWrapper::s_LastHeldBody;
 
 EigenTypes::Vector3f FromBullet(const btVector3& v) { return EigenTypes::Vector3f(v.x(), v.y(), v.z()); }
 btVector3 ToBullet(const EigenTypes::Vector3f& v) {return btVector3(v.x(), v.y(), v.z()); }
@@ -102,13 +138,14 @@ void BulletWrapper::init()
   m_CollisionConfiguration = new btDefaultCollisionConfiguration();
   m_Dispatcher = new btCollisionDispatcher(m_CollisionConfiguration);
 
+  m_Dispatcher->setNearCallback(MyNearCallback);
+
   m_Solver = new btSequentialImpulseConstraintSolver;
 
   m_DynamicsWorld = new btDiscreteDynamicsWorld(m_Dispatcher, m_Broadphase, m_Solver, m_CollisionConfiguration);
 
   //m_DynamicsWorld->setGravity(btVector3(0, -10, 0));
   m_DynamicsWorld->setGravity(btVector3(0, 0, 0));
-
 }
 
 void BulletWrapper::destroy()
@@ -211,7 +248,7 @@ void BulletWrapper::utilAddCube(const EigenTypes::Vector3f& position, const Eige
   bodyData.m_ShapeType = SHAPE_TYPE_BOX;
   bodyData.m_Visible = true;
   bodyData.m_Body->setActivationState(DISABLE_DEACTIVATION);
-  m_DynamicsWorld->addRigidBody(bodyData.m_Body);
+  m_DynamicsWorld->addRigidBody(bodyData.m_Body, COLLISION_GROUP_DYNAMIC, COLLISION_GROUP_DYNAMIC | COLLISION_GROUP_HAND);
 }
 
 btRigidBody* BulletWrapper::utilAddFingerSphere(const EigenTypes::Vector3f& position, float radius)
@@ -230,7 +267,7 @@ btRigidBody* BulletWrapper::utilAddFingerSphere(const EigenTypes::Vector3f& posi
   bodyData.m_Visible = false;
   bodyData.m_Body = new btRigidBody(fallRigidBodyCI);
   bodyData.m_Body->setActivationState(DISABLE_DEACTIVATION);
-  m_DynamicsWorld->addRigidBody(bodyData.m_Body);
+  m_DynamicsWorld->addRigidBody(bodyData.m_Body, COLLISION_GROUP_HAND, COLLISION_GROUP_DYNAMIC);
   return bodyData.m_Body;
 }
 
@@ -311,6 +348,10 @@ void BulletWrapper::utilSyncHandRepresentations(const std::vector<SkeletonHand>&
     }
   }
 
+  // Reset held body ptr.
+  m_FramesTilLastHeldBodyReset = std::max(0, m_FramesTilLastHeldBodyReset - 1);
+  if (!m_FramesTilLastHeldBodyReset) {s_LastHeldBody = NULL;}
+
   for (int hi = 0; hi < numFrameHands; hi++)
   {
     const SkeletonHand& skeletonHand = skeletonHands[hi];
@@ -333,7 +374,7 @@ void BulletWrapper::utilSyncHandRepresentations(const std::vector<SkeletonHand>&
       // Update hand
       BulletHandRepresentation& handRepresentation = m_HandRepresentations[idx];
       updateHandRepresentation(skeletonHand, handRepresentation, deltaTime);
-
+      updateObjectHolding(skeletonHand, handRepresentation, deltaTime);
     }
   }
 
@@ -343,7 +384,7 @@ void BulletWrapper::utilBounceBodiesAt2mAway()
 {
   btVector3 headPosition = m_HeadRepresentation->getWorldTransform().getOrigin();
 
-  for (int i = 0; i < m_BodyDatas.size(); i++)
+  for (size_t i = 0; i < m_BodyDatas.size(); i++)
   {
     btRigidBody* body = m_BodyDatas[i].m_Body;
     btVector3 position = body->getWorldTransform().getOrigin();
@@ -364,6 +405,30 @@ void BulletWrapper::utilBounceBodiesAt2mAway()
   }
 }
 
+btRigidBody* BulletWrapper::utilFindClosestBody(const EigenTypes::Vector3f& point)
+{
+  btRigidBody* closest = NULL;
+  float minDist2 = 10000.0f;
+
+  for (size_t i = 0; i < m_BodyDatas.size(); i++)
+  {
+    if (m_BodyDatas[i].m_Visible) // skip the hand bodies.
+    {
+      btRigidBody* body = m_BodyDatas[i].m_Body;
+      btVector3 position = body->getWorldTransform().getOrigin();
+
+      float dist2 = (position - ToBullet(point)).length2();
+      if (dist2 < minDist2)
+      {
+        minDist2 = dist2;
+        closest = body;
+      }
+    }
+  }
+
+  return closest;
+}
+
 void BulletWrapper::createHandRepresentation(const SkeletonHand& skeletonHand, BulletWrapper::BulletHandRepresentation& handRepresentation)
 {
   handRepresentation.m_Id = skeletonHand.id;
@@ -374,6 +439,18 @@ void BulletWrapper::createHandRepresentation(const SkeletonHand& skeletonHand, B
     btRigidBody* body = utilAddFingerSphere(pos, 0.01f);
     handRepresentation.m_Bodies.push_back(body);
   }
+
+  handRepresentation.m_HeldBody = NULL;
+}
+
+void BulletWrapper::destroyHandRepresentationFromWorld(BulletWrapper::BulletHandRepresentation& handRepresentation)
+{
+  for (unsigned int i = 0; i < handRepresentation.m_Bodies.size(); i++)
+  {
+    removeBody(handRepresentation.m_Bodies[i]);
+  }
+  handRepresentation.m_Bodies.clear();
+  handRepresentation.m_Id = -1;
 }
 
 void BulletWrapper::updateHandRepresentation(const SkeletonHand& skeletonHand, BulletWrapper::BulletHandRepresentation& handRepresentation, float deltaTime)
@@ -392,15 +469,42 @@ void BulletWrapper::updateHandRepresentation(const SkeletonHand& skeletonHand, B
   }
 }
 
-void BulletWrapper::destroyHandRepresentationFromWorld(BulletWrapper::BulletHandRepresentation& handRepresentation)
+
+
+void BulletWrapper::updateObjectHolding(const SkeletonHand& skeletonHand, BulletHandRepresentation& handRepresentation, float deltaTime)
 {
-  for (unsigned int i = 0; i < handRepresentation.m_Bodies.size(); i++)
+  if (skeletonHand.pinchStrength == 1.0f && handRepresentation.m_HeldBody == NULL)
   {
-    removeBody(handRepresentation.m_Bodies[i]);
+    // Find body to pick
+    btRigidBody* closestBody = utilFindClosestBody(skeletonHand.getManipulationPoint());
+    handRepresentation.m_HeldBody = closestBody;
   }
-  handRepresentation.m_Bodies.clear();
-  handRepresentation.m_Id = -1;
+
+  if (skeletonHand.pinchStrength < 1.0f)
+  {
+    // Let body go
+    handRepresentation.m_HeldBody = NULL;
+  }
+  
+
+  if (handRepresentation.m_HeldBody != NULL)
+  {
+    // Control held body
+    s_LastHeldBody = handRepresentation.m_HeldBody;
+    m_FramesTilLastHeldBodyReset = 12;
+
+    //handRepresentation.m_HeldBody->setCollisionFlags(0);
+
+    // apply velocities or apply positions
+    btVector3 target = ToBullet(skeletonHand.getManipulationPoint() - skeletonHand.rotation * EigenTypes::Vector3f(0.1f, 0.1f, 0.1f));
+
+    btVector3 current = handRepresentation.m_HeldBody->getWorldTransform().getOrigin();
+    btVector3 targetVelocity = 0.5f * (target - current) / deltaTime;
+    handRepresentation.m_HeldBody->setLinearVelocity(targetVelocity);
+    handRepresentation.m_HeldBody->setAngularVelocity(btVector3(0, 0, 0));
+  }
 }
+
 
 void BulletWrapper::zero()
 {
