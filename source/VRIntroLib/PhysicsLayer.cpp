@@ -125,8 +125,8 @@ btRigidBody* BulletWrapper::s_LastHeldBody;
 EigenTypes::Vector3f FromBullet(const btVector3& v) { return EigenTypes::Vector3f(v.x(), v.y(), v.z()); }
 btVector3 ToBullet(const EigenTypes::Vector3f& v) {return btVector3(v.x(), v.y(), v.z()); }
 
-Eigen::Quaternion<double> FromBullet(const btQuaternion& q) { return Eigen::Quaternion<double>(q.getW(), q.getX(), q.getY(), q.getZ()); }
-btQuaternion ToBullet(const Eigen::Quaternion<double>& q) { return btQuaternion((btScalar)q.x(), (btScalar)q.y(), (btScalar)q.z(), (btScalar)q.w()); }
+Eigen::Quaternion<float> FromBullet(const btQuaternion& q) { return Eigen::Quaternion<float>(q.getW(), q.getX(), q.getY(), q.getZ()); }
+btQuaternion ToBullet(const Eigen::Quaternion<float>& q) { return btQuaternion((btScalar)q.x(), (btScalar)q.y(), (btScalar)q.z(), (btScalar)q.w()); }
 
 void BulletWrapper::init()
 {
@@ -441,7 +441,7 @@ btRigidBody* BulletWrapper::utilFindClosestBody(const EigenTypes::Vector3f& poin
           float sin2 = std::sqrt(1 - dot * dot);
           float sin8 = sin2 * sin2 * sin2 * sin2;
           float sin32 = sin8 * sin8 *sin8 *sin8;
-          dist2 *= 1 / (sin32 + 0.000001);
+          dist2 *= 1.0f / (sin32 + 0.000001f);
         }
         if (dist2 < minDist2)
         {
@@ -505,7 +505,7 @@ void BulletWrapper::updateObjectHolding(const SkeletonHand& skeletonHand, Bullet
   if (skeletonHand.grabStrength >= strengthThreshold && handRepresentation.m_HeldBody == NULL)
   {
     // Find body to pick
-    EigenTypes::Vector3f underHandDirection = -skeletonHand.rotation * EigenTypes::Vector3f::UnitY();
+    EigenTypes::Vector3f underHandDirection = -skeletonHand.rotationButNotReally * EigenTypes::Vector3f::UnitY();
 
     btRigidBody* closestBody = utilFindClosestBody(skeletonHand.getManipulationPoint(), underHandDirection);
     handRepresentation.m_HeldBody = closestBody;
@@ -520,19 +520,35 @@ void BulletWrapper::updateObjectHolding(const SkeletonHand& skeletonHand, Bullet
 
   if (handRepresentation.m_HeldBody != NULL)
   {
+    btRigidBody* body = handRepresentation.m_HeldBody;
     // Control held body
-    s_LastHeldBody = handRepresentation.m_HeldBody;
+    s_LastHeldBody = body;
     m_FramesTilLastHeldBodyReset = 12;
 
     //handRepresentation.m_HeldBody->setCollisionFlags(0);
 
     // apply velocities or apply positions
-    btVector3 target = ToBullet(skeletonHand.getManipulationPoint());// - skeletonHand.rotation * EigenTypes::Vector3f(0.1f, 0.1f, 0.1f));
-
-    btVector3 current = handRepresentation.m_HeldBody->getWorldTransform().getOrigin();
+    btVector3 target = ToBullet(skeletonHand.getManipulationPoint());// - skeletonHand.rotationButNotReally * EigenTypes::Vector3f(0.1f, 0.1f, 0.1f));
+    btVector3 current = body->getWorldTransform().getOrigin();
     btVector3 targetVelocity = 0.5f * (target - current) / deltaTime;
-    handRepresentation.m_HeldBody->setLinearVelocity(targetVelocity);
-    handRepresentation.m_HeldBody->setAngularVelocity(btVector3(0, 0, 0));
+    body->setLinearVelocity(targetVelocity);
+
+    // convert from-to quaternions to angular velocity in world space
+    {
+      EigenTypes::Quaternionf currentRotation = FromBullet(body->getWorldTransform().getRotation());
+      EigenTypes::Quaternionf targetRotation = EigenTypes::Quaternionf(skeletonHand.arbitraryRelatedRotation()); // breaks for left hand ???
+
+      EigenTypes::Quaternionf delta = currentRotation.inverse() * targetRotation;
+      Eigen::AngleAxis<float> angleAxis(delta);
+      EigenTypes::Vector3f axis = angleAxis.axis();
+      float angle = angleAxis.angle();
+      const float pi = 3.1415926536f;
+      if (angle > pi) angle -= 2.0f * pi;
+      if (angle < -pi) angle += 2.0f * pi;
+
+      EigenTypes::Vector3f angularVelocity = currentRotation * (axis * angle * 0.5f / deltaTime);
+      body->setAngularVelocity(ToBullet(angularVelocity));
+    }
   }
 }
 
@@ -623,7 +639,7 @@ void PhysicsLayer::Render(TimeDelta real_time_delta) const {
           const btBoxShape* boxShape = static_cast<btBoxShape*>(shape);
           m_Box.SetSize(2.0f * FromBullet(boxShape->getHalfExtentsWithMargin()).cast<double>());
           m_Box.Translation() = FromBullet(trans.getOrigin()).cast<double>();
-          m_Box.LinearTransformation() = FromBullet(trans.getRotation()).toRotationMatrix();
+          m_Box.LinearTransformation() = FromBullet(trans.getRotation()).cast<double>().toRotationMatrix();
 
           m_Box.Material().SetDiffuseLightColor(Color(1.0f, 1.0f, 1.0f, m_Alpha));
           m_Box.Material().SetAmbientLightColor(Color(0.5f, 0.5f, 0.5f, m_Alpha));
@@ -635,7 +651,7 @@ void PhysicsLayer::Render(TimeDelta real_time_delta) const {
           const btSphereShape* sphereShape = static_cast<btSphereShape*>(shape);
           m_Sphere.SetRadius(sphereShape->getRadius());
           m_Sphere.Translation() = FromBullet(trans.getOrigin()).cast<double>();
-          m_Sphere.LinearTransformation() = FromBullet(trans.getRotation()).toRotationMatrix();
+          m_Sphere.LinearTransformation() = FromBullet(trans.getRotation()).cast<double>().toRotationMatrix();
           m_Sphere.Material().SetDiffuseLightColor(Color(1.0f, 1.0f, 1.0f, m_Alpha));
           m_Sphere.Material().SetAmbientLightColor(Color(0.5f, 0.5f, 0.5f, m_Alpha));
           PrimitiveBase::DrawSceneGraph(m_Sphere, m_Renderer);
@@ -652,9 +668,9 @@ void PhysicsLayer::Render(TimeDelta real_time_delta) const {
     {
       const SkeletonHand& hand = m_SkeletonHands[i];
       EigenTypes::Vector3f arrowEnd[3];
-      arrowEnd[0] = hand.center + 0.1f * hand.rotation * EigenTypes::Vector3f::UnitX();
-      arrowEnd[1] = hand.center + 0.1f * hand.rotation * EigenTypes::Vector3f::UnitY();
-      arrowEnd[2] = hand.center + 0.1f * hand.rotation * EigenTypes::Vector3f::UnitZ();
+      arrowEnd[0] = hand.center + 0.1f * hand.arbitraryRelatedRotation() * EigenTypes::Vector3f::UnitX();
+      arrowEnd[1] = hand.center + 0.1f * hand.arbitraryRelatedRotation() * EigenTypes::Vector3f::UnitY();
+      arrowEnd[2] = hand.center + 0.1f * hand.arbitraryRelatedRotation() * EigenTypes::Vector3f::UnitZ();
 
       glLineWidth(1.0f);
 

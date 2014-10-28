@@ -23,8 +23,8 @@ struct SkeletonHand {
   // Palm's position
   EigenTypes::Vector3f center;
 
-  // Palm's rotation 
-  EigenTypes::Matrix3x3f rotation;
+  // Palm's rotation/basis -- it's reversed for the left hand
+  EigenTypes::Matrix3x3f rotationButNotReally;
 
   //EigenTypes::stdvectorV3f tips[5];
   EigenTypes::Vector3f joints[23];
@@ -32,6 +32,9 @@ struct SkeletonHand {
   EigenTypes::Vector3f avgExtended;
 
   EigenTypes::Vector3f getManipulationPoint() const { return 0.5f * (joints[0] + joints[3]); }
+
+  EigenTypes::Matrix3x3f arbitraryRelatedRotation() const;
+
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };

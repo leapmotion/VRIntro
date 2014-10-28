@@ -6,6 +6,15 @@
 #include "GLShaderLoader.h"
 #include "GLController.h"
 
+
+EigenTypes::Matrix3x3f SkeletonHand::arbitraryRelatedRotation() const
+{
+  EigenTypes::Matrix3x3f result = rotationButNotReally; 
+  EigenTypes::Vector3f z = result.col(0).cross(result.col(1));
+  result.col(2) = z;
+  return result;
+}
+
 InteractionLayer::InteractionLayer(const EigenTypes::Vector3f& initialEyePos, const std::string& shaderName) :
   m_Shader(Resource<GLShader>(shaderName)),
   m_EyePos(initialEyePos),

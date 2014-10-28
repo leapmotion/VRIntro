@@ -39,11 +39,16 @@ void APIFrameSupplier::PopulateInteractionLayer(InteractionLayer& target, const 
     const EigenTypes::Vector3f palmDir = (rotation*hand.direction().toVector3<EigenTypes::Vector3f>()).normalized();
     const EigenTypes::Vector3f palmNormal = (rotation*hand.palmNormal().toVector3<EigenTypes::Vector3f>()).normalized();
     const EigenTypes::Vector3f palmSide = palmDir.cross(palmNormal).normalized();
+
     const EigenTypes::Matrix3x3f palmRotation = rotation*(EigenTypes::Matrix3x3f(hand.basis().toArray3x3()))*rotation.inverse();
-    const EigenTypes::Matrix3x3f palmBasis = rotation*1000*(EigenTypes::Matrix3x3f(hand.basis().toArray3x3()));
+    EigenTypes::Matrix3x3f palmBasis = rotation*(EigenTypes::Matrix3x3f(hand.basis().toArray3x3()));
+
+    // Remove scale from palmBasis
+    const float basisScale = (palmBasis * EigenTypes::Vector3f::UnitX()).norm();
+    palmBasis *= 1.0f / basisScale;
 
     outHand.center = palm;
-    outHand.rotation = palmBasis;
+    outHand.rotationButNotReally = palmBasis;
     target.m_Palms.push_back(palm);
     target.m_PalmOrientations.push_back(palmRotation);
     EigenTypes::Vector3f sumExtended = EigenTypes::Vector3f::Zero();
