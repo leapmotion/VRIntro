@@ -95,13 +95,13 @@ void PassthroughLayer::SetImage(const unsigned char* data, int width, int height
 }
 
 void PassthroughLayer::SetColorImage(const unsigned char* data) {
-  m_colorimage.UpdateTexture(GLTexture2PixelDataReference(GL_LUMINANCE, GL_UNSIGNED_BYTE, data, 0));
+  m_colorimage.UpdateTexture(GLTexture2PixelDataReference(GL_RGBA, GL_UNSIGNED_BYTE, data, m_colorimage.Params().Width()*m_colorimage.Params().Height()*4));
   m_UseRGBI = true;
   m_HasData = true;
 }
 
 void PassthroughLayer::SetDistortion(const float* data) {
-  m_distortion.UpdateTexture(GLTexture2PixelDataReference(GL_RG, GL_FLOAT, data, 0));
+  m_distortion.UpdateTexture(GLTexture2PixelDataReference(GL_RG, GL_FLOAT, data, m_distortion.Params().Width()*m_distortion.Params().Height()*8));
 }
 
 void PassthroughLayer::Render(TimeDelta real_time_delta) const {
