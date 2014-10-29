@@ -54,7 +54,7 @@ public:
   void removeBody(btRigidBody* body);
 
   void utilSyncHeadRepresentation(const EigenTypes::Vector3f& headPosition, float deltaTime);
-  void utilSyncHandRepresentations(const std::vector<SkeletonHand>& m_SkeletonHands, float deltaTime);
+  void utilSyncHandRepresentations(const EigenTypes::Vector3f& headPosition, const std::vector<SkeletonHand>& skeletonHands, float deltaTime);
 
   void utilBounceBodiesAt2mAway();
 
@@ -88,9 +88,12 @@ public:
 
     // Held body, if pinching is active. Null otherwise.
     btRigidBody* m_HeldBody;
+
+    // Is this representation actually active. Some invalid hands reported by tracking may be rejected (e.g. when they're too far & we know they're actually unwanted artifacts.)
+    bool isActive() const { return m_Bodies.size(); }
   };
 
-  void createHandRepresentation(const SkeletonHand& skeletonHand, BulletWrapper::BulletHandRepresentation& handRepresentation);
+  void createHandRepresentation(const EigenTypes::Vector3f& headPosition, const SkeletonHand& skeletonHand, BulletWrapper::BulletHandRepresentation& handRepresentation);
   void destroyHandRepresentationFromWorld(BulletWrapper::BulletHandRepresentation& handRepresentation);
 
   void updateHandRepresentation(const SkeletonHand& skeletonHand, BulletWrapper::BulletHandRepresentation& handRepresentation, float deltaTime);
@@ -316,7 +319,7 @@ void BulletWrapper::utilSyncHeadRepresentation(const EigenTypes::Vector3f& headP
   m_HeadRepresentation->setAngularVelocity(btVector3(0, 0, 0));
 }
 
-void BulletWrapper::utilSyncHandRepresentations(const std::vector<SkeletonHand>& skeletonHands, float deltaTime)
+void BulletWrapper::utilSyncHandRepresentations(const EigenTypes::Vector3f& headPosition, const std::vector<SkeletonHand>& skeletonHands, float deltaTime)
 {
   // Add new, remove unneded, update persisting HandRepresentations
 
@@ -361,13 +364,13 @@ void BulletWrapper::utilSyncHandRepresentations(const std::vector<SkeletonHand>&
     {
       // Create hand
       BulletHandRepresentation handRepresentation;
-      createHandRepresentation(skeletonHand, handRepresentation);
-
-      idx = m_HandRepresentations.size();
-      handIdToIdx[handId] = idx;
-      m_HandRepresentations.push_back(handRepresentation);
-
-      //addHandRepresentationToWorld(handRepresentation);
+      createHandRepresentation(headPosition, skeletonHand, handRepresentation);
+      if (handRepresentation.isActive())
+      {
+        idx = m_HandRepresentations.size();
+        handIdToIdx[handId] = idx;
+        m_HandRepresentations.push_back(handRepresentation);
+      }
     }
     else
     {
@@ -457,15 +460,22 @@ btRigidBody* BulletWrapper::utilFindClosestBody(const EigenTypes::Vector3f& poin
   return closest;
 }
 
-void BulletWrapper::createHandRepresentation(const SkeletonHand& skeletonHand, BulletWrapper::BulletHandRepresentation& handRepresentation)
+void BulletWrapper::createHandRepresentation(const EigenTypes::Vector3f& headPosition, const SkeletonHand& skeletonHand, BulletWrapper::BulletHandRepresentation& handRepresentation)
 {
   handRepresentation.m_Id = skeletonHand.id;
 
-  for (int i = 0; i < k_NumJoints; i++)
+  // Check hand's distance from the head
+  float headToPalmDist = (headPosition - skeletonHand.center).norm();
+
+  // Only reflect a SkeletonHand with an active BulletHandRepresentation when it comes closer than a distance to the head.
+  if (headToPalmDist < 0.40f)
   {
-    EigenTypes::Vector3f pos = skeletonHand.joints[i];
-    btRigidBody* body = utilAddFingerSphere(pos, 0.01f);
-    handRepresentation.m_Bodies.push_back(body);
+    for (int i = 0; i < k_NumJoints; i++)
+    {
+      EigenTypes::Vector3f pos = skeletonHand.joints[i];
+      btRigidBody* body = utilAddFingerSphere(pos, 0.01f);
+      handRepresentation.m_Bodies.push_back(body);
+    }
   }
 
   handRepresentation.m_HeldBody = NULL;
@@ -593,7 +603,7 @@ void PhysicsLayer::Update(TimeDelta real_time_delta) {
   accumulatedDeltaTime += (float)real_time_delta;
   if (accumulatedDeltaTime > fixedTimeStep)
   {
-    m_BulletWrapper->utilSyncHandRepresentations(m_SkeletonHands, (float)fixedTimeStep);
+    m_BulletWrapper->utilSyncHandRepresentations(m_EyePos, m_SkeletonHands, (float)fixedTimeStep);
     m_BulletWrapper->utilSyncHeadRepresentation(m_EyePos, (float)fixedTimeStep);
     m_BulletWrapper->utilBounceBodiesAt2mAway();
     m_BulletWrapper->step(fixedTimeStep);
