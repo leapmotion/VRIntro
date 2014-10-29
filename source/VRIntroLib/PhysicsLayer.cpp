@@ -535,10 +535,10 @@ void BulletWrapper::updateObjectHolding(const SkeletonHand& skeletonHand, Bullet
 
     // convert from-to quaternions to angular velocity in world space
     {
-      EigenTypes::Quaternionf currentRotation = FromBullet(body->getWorldTransform().getRotation());
-      EigenTypes::Quaternionf targetRotation = EigenTypes::Quaternionf(skeletonHand.arbitraryRelatedRotation()); // breaks for left hand ???
+      Eigen::Quaternionf currentRotation = FromBullet(body->getWorldTransform().getRotation());
+      Eigen::Quaternionf targetRotation = Eigen::Quaternionf(skeletonHand.arbitraryRelatedRotation()); // breaks for left hand ???
 
-      EigenTypes::Quaternionf delta = currentRotation.inverse() * targetRotation;
+      Eigen::Quaternionf delta = currentRotation.inverse() * targetRotation;
       Eigen::AngleAxis<float> angleAxis(delta);
       EigenTypes::Vector3f axis = angleAxis.axis();
       float angle = angleAxis.angle();
