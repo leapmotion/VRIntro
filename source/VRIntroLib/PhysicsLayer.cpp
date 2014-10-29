@@ -227,7 +227,7 @@ void BulletWrapper::utilSetupScene(const EigenTypes::Vector3f& refPosition)
 
   // Add head representation
   const bool notVisible = false;
-  m_HeadRepresentation = utilAddFingerSphere(refPosition, 0.1f, notVisible);
+  m_HeadRepresentation = utilAddFingerSphere(refPosition, 0.2f, notVisible);
 
 }
 
