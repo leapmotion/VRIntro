@@ -91,5 +91,6 @@ define_post_build_resource_copy_rules(
     ABSOLUTE_PATH_RESOURCES
         ${Components_DIR}/resources/material-frag.glsl
         ${Components_DIR}/resources/matrix-transformed-vert.glsl
+		"${SDL_SHARED_LIB}"
 )
 endif()
