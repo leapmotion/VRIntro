@@ -1,5 +1,5 @@
 #MSVC pch macro.  Copied from http://pastebin.com/84dm5rXZ
-macro(ADD_MSVC_PRECOMPILED_HEADER PrecompiledHeader PrecompiledSource SourcesVar)
+macro(add_pch PrecompiledHeader PrecompiledSource SourcesVar)
   if(MSVC)
     set_source_files_properties(${PrecompiledSource}
         PROPERTIES
@@ -15,4 +15,4 @@ macro(ADD_MSVC_PRECOMPILED_HEADER PrecompiledHeader PrecompiledSource SourcesVar
     list(APPEND ${SourcesVar} ${PrecompiledHeader} ${PrecompiledSource})
     add_compile_options(/Yu)
   endif(MSVC)
-endmacro(ADD_MSVC_PRECOMPILED_HEADER)
+endmacro(add_pch)
