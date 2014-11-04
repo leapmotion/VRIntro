@@ -34,21 +34,24 @@ function(add_conditional_sources source_list_var condition_var ...)
   set(${source_list_var} ${${source_list_var}} ${add_conditional_sources_FILES} PARENT_SCOPE)
 endfunction()
 
-macro(_add_platform_conditionals platform condition)
-  function(${platform}_sources ...)
+#defines 'func_name' and add_'func_name' shorthands for add_conditional_sources with pre-set conditions.
+macro(add_named_conditional_functions func_name group_name condition)
+  function(${func_name} ...)
     set(my_argv ARGV)
-    conditional_sources("${condition}" GROUP_NAME "${platform} Source" FILES ${${my_argv}})
+    conditional_sources("${condition}" GROUP_NAME "${group_name}" FILES ${${my_argv}})
   endfunction()
 
-  function(add_${platform}_sources source_list_var ...)
+  function(add_${func_name} source_list_var ...)
     set(my_argv ARGV)
 
     list(REMOVE_AT ARGV 0)
-    add_conditional_sources(${source_list_var} "${condition}" GROUP_NAME "${platform} Source" FILES ${${my_argv}})
+    add_conditional_sources(${source_list_var} "${condition}" GROUP_NAME "${group_name}" FILES ${${my_argv}})
     set(${source_list_var} ${${source_list_var}} PARENT_SCOPE)
   endfunction()
 endmacro()
 
-_add_platform_conditionals(Windows WIN32)
-_add_platform_conditionals(Mac APPLE)
-_add_platform_conditionals(Unix "UNIX AND NOT APPLE AND NOT WIN32")
+#Some good defaults
+add_named_conditional_functions("windows_sources" "Windows Source" WIN32)
+add_named_conditional_functions("mac_sources" "Mac Source" APPLE)
+add_named_conditional_functions("unix_sources" "Unix Source" "UNIX AND NOT APPLE AND NOT WIN32")
+add_named_conditional_functions("resource_files" "Resource Files" FALSE)
