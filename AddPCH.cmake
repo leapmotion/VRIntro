@@ -1,5 +1,5 @@
-#MSVC pch macro.  Copied from http://pastebin.com/84dm5rXZ
-macro(add_pch PrecompiledHeader PrecompiledSource SourcesVar)
+#MSVC pch macro.  Copied from http://pastebin.com/84dm5rXZ and modified by Walter Gray
+macro(add_pch SourcesVar PrecompiledHeader PrecompiledSource)
   if(MSVC)
     set_source_files_properties(${PrecompiledSource}
         PROPERTIES
