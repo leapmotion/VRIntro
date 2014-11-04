@@ -1,13 +1,27 @@
 #.rst
 #ConditionalSources
 #---------------
+# Created by Walter Gray
+# 
+# This module defines a set of functions for specifying conditionally compiled source files,
+# generally platform specific ones.  Files that are listed but whose condition is not met will
+# still be visible in any IDE generated projects, but will not be compiled and will be isolated in
+# a named filter group.  This is particularly useful for find and replace operations in multi-platform
+# codebases.
 #
-# This module defines a set of functions for specifying platform specific source files.
-# When using these, all source files regardless of platform should be passed to the add_* commands
-# These commands can be used either before or after the add_* command.
-
-# Specifies a set of source files that are only meant to be incldued given a certain condition,
-# such as WIN32, or MSVC.
+# There are two groups of functions
+# conditional_sources is sufficient for setting all the flags on a list of files so that they will be grouped
+# and only compiled under the given conditions.
+# add_conditional_sources will first call conditional_sources, and will then append the list of sources to the given
+# variable.
+#
+# add_named_conditional_functions is used for defining shorthand functions. Examples are at the bottom, and cover the most common
+# platform-specific use cases.
+#
+# It is also worth noting that this is the only example I'm aware of showing cmake macro for defining functions.
+# The trick was realising that referencing ${ARGV} in a macro references the ARGV of the *macro*, but you can
+# access the defined function's ARGV by putting "ARGV" in a variable, then double-dereferincing it - this prevents
+# the ${ARGV} from being parsed by cmake's macro preprocessor.
 include(VerboseMessage)
 
 function(conditional_sources condition_var ...)
