@@ -58,9 +58,8 @@ void SpaceLayer::Update(TimeDelta real_time_delta) {
 }
 
 void SpaceLayer::Render(TimeDelta real_time_delta) const {
-  // glDisable(GL_DEPTH_TEST);
-  glDepthMask(GL_FALSE);
   RenderPopup();
+  glDepthMask(GL_FALSE);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE);
   glLineWidth(1.5);
   glPointSize(1.0);
@@ -89,7 +88,7 @@ void SpaceLayer::Render(TimeDelta real_time_delta) const {
 
   m_Shader->Unbind();
   //std::cout << __LINE__ << ":\t SDL_GetTicks() = " << (SDL_GetTicks() - start) << std::endl;
-  // glEnable(GL_DEPTH_TEST);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glDepthMask(GL_TRUE);
 }
 

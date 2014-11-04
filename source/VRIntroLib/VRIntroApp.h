@@ -15,6 +15,8 @@
 #include <thread>
 
 class IFrameSupplier;
+class HandLayer;
+class MessageLayer;
 
 // Interface class for top-level control of an application.
 class VRIntroApp : public Application {
@@ -52,10 +54,6 @@ public:
   #endif
 
 private:
-  static const int CONTENT_LAYERS = 6;
-  static const int HAND_LAYER = CONTENT_LAYERS;
-  static const int MESSAGE_LAYERS = CONTENT_LAYERS + 1;
-
   void InitializeApplicationLayers();
   void ShutdownApplicationLayers();
   void SelectLayer(int i);
@@ -85,6 +83,10 @@ private:
   GLController      m_GLController;
   TimePoint         m_applicationTime;
   std::vector<std::shared_ptr<InteractionLayer>>  m_Layers;
+  std::vector<std::shared_ptr<InteractionLayer>>  m_MappedLayers;
+  std::shared_ptr<HandLayer> m_HandLayer;
+  std::shared_ptr<MessageLayer> m_MessageLayer;
+
   std::shared_ptr<PassthroughLayer>               m_PassthroughLayer[2];
   IFrameSupplier*                                 m_FrameSupplier;
   Uint32                                          SDL_Window_ID;

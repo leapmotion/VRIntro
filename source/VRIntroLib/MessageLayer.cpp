@@ -52,8 +52,6 @@ MessageLayer::MessageLayer(const EigenTypes::Vector3f& initialEyePos) :
 }
 
 void MessageLayer::Render(TimeDelta real_time_delta) const {
-  glDepthMask(GL_FALSE);
-
   m_Shader->Bind();
   EigenTypes::Matrix4x4f modelView = m_ModelView;
   modelView.block<3, 1>(0, 3) += modelView.block<3, 3>(0, 0)*m_EyePos;
@@ -85,7 +83,6 @@ void MessageLayer::Render(TimeDelta real_time_delta) const {
   m_Buffer.Unbind();
 
   m_Shader->Unbind();
-  glDepthMask(GL_TRUE);
 }
 
 void MessageLayer::DrawMessage(int index) const {

@@ -167,19 +167,18 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
     m_HealthWarningDismissed = true;
   }
 
-  messageLayer = static_cast<MessageLayer*>(&*m_Layers[MESSAGE_LAYERS]);
   if (m_PassthroughLayer[0]->m_HasData) {
     if (m_applicationTime > 15.0f && !m_HelpToggled) {
       m_HelpToggled = true;
-      messageLayer->SetVisible(1, false);
+      m_MessageLayer->SetVisible(1, false);
     }
   } else {
     // Leap is not attached or frames are not going through
-    messageLayer->SetVisible(0, true);
+    m_MessageLayer->SetVisible(0, true);
   }
 
-  messageLayer->SetVisible(2, m_FrameSupplier->GetFPSEstimate() < 30);
-  messageLayer->SetVisible(3, m_Oculus.isDebug() && m_OculusMode);
+  m_MessageLayer->SetVisible(2, m_FrameSupplier->GetFPSEstimate() < 30);
+  m_MessageLayer->SetVisible(3, m_Oculus.isDebug() && m_OculusMode);
 
   double elapsed = timer.Stop();
   //std::cout << __LINE__ << ":\t   Update() = " << (elapsed) << std::endl;
@@ -234,7 +233,7 @@ void VRIntroApp::RenderEye(TimeDelta real_time_delta, int i, const EigenTypes::M
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  for (auto it = m_Layers.rbegin(); it != m_Layers.rend(); ++it) {
+  for (auto it = m_Layers.begin(); it != m_Layers.end(); ++it) {
     // Set individual shader's state
     InteractionLayer &layer = **it;
     if (layer.Alpha() > 0.01f) {
@@ -279,7 +278,7 @@ EventHandlerAction VRIntroApp::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) 
       break;
     case 'h':
       // Hand
-      SelectLayer(HAND_LAYER);
+      m_HandLayer->Alpha() = 1 - m_HandLayer->Alpha();
       break;
     case 'c':
       m_CrippleMode = !m_CrippleMode;
@@ -291,8 +290,7 @@ EventHandlerAction VRIntroApp::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) 
       // Help menu
       m_HelpToggled = true;
       {
-        messageLayer = static_cast<MessageLayer*>(&*m_Layers[MESSAGE_LAYERS]);
-        messageLayer->SetVisible(1, !messageLayer->GetVisible(1));
+        m_MessageLayer->SetVisible(1, !m_MessageLayer->GetVisible(1));
       }
       break;
     case SDLK_0:
@@ -304,8 +302,8 @@ EventHandlerAction VRIntroApp::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) 
     case SDLK_6:
       // Content layer
       if (!(SDL_GetModState() & KMOD_CTRL)) {
-        for (int i = 0; i < CONTENT_LAYERS; i++) {
-          m_Layers[i]->Alpha() = 0;
+        for (int i = 0; i < m_MappedLayers.size(); i++) {
+          m_MappedLayers[i]->Alpha() = 0;
         }
       }
       // Dim passthrough if in flying stage
@@ -325,20 +323,20 @@ EventHandlerAction VRIntroApp::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) 
       }
       break;
     case SDLK_UP: {
-      float& alpha = m_Layers[m_Selected]->Alpha();
+      float& alpha = m_MappedLayers[m_Selected]->Alpha();
       alpha = std::min(1.0f, alpha + 0.04f);
     }
     break;
     case SDLK_DOWN: {
-      float& alpha = m_Layers[m_Selected]->Alpha();
+      float& alpha = m_MappedLayers[m_Selected]->Alpha();
       alpha = std::max(0.0f, alpha - 0.04f);
     }
     break;
     case SDLK_LEFT:
-      m_Selected = (m_Selected + m_Layers.size() - 1) % m_Layers.size();
+      m_Selected = (m_Selected + m_MappedLayers.size() - 1) % m_MappedLayers.size();
       break;
     case SDLK_RIGHT:
-      m_Selected = (m_Selected + 1) % m_Layers.size();
+      m_Selected = (m_Selected + 1) % m_MappedLayers.size();
       break;
     case SDLK_F11:
       m_SDLController.ToggleFullscreen();
@@ -400,24 +398,34 @@ TimePoint VRIntroApp::Time() const {
 void VRIntroApp::InitializeApplicationLayers() {
   EigenTypes::Vector3f defaultEyePose(0, 1.675f, -5.f);
 
-  m_Layers.push_back(std::shared_ptr<GridLayer>(new GridLayer(defaultEyePose)));
-  m_Layers.push_back(std::shared_ptr<SpheresLayer>(new SpheresLayer(defaultEyePose)));
-  m_Layers.push_back(std::shared_ptr<SpaceLayer>(new SpaceLayer(defaultEyePose)));
-  m_Layers.push_back(std::shared_ptr<FlyingLayer>(new FlyingLayer(defaultEyePose)));
-  m_Layers.push_back(std::shared_ptr<FractalLayer>(new FractalLayer(defaultEyePose)));
-  m_Layers.push_back(std::shared_ptr<QuadsLayer>(new QuadsLayer(defaultEyePose)));
-
-  m_Layers.push_back(std::shared_ptr<HandLayer>(new HandLayer(defaultEyePose)));
-  m_Layers.push_back(std::shared_ptr<MessageLayer>(new MessageLayer(defaultEyePose)));
-  // m_Layers.push_back(std::shared_ptr<MessageLayer>(new MessageLayer(defaultEyePose)));
-
-  m_Layers[CONTENT_LAYERS]->Alpha() = 1;
-  m_Layers[CONTENT_LAYERS + 1]->Alpha() = 1;
+  m_MessageLayer = std::shared_ptr<MessageLayer>(new MessageLayer(defaultEyePose));
+  m_MessageLayer->Alpha() = 1.0f;
+  m_HandLayer = std::shared_ptr<HandLayer>(new HandLayer(defaultEyePose));
+  m_HandLayer->Alpha() = 1.0f;
 
   for (int i = 0; i < 2; i++) {
     m_PassthroughLayer[i] = std::shared_ptr<PassthroughLayer>(new PassthroughLayer());
     m_PassthroughLayer[i]->Alpha() = 1.0f;
   }
+
+  m_MappedLayers.push_back(std::shared_ptr<GridLayer>(new GridLayer(defaultEyePose)));
+  m_MappedLayers.push_back(std::shared_ptr<SpheresLayer>(new SpheresLayer(defaultEyePose)));
+  m_MappedLayers.push_back(std::shared_ptr<SpaceLayer>(new SpaceLayer(defaultEyePose)));
+  m_MappedLayers.push_back(std::shared_ptr<FlyingLayer>(new FlyingLayer(defaultEyePose)));
+  m_MappedLayers.push_back(std::shared_ptr<FractalLayer>(new FractalLayer(defaultEyePose)));
+  m_MappedLayers.push_back(std::shared_ptr<QuadsLayer>(new QuadsLayer(defaultEyePose)));
+
+  // Opaque
+  m_Layers.push_back(m_MappedLayers[0]);
+  m_Layers.push_back(m_MappedLayers[1]);
+  m_Layers.push_back(m_MappedLayers[3]);
+  m_Layers.push_back(m_MappedLayers[5]);
+
+  // Translucent
+  m_Layers.push_back(m_HandLayer);
+  m_Layers.push_back(m_MappedLayers[2]);
+  m_Layers.push_back(m_MappedLayers[4]);
+  m_Layers.push_back(m_MessageLayer);
 }
 
 void VRIntroApp::ShutdownApplicationLayers() {
@@ -433,7 +441,7 @@ void VRIntroApp::ShutdownApplicationLayers() {
 }
 
 void VRIntroApp::SelectLayer(int i) {
-  m_Selected = i % m_Layers.size();
-  float& alpha = m_Layers[m_Selected]->Alpha();
+  m_Selected = i % m_MappedLayers.size();
+  float& alpha = m_MappedLayers[m_Selected]->Alpha();
   alpha = alpha < 0.3f ? 1.0f : 0.0f;
 }
