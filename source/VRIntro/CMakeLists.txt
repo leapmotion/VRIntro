@@ -1,5 +1,3 @@
-include(Common)
-
 set(VRIntro_SOURCES
     main.cpp
     APIFrameSupplier.h

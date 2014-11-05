@@ -1,3 +1,5 @@
+include(Common)
+
 # Root dependency
 find_package(Components REQUIRED)
 

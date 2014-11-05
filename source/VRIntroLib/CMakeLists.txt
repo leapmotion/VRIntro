@@ -1,5 +1,3 @@
-include(Common)
-
 set(VRIntroLib_SOURCES
   VRIntroApp.cpp
   VRIntroApp.h
@@ -62,6 +60,7 @@ if(NOT SHOW_CONSOLE AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
 endif()
 
 add_library(VRIntroLib STATIC ${VRIntroLib_SOURCES})
+
 target_link_components(VRIntroLib Application GLController GLShaderLoader GLTexture2Loader Primitives SDLController OculusVR)
 target_package(VRIntroLib Eigen)
 
