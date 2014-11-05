@@ -13,13 +13,10 @@ PassthroughLayer::PassthroughLayer() :
   m_image(GLTexture2Params(640, 240, GL_LUMINANCE), GLTexture2PixelDataReference(GL_LUMINANCE, GL_UNSIGNED_BYTE, (const void*) NULL, 0)),
   m_colorimage(GLTexture2Params(608, 540, GL_RGBA), GLTexture2PixelDataReference(GL_RGBA, GL_UNSIGNED_BYTE, (const void*) NULL, 0)),
   m_distortion(GLTexture2Params(64, 64, GL_RG32F), GLTexture2PixelDataReference(GL_RG, GL_FLOAT, (const void*) NULL, 0)),
-  m_PopupShader(Resource<GLShader>("shaders/transparent")),
-  //  m_PopupTexture(Resource<GLTexture2>("images/no_images.png")),
   m_Gamma(0.8f),
   m_Brightness(1.0f),
   m_IRMode(0),
   m_HasData(false) {
-  m_Buffer.Create(GL_ARRAY_BUFFER);
 
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
@@ -41,19 +38,6 @@ PassthroughLayer::PassthroughLayer() :
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   m_distortion.Unbind();
-
-  // Define popup text coordinates
-  static const float edges[] = {
-    -0.4f, -0.3f, -0.6f, 0, 0,
-    -0.4f, +0.3f, -0.6f, 0, 1,
-    +0.4f, -0.3f, -0.6f, 1, 0,
-    +0.4f, +0.3f, -0.6f, 1, 1,
-  };
-
-  m_PopupBuffer.Create(GL_ARRAY_BUFFER);
-  m_PopupBuffer.Bind();
-  m_PopupBuffer.Allocate(edges, sizeof(edges), GL_STATIC_DRAW);
-  m_PopupBuffer.Unbind();
 }
 
 PassthroughLayer::~PassthroughLayer() {
@@ -157,36 +141,7 @@ void PassthroughLayer::Render(TimeDelta real_time_delta) const {
     m_distortion.Unbind();
     m_Shader->Unbind();
     glClear(GL_DEPTH_BUFFER_BIT);
-  } else {
-    //glDepthMask(GL_FALSE);
-    //RenderPopup();
-    //glDepthMask(GL_TRUE);
   }
-}
-
-void PassthroughLayer::RenderPopup() const {
-  m_PopupShader->Bind();
-  GLShaderMatrices::UploadUniforms(*m_PopupShader, EigenTypes::Matrix4x4::Identity(), m_Projection.cast<double>(), BindFlags::NONE);
-
-  glActiveTexture(GL_TEXTURE0 + 0);
-  glUniform1i(m_PopupShader->LocationOfUniform("texture"), 0);
-  glUniform1f(m_PopupShader->LocationOfUniform("alpha"), 1.0f);
-
-  m_PopupBuffer.Bind();
-  glEnableVertexAttribArray(m_PopupShader->LocationOfAttribute("position"));
-  glEnableVertexAttribArray(m_PopupShader->LocationOfAttribute("texcoord"));
-  glVertexAttribPointer(m_PopupShader->LocationOfAttribute("position"), 3, GL_FLOAT, GL_TRUE, 5*sizeof(float), (GLvoid*)0);
-  glVertexAttribPointer(m_PopupShader->LocationOfAttribute("texcoord"), 2, GL_FLOAT, GL_TRUE, 5*sizeof(float), (GLvoid*)(3*sizeof(float)));
-
-  m_PopupTexture->Bind();
-  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-  glBindTexture(GL_TEXTURE_2D, 0); // Unbind
-
-  glDisableVertexAttribArray(m_PopupShader->LocationOfAttribute("position"));
-  glDisableVertexAttribArray(m_PopupShader->LocationOfAttribute("texcoord"));
-  m_PopupBuffer.Unbind();
-
-  m_PopupShader->Unbind();
 }
 
 EventHandlerAction PassthroughLayer::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) {

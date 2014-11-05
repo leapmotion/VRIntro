@@ -19,7 +19,6 @@ public:
   void SetColorImage(const unsigned char* data);
   void SetDistortion(const float* data);
   void SetCrippleMode(bool value) { m_CrippleMode = value; }
-  //void SetProjection(const EigenTypes::Matrix4x4f& proj) { m_projection = proj; } // HACK until I can do this a better way
 
   virtual void Update(TimeDelta real_time_delta) override {}
   virtual void Render(TimeDelta real_time_delta) const override;
@@ -29,17 +28,9 @@ public:
   bool m_HasData;
 
 private:
-  void RenderPopup() const;
-
-  mutable GLBuffer m_PopupBuffer;
-  std::shared_ptr<GLTexture2> m_PopupTexture;
-  std::shared_ptr<GLShader> m_PopupShader;
-
-  //std::shared_ptr<GLShader> m_shader;
   mutable GLTexture2 m_image;
   mutable GLTexture2 m_colorimage;
   mutable GLTexture2 m_distortion;
-  //EigenTypes::Matrix4x4f m_projection
   mutable GLBuffer m_Buffer;
   float m_Gamma;
   float m_Brightness;
