@@ -13,8 +13,7 @@ find_path(EXTERNAL_LIBRARY_DIR "glew-1.9.0" HINTS /opt/local/Libraries PATHS $EN
 # TODO: Make EXTERNAL_LIBRARY_DIR detection optional, since users may not have their libraries
 # installed the same way we (Leap) do.
 if(EXTERNAL_LIBRARY_DIR STREQUAL "EXTERNAL_LIBRARY_DIR-NOTFOUND")
-    message(STATUS "External Library Directory not found, please specify a folder to look for external libraries")
-    return()
+    message( FATAL_ERROR "EXTERNAL_LIBRARY_DIR not found, please specify a folder to look for external libraries")
 endif()
 
 # CMAKE_PREFIX_PATH is the path used for searching by FIND_XXX(), with appropriate suffixes added.
