@@ -22,6 +22,7 @@ void APIFrameSupplier::PopulateInteractionLayer(InteractionLayer& target, const 
   target.m_TipsExtended.clear();
   target.m_TipsIndex.clear();
   target.m_Palms.clear();
+  target.m_PalmOrientations.clear();
   target.m_SkeletonHands.clear();
   EigenTypes::Matrix4x4f worldTransform = EigenTypes::Matrix4x4f(worldTransformRaw);
   EigenTypes::Matrix3x3f rotation = worldTransform.block<3, 3>(0, 0);
@@ -30,15 +31,26 @@ void APIFrameSupplier::PopulateInteractionLayer(InteractionLayer& target, const 
   for (int i = 0; i < frame.hands().count(); i++) {
     const Leap::Hand& hand = frame.hands()[i];
     SkeletonHand outHand;
+    outHand.id = hand.id();
     outHand.confidence = hand.confidence();
+    outHand.grabStrength = hand.grabStrength();
 
     const EigenTypes::Vector3f palm = rotation*hand.palmPosition().toVector3<EigenTypes::Vector3f>() + translation;
     const EigenTypes::Vector3f palmDir = (rotation*hand.direction().toVector3<EigenTypes::Vector3f>()).normalized();
     const EigenTypes::Vector3f palmNormal = (rotation*hand.palmNormal().toVector3<EigenTypes::Vector3f>()).normalized();
     const EigenTypes::Vector3f palmSide = palmDir.cross(palmNormal).normalized();
+
+    const EigenTypes::Matrix3x3f palmRotation = rotation*(EigenTypes::Matrix3x3f(hand.basis().toArray3x3()))*rotation.inverse();
+    EigenTypes::Matrix3x3f palmBasis = rotation*(EigenTypes::Matrix3x3f(hand.basis().toArray3x3()));
+
+    // Remove scale from palmBasis
+    const float basisScale = (palmBasis * EigenTypes::Vector3f::UnitX()).norm();
+    palmBasis *= 1.0f / basisScale;
+
     outHand.center = palm;
+    outHand.rotationButNotReally = palmBasis;
     target.m_Palms.push_back(palm);
-    target.m_PalmOrientations.push_back(rotation*EigenTypes::Matrix3x3f(hand.basis().toArray3x3())*rotation.transpose());
+    target.m_PalmOrientations.push_back(palmRotation);
     EigenTypes::Vector3f sumExtended = EigenTypes::Vector3f::Zero();
     int numExtended = 0;
 

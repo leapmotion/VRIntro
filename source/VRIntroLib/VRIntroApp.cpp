@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "Config.h"
 #include "IFrameSupplier.h"
 #include "VRIntroApp.h"
 #include "SpheresLayer.h"
@@ -9,6 +10,7 @@
 #include "FractalLayer.h"
 #include "QuadsLayer.h"
 #include "FlyingLayer.h"
+#include "PhysicsLayer.h"
 #include "SDL.h"
 #include "PlatformInitializer.h"
 #include "PrecisionTimer.h"
@@ -311,6 +313,7 @@ EventHandlerAction VRIntroApp::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) 
     case SDLK_4:
     case SDLK_5:
     case SDLK_6:
+    case SDLK_7:
       // Content layer
       if (!(SDL_GetModState() & KMOD_CTRL)) {
         for (int i = 0; i < m_MappedLayers.size(); i++) {
@@ -426,6 +429,11 @@ void VRIntroApp::InitializeApplicationLayers() {
   m_MappedLayers.push_back(std::shared_ptr<FlyingLayer>(new FlyingLayer(defaultEyePose)));
   m_MappedLayers.push_back(std::shared_ptr<FractalLayer>(new FractalLayer(defaultEyePose)));
   m_MappedLayers.push_back(std::shared_ptr<QuadsLayer>(new QuadsLayer(defaultEyePose)));
+#if USE_BULLET == 1
+  m_MappedLayers.push_back(std::shared_ptr<PhysicsLayer>(new PhysicsLayer(defaultEyePose)));
+#else
+  m_MappedLayers.push_back(std::shared_ptr<GridLayer>(new GridLayer(defaultEyePose)));
+#endif
 
   // Opaque
   m_Layers.push_back(m_GhostHandLayer);
@@ -433,6 +441,7 @@ void VRIntroApp::InitializeApplicationLayers() {
   m_Layers.push_back(m_MappedLayers[1]);
   m_Layers.push_back(m_MappedLayers[3]);
   m_Layers.push_back(m_MappedLayers[5]);
+  m_Layers.push_back(m_MappedLayers[6]);
 
   // Translucent
   m_Layers.push_back(m_HandLayer);
@@ -457,4 +466,7 @@ void VRIntroApp::SelectLayer(int i) {
   m_Selected = i % m_MappedLayers.size();
   float& alpha = m_MappedLayers[m_Selected]->Alpha();
   alpha = alpha < 0.3f ? 1.0f : 0.0f;
+
+  static int lastSelected = -1;
+  if (lastSelected != m_Selected) { m_MappedLayers[m_Selected]->OnSelected(); lastSelected = m_Selected; }
 }

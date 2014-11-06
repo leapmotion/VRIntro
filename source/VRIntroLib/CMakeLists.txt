@@ -1,3 +1,8 @@
+option(USE_BULLET "Use Bullet physics engine to build block simulation level" OFF)
+
+CONFIGURE_FILE(Config.h.in ${PROJECT_BINARY_DIR}/Config.h @ONLY IMMEDIATE)
+include_directories(${PROJECT_BINARY_DIR})
+
 set(VRIntroLib_SOURCES
   VRIntroApp.cpp
   VRIntroApp.h
@@ -28,6 +33,7 @@ set(VRIntroLib_SOURCES
   IFrameSupplier.h
   MathUtility.h
   MathUtility.cpp
+  PhysicsLayer.h
 )
 
 add_windows_sources(
@@ -37,6 +43,10 @@ add_windows_sources(
   Mirror.h
   Mirror.cpp
 )
+
+if(USE_BULLET)
+  set(VRIntroLib_SOURCES ${VRIntroLib_SOURCES} PhysicsLayer.cpp)
+endif()
 
 add_mac_sources(
   VRIntroLib_SOURCES
@@ -63,6 +73,9 @@ add_library(VRIntroLib STATIC ${VRIntroLib_SOURCES})
 
 target_link_components(VRIntroLib Application GLController GLShaderLoader GLTexture2Loader Primitives SDLController OculusVR)
 target_package(VRIntroLib Eigen)
+if(USE_BULLET)
+  target_package(VRIntroLib Bullet)
+endif()
 
 if(WIN32)
   target_link_libraries(VRIntroLib comctl32.lib Dwmapi.lib Shlwapi.lib)

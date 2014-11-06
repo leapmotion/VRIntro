@@ -11,12 +11,30 @@
 class GLShader;
 
 struct SkeletonHand {
+
+  // Hand Id from Leap API
+  int id;
+
   float confidence;
+
+  // Pinch strength, from API
+  float grabStrength;
+
+  // Palm's position
   EigenTypes::Vector3f center;
+
+  // Palm's rotation/basis -- it's reversed for the left hand
+  EigenTypes::Matrix3x3f rotationButNotReally;
+
   //EigenTypes::stdvectorV3f tips[5];
   EigenTypes::Vector3f joints[23];
   EigenTypes::Vector3f jointConnections[23];
   EigenTypes::Vector3f avgExtended;
+
+  EigenTypes::Vector3f getManipulationPoint() const { return 0.5f * (joints[0] + joints[3]); }
+
+  EigenTypes::Matrix3x3f arbitraryRelatedRotation() const;
+
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
@@ -30,6 +48,8 @@ public:
   void SetProjection(const EigenTypes::Matrix4x4f& value) { m_Projection = value; m_Renderer.GetProjection().Matrix() = value.cast<double>(); }
   void SetModelView(const EigenTypes::Matrix4x4f& value) { m_ModelView = value; m_Renderer.GetModelView().Matrix() = value.cast<double>(); }
   void SetFingerRadius(float value) { m_FingerRadius = value; }
+  
+  virtual void OnSelected() {}
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -48,6 +68,7 @@ protected:
   std::shared_ptr<GLShader> m_Shader;
   mutable Sphere m_Sphere;
   mutable Cylinder m_Cylinder;
+  mutable Box m_Box;
   float m_FingerRadius;
 
   EigenTypes::Matrix4x4f m_Projection;
