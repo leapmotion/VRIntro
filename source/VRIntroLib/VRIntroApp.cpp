@@ -376,6 +376,13 @@ EventHandlerAction VRIntroApp::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) 
       m_Zoom = 1.0f;
       m_Scale = 1.0f;
       break;
+    case ';':
+      if (SDL_GetModState() & KMOD_SHIFT) {
+        system("cmd /c lftool --set_strobe interval,127");
+      } else {
+        system("cmd /c lftool --set_strobe interval,1");
+      }
+      break;
     case 0x1b:
       exit(0);
     default:
