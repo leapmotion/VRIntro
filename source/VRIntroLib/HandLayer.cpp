@@ -3,8 +3,9 @@
 
 #include "GLController.h"
 
-HandLayer::HandLayer(const EigenTypes::Vector3f& initialEyePos) :
-  InteractionLayer(initialEyePos) {
+HandLayer::HandLayer(const EigenTypes::Vector3f& initialEyePos, bool isGhost) :
+  InteractionLayer(initialEyePos),
+  m_IsGhost(isGhost) {
   // TODO: switch to non-default shader
 }
 
@@ -13,7 +14,7 @@ void HandLayer::Update(TimeDelta real_time_delta) {
 }
 
 void HandLayer::Render(TimeDelta real_time_delta) const {
-  DrawSkeletonHands();
+  DrawSkeletonHands(m_IsGhost);
 }
 
 EventHandlerAction HandLayer::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) {

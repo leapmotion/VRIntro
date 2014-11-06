@@ -15,6 +15,7 @@ uniform float brightness;
 uniform float use_color;
 uniform float ir_mode;
 uniform float cripple_mode;
+uniform float stencil_mode;
 
 // debayer
 float width = 672.0;
@@ -129,9 +130,11 @@ void main(void) {
     
     gl_FragColor.rgb = ir_mode > 0.5 ? vec3(ir_out) : gl_FragColor.rgb;
     gl_FragColor.rgb = 1.05*brightness*pow(gl_FragColor.rgb, vec3(gamma));
-
+    vec3 dist = normalize(output_lf.rgb) - vec3(0.6968, 0.4856, 0.5279);
+    gl_FragColor.a = stencil_mode > 0.5 ? ir_out*6.0 + 0.08/(1 + 25*dot(dist, dist)) : 1.0;
+    
   } else {
     gl_FragColor.rgb = brightness*vec3(pow(texture2D(texture, texCoord).r, gamma));
+    gl_FragColor.a = stencil_mode > 0.5 ? gl_FragColor.r : 1.0;
   }
-  gl_FragColor.a = 1.0;
 }

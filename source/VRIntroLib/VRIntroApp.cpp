@@ -185,13 +185,21 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
 }
 
 void VRIntroApp::Render(TimeDelta real_time_delta) const {
+
+  GLenum error_code = glGetError();
+  glEnable(GL_BLEND);
+  //glClearStencil(0);
+  glStencilMask(1); // Write to stencil buffer
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  GLenum error_code1 = glGetError();
   PrecisionTimer timer;
   timer.Start();
   assert(real_time_delta >= 0.0);
   if (m_OculusMode) {
     m_Oculus.BeginFrame();
     glGetError(); // Remove any phantom gl errors before they throw an exception
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     // Do the eye-order trick!
     for (int i = 1; i >= 0; i--) {
@@ -206,7 +214,7 @@ void VRIntroApp::Render(TimeDelta real_time_delta) const {
     glGetError(); // Remove any phantom gl errors before they throw an exception
   } else {
     m_SDLController.BeginRender();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glViewport(0, 0, m_Width, m_Height);
 
     Projection projection;
@@ -223,15 +231,17 @@ void VRIntroApp::Render(TimeDelta real_time_delta) const {
 }
 
 void VRIntroApp::RenderEye(TimeDelta real_time_delta, int i, const EigenTypes::Matrix4x4f& proj) const {
+  GLenum error_code = glGetError();
   const EigenTypes::Matrix4x4f view = m_Oculus.EyeView(m_CrippleMode ? 0 : i);
   const EigenTypes::Matrix4x4f zoomMat = EigenTypes::Vector4f(m_Zoom, m_Zoom, 1, 1).asDiagonal();
 
+  GLenum error_code2 = glGetError();
+  glDisable(GL_DEPTH_TEST);
   m_PassthroughLayer[i]->SetProjection(zoomMat*proj);
+  GLenum error_code1 = glGetError();
   m_PassthroughLayer[i]->Render(real_time_delta);
 
   glEnable(GL_DEPTH_TEST);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   for (auto it = m_Layers.begin(); it != m_Layers.end(); ++it) {
     // Set individual shader's state
@@ -279,6 +289,7 @@ EventHandlerAction VRIntroApp::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) 
     case 'h':
       // Hand
       m_HandLayer->Alpha() = 1 - m_HandLayer->Alpha();
+      m_GhostHandLayer->Alpha() = 1 - m_GhostHandLayer->Alpha();
       break;
     case 'c':
       m_CrippleMode = !m_CrippleMode;
@@ -402,6 +413,7 @@ void VRIntroApp::InitializeApplicationLayers() {
   m_MessageLayer->Alpha() = 1.0f;
   m_HandLayer = std::shared_ptr<HandLayer>(new HandLayer(defaultEyePose));
   m_HandLayer->Alpha() = 1.0f;
+  m_GhostHandLayer = std::shared_ptr<HandLayer>(new HandLayer(defaultEyePose, true));
 
   for (int i = 0; i < 2; i++) {
     m_PassthroughLayer[i] = std::shared_ptr<PassthroughLayer>(new PassthroughLayer());
@@ -416,6 +428,7 @@ void VRIntroApp::InitializeApplicationLayers() {
   m_MappedLayers.push_back(std::shared_ptr<QuadsLayer>(new QuadsLayer(defaultEyePose)));
 
   // Opaque
+  m_Layers.push_back(m_GhostHandLayer);
   m_Layers.push_back(m_MappedLayers[0]);
   m_Layers.push_back(m_MappedLayers[1]);
   m_Layers.push_back(m_MappedLayers[3]);

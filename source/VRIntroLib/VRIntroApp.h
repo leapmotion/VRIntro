@@ -85,6 +85,7 @@ private:
   std::vector<std::shared_ptr<InteractionLayer>>  m_Layers;
   std::vector<std::shared_ptr<InteractionLayer>>  m_MappedLayers;
   std::shared_ptr<HandLayer> m_HandLayer;
+  std::shared_ptr<HandLayer> m_GhostHandLayer;
   std::shared_ptr<MessageLayer> m_MessageLayer;
 
   std::shared_ptr<PassthroughLayer>               m_PassthroughLayer[2];

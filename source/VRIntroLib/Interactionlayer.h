@@ -43,7 +43,7 @@ public:
   std::vector<int> m_TipsIndex;
 
 protected:
-  void DrawSkeletonHands() const;
+  void DrawSkeletonHands(bool capsuleMode = false) const;
   mutable RenderState m_Renderer;
   std::shared_ptr<GLShader> m_Shader;
   mutable Sphere m_Sphere;

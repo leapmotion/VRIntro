@@ -90,6 +90,7 @@ void PassthroughLayer::SetDistortion(const float* data) {
 
 void PassthroughLayer::Render(TimeDelta real_time_delta) const {
   if (m_HasData) {
+    glDepthMask(GL_FALSE);
     m_Shader->Bind();
     GLShaderMatrices::UploadUniforms(*m_Shader, EigenTypes::Matrix4x4::Identity(), m_Projection.cast<double>(), BindFlags::NONE);
 
@@ -114,24 +115,23 @@ void PassthroughLayer::Render(TimeDelta real_time_delta) const {
     static int i = 0;
     glUniform1f(m_Shader->LocationOfUniform("ir_mode"), ((m_IRMode + (++i & 1)) & 2) > 0 ? 1.0f : 0.0f);
     glUniform1f(m_Shader->LocationOfUniform("cripple_mode"), m_CrippleMode ? 1.0f : 0.0f);
+    glUniform1f(m_Shader->LocationOfUniform("stencil_mode"), 0.0f);
 
-#if 0
-    const float edges[] = {-4, -4, -1, -4, 4, -1, 4, -4, -1, 4, 4, -1};
-    // Why the fuck doesn't this work?
-    m_Renderer.EnablePositionAttribute();
-    m_Buffer.Bind();
-    m_Buffer.Allocate(&edges[0], sizeof(edges), GL_DYNAMIC_DRAW);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    m_Buffer.Release();
-    m_Renderer.DisablePositionAttribute();
-#else
-    glBegin(GL_TRIANGLE_STRIP);
-    glVertex3f(-4, -4, -1);
-    glVertex3f(-4, 4, -1);
-    glVertex3f(4, -4, -1);
-    glVertex3f(4, 4, -1);
-    glEnd();
-#endif
+    DrawQuad();
+
+    glUniform1f(m_Shader->LocationOfUniform("stencil_mode"), 1.0f);
+    glEnable(GL_ALPHA_TEST);
+    glEnable(GL_STENCIL_TEST);
+    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+    glStencilFunc(GL_ALWAYS, 1, 1);
+    glAlphaFunc(GL_GREATER, 0.2f);
+    DrawQuad();
+
+    glDisable(GL_ALPHA_TEST);
+    glDisable(GL_STENCIL_TEST);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
     if (m_UseRGBI) {
       m_colorimage.Unbind();
@@ -140,8 +140,28 @@ void PassthroughLayer::Render(TimeDelta real_time_delta) const {
     }
     m_distortion.Unbind();
     m_Shader->Unbind();
-    glClear(GL_DEPTH_BUFFER_BIT);
+    glDepthMask(GL_TRUE);
   }
+}
+
+void PassthroughLayer::DrawQuad() const {
+#if 0
+  const float edges[] = {-4, -4, -1, -4, 4, -1, 4, -4, -1, 4, 4, -1};
+  // Why the fuck doesn't this work?
+  m_Renderer.EnablePositionAttribute();
+  m_Buffer.Bind();
+  m_Buffer.Allocate(&edges[0], sizeof(edges), GL_DYNAMIC_DRAW);
+  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+  m_Buffer.Release();
+  m_Renderer.DisablePositionAttribute();
+#else
+  glBegin(GL_TRIANGLE_STRIP);
+  glVertex3f(-4, -4, -1);
+  glVertex3f(-4, 4, -1);
+  glVertex3f(4, -4, -1);
+  glVertex3f(4, 4, -1);
+  glEnd();
+#endif
 }
 
 EventHandlerAction PassthroughLayer::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) {

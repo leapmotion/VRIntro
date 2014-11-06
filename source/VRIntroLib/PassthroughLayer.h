@@ -24,10 +24,13 @@ public:
   virtual void Render(TimeDelta real_time_delta) const override;
   EventHandlerAction HandleKeyboardEvent(const SDL_KeyboardEvent &ev) override;
 
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   bool m_HasData;
 
 private:
+  void DrawQuad() const;
+
   mutable GLTexture2 m_image;
   mutable GLTexture2 m_colorimage;
   mutable GLTexture2 m_distortion;
