@@ -511,7 +511,7 @@ void BulletWrapper::updateHandRepresentation(const SkeletonHand& skeletonHand, B
 
 void BulletWrapper::updateObjectHolding(const SkeletonHand& skeletonHand, BulletHandRepresentation& handRepresentation, float deltaTime)
 {
-  const float strengthThreshold = 0.8f;
+  const float strengthThreshold = 1.8f;
   if (skeletonHand.grabStrength >= strengthThreshold && handRepresentation.m_HeldBody == NULL)
   {
     // Find body to pick
