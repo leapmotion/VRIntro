@@ -1,6 +1,11 @@
 #.rst
 #LeapTemplates
-
+#-------------
+# Created by Walter Gray
+#
+# Some Leap Motion specific boilderplate code.
+# Not reccomended for use outside of the Leap Motion engineering group,
+# though you're welcome to define your own.
 
 macro(leap_find_external_libraries pc_variant)
   find_path(EXTERNAL_LIBRARY_DIR "eigen-3.2.1/Eigen/CmakeLists.txt"
@@ -29,7 +34,7 @@ macro(leap_use_standard_platform_settings)
       set(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE STRING "Mac OS X build architectures" FORCE)
     endif()
     if(NOT CMAKE_OSX_SYSROOT)
-      set(CMAKE_OSX_SYSROOT "macosx10.8" CACHE STRING "Mac OS X build environment" FORCE)
+      set(CMAKE_OSX_SYSROOT "macosx10.9" CACHE STRING "Mac OS X build environment" FORCE)
     endif()
 
     set(CMAKE_OSX_DEPLOYMENT_TARGET "10.7" CACHE STRING "Mac OS X deployment target" FORCE)
