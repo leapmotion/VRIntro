@@ -45,8 +45,6 @@ void main(void) {
 
   if (use_color > 0.5) {
     // Unwarp the point. Correct oculus distortion, if applicable
-    texCoord.x *= 4.0; // HACK!!!
-    texCoord.y *= 2.0; // HACK!!!
    
     float dx = 1.0/width;
     float dy = 1.0/height;
