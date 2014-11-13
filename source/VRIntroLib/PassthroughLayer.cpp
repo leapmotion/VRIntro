@@ -119,19 +119,21 @@ void PassthroughLayer::Render(TimeDelta real_time_delta) const {
 
     DrawQuad();
 
-    glUniform1f(m_Shader->LocationOfUniform("stencil_mode"), 1.0f);
-    glEnable(GL_ALPHA_TEST);
-    glEnable(GL_STENCIL_TEST);
-    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+    if (m_GenerateStencil) {
+      glUniform1f(m_Shader->LocationOfUniform("stencil_mode"), 1.0f);
+      glEnable(GL_ALPHA_TEST);
+      glEnable(GL_STENCIL_TEST);
+      glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-    glStencilFunc(GL_ALWAYS, 1, 1);
-    glAlphaFunc(GL_GREATER, 0.2f);
-    DrawQuad();
+      glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+      glStencilFunc(GL_ALWAYS, 1, 1);
+      glAlphaFunc(GL_GREATER, 0.2f);
+      DrawQuad();
 
-    glDisable(GL_ALPHA_TEST);
-    glDisable(GL_STENCIL_TEST);
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+      glDisable(GL_ALPHA_TEST);
+      glDisable(GL_STENCIL_TEST);
+      glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    }
 
     if (m_UseRGBI) {
       m_colorimage.Unbind();

@@ -138,6 +138,7 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
   for (int i = 0; i < 2; i++) {
     m_FrameSupplier->PopulatePassthroughLayer(*m_PassthroughLayer[i], m_CrippleMode ? 0 : i);
     m_PassthroughLayer[i]->SetCrippleMode(m_CroppleMode);
+    m_PassthroughLayer[i]->SetStencil(m_GhostHandLayer->Alpha() == 1);
   }
 
   // Calculate where each point of interest would have to be if a 6.4-cm baseline Leap centered exactly at the eyeballs saw the frame seen. It will be off by a factor of 1.6.

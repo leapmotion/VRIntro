@@ -19,6 +19,7 @@ public:
   void SetColorImage(const unsigned char* data);
   void SetDistortion(const float* data);
   void SetCrippleMode(bool value) { m_CrippleMode = value; }
+  void SetStencil(bool value) { m_GenerateStencil = value; }
 
   virtual void Update(TimeDelta real_time_delta) override {}
   virtual void Render(TimeDelta real_time_delta) const override;
@@ -38,6 +39,7 @@ private:
   float m_Gamma;
   float m_Brightness;
   bool m_UseRGBI;
+  bool m_GenerateStencil;
   int m_IRMode;
   bool m_CrippleMode;
 
