@@ -20,65 +20,101 @@
 #   linking to as the first parameter.  Upon successfully finding the package, it
 #   attempts to call TARGET_IMPORTED_LIBRARIES(<target> <package>::<package>)
 
-function(target_imported_libraries target link_type)
+include(CMakeParseArguments)
+function(target_imported_libraries target)
   list(REMOVE_AT ARGV 0) #pop the target
+  cmake_parse_arguments(target_imported_libraries "" "LINK_TYPE" "" ${ARGV})
   
-  foreach(_import_lib ${ARGV})
+  set(_library_list ${target_imported_libraries_UNPARSED_ARGUMENTS})
+  target_link_libraries(${target} ${target_imported_libraries_LINK_TYPE} ${_library_list})
+
+  #early out if the target isn't an EXECUTABLE
+  get_target_property(_target_type ${target} TYPE)
+  if(NOT ${_target_type} STREQUAL EXECUTABLE)
+    return()
+  endif()
+
+  #setup custom commands to copy .dll/dylib files for all dependencies
+  set(_lib_index 0 )
+  list(LENGTH _library_list _lib_length)
+
+  #foreach doesn't allow you to append to the list from within the loop.
+  while(_lib_index LESS _lib_length)
+    list(GET _library_list ${_lib_index} _import_lib)
+
     if(TARGET ${_import_lib})
-      target_link_libraries(${target} ${link_type} ${_import_lib})
-      
+      get_target_property(_depends ${_import_lib} INTERFACE_LINK_LIBRARIES)
+      foreach(_depend ${_depends})
+        if(TARGET ${_depend})
+          list(FIND _library_list ${_depend} _found_lib)
+          if(_found_lib EQUAL -1) #make sure we don't do duplicate adds.
+            verbose_message("${target}:Adding nested dependency ${_depend}")
+            list(APPEND _library_list ${_depend})
+          else()
+            verbose_message("${target}:skipping duplicate nested dependency ${_depend}")
+          endif()
+
+        endif()
+      endforeach()
+
       get_target_property(_type ${_import_lib} TYPE)
       get_target_property(_imported ${_import_lib} IMPORTED)
-      if((${_type} STREQUAL SHARED_LIBRARY) AND ${_imported})
+      if(${_type} STREQUAL SHARED_LIBRARY AND ${_imported})
         
         set(_found_configs_expr)
-        set(_target_expr)
-        foreach(_config DEBUG RELEASE)
-          set(_config_suffix _${_config})
-          
-          get_target_property(_dylib${_config} ${_import_lib} IMPORTED_LOCATION${_config_suffix})
-          if(_dylib${_config})
-            list(APPEND _found_configs_expr "$<CONFIG:${_config}>")
-            set(_target_expr "${_target_expr}$<$<CONFIG:${_config}>:${_dylib${_config}}>")
-          endif()
-        endforeach()
+        set(_imported_location)
         
-        #The default case requires special handling
-        get_target_property(_dylib ${_import_lib} IMPORTED_LOCATION)
-        if(_dylib)
-          if(_found_configs_expr)
-              #For some reason, generator expressions require their lists to be , delimited
-              string(REPLACE ";" "," _found_configs_expr "${_found_configs_expr}")
-            set(_target_expr "${_target_expr}$<$<NOT:$<OR:${_found_configs_expr}>>:${_dylib}>")
-          else()
-            set(_target_expr "${_dylib}")
+        #if only the _<Config> variants are set, create a generator expression.
+        get_target_property(_imported_location ${_import_lib} IMPORTED_LOCATION)
+        if(NOT _imported_location)
+          get_target_property(_imported_location_debug ${_import_lib} IMPORTED_LOCATION_DEBUG)
+          get_target_property(_imported_location_release ${_import_lib} IMPORTED_LOCATION_RELEASE)
+          if(NOT _imported_location_debug AND NOT _imported_location_release)
+            message(FATAL_ERROR "No IMPORTED_LOCATION specified for SHARED import target ${_import_lib}")
           endif()
+          set(_imported_location "$<$<CONFIG:DEBUG>:${_imported_location_debug}>$<$<CONFIG:RELEASE>:${_imported_location_release}>")
         endif()
-          
-        if(NOT _target_expr)
-          message(FATAL_ERROR "No dylib specified for SHARED import target ${_import_lib}")
-        endif()
-        
-        verbose_message("Adding copy command for ${_import_lib}: ${_target_expr}")
+
+        verbose_message("Adding copy command for ${_import_lib}: ${_imported_location}")
 
         if(MSVC)
           add_custom_command(TARGET ${target} POST_BUILD 
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different \"${_target_expr}\" \"$<TARGET_FILE_DIR:${target}>\")
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different \"${_imported_location}\" \"$<TARGET_FILE_DIR:${target}>\")
         elseif(APPLE)
-          add_custom_command(TARGET ${target} POST_BUILD 
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different \"${_target_expr}\" \"$<TARGET_FILE_DIR:${target}>/../Frameworks\")
-          #call install_name_tool and fixup the dylib paths here:
+          get_target_property(_is_bundle ${target} MACOSX_BUNDLE)
+          if(_is_bundle)
+            add_custom_command(TARGET ${target} POST_BUILD
+              COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${target}>/../Frameworks/"
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_imported_location}" "$<TARGET_FILE_DIR:${target}>/../Frameworks/"
+              COMMAND install_name_tool -change @loader_path/libLeap.dylib @loader_path/../Frameworks/libLeap.dylib "$<TARGET_FILE:${target}>")
+            #call install_name_tool and fixup the dylib paths here:
+          endif()
         else()
           message(WARNING "Automatic handling of shared libraries is unimplemented on this platform")
         endif()
       endif()
     endif()
-  endforeach()
+
+    math(EXPR _lib_index "${_lib_index} + 1") #an extremely verbose i++...
+    #if this is expensive, simply increment it when adding to the list.
+    list(LENGTH _library_list _lib_length) #this is likely to have changed
+  endwhile()
 endfunction()
 
 #This function wraps find_package, then calls target_imported_libraries on the generated package)
-function(target_package target package)
+function(target_package target package )
   list(REMOVE_AT ARGV 0) # pop the target
-  find_package(${ARGV})
-  target_imported_libraries(${target} PUBLIC ${package}::${package})
+  cmake_parse_arguments(target_package "" "LINK_TYPE" "" ${ARGV})
+
+  if(TARGET ${package}::${package})
+    verbose_message("${package}::${package} already exists, skipping find op")
+  else()
+    find_package(${target_package_UNPARSED_ARGUMENTS})
+  endif()
+
+  if(target_package_LINK_TYPE)
+    target_imported_libraries(${target} ${package}::${package} LINK_TYPE ${target_package_LINK_TYPE})
+  else()
+    target_imported_libraries(${target} ${package}::${package})
+  endif()
 endfunction()

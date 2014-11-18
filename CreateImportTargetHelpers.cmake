@@ -27,6 +27,9 @@
 #   The file to use as the IMPORTED_LOCATION.  If <type> is SHARED, this should
 #   be a .dll, .dylib, or .so.  If <type> is STATIC or UNKNOWN, this should be 
 #   a .lib, or .a file.  This is unused for INTERFACE libraries
+# <namespace>_SHARED_LIB<_DEBUG/_RELEASE>
+#   The file to use as the IMPORTED_LOCATION if <type> is SHARED.  This is helpful
+#   for backwards compatilbility where projects expect _LIBRARY to be the import_lib.
 # <namespace>_IMPORT_LIB<_DEBUG/_RELEASE>
 #   The import library corresponding to the .dll.  Only used on Windows. 
 #   This may not use generator expressions.
@@ -65,15 +68,31 @@ function(map_var_to_prop target property var )
     endif()
   endforeach()
   
+  #set the default to a nice generator expression if it is not in the blacklist
+  set(_genexpr_unsupported_properties "IMPORTED_LOCATION")
+  list(FIND _genexpr_unsupported_properties _find_result ${property})
+  if(NOT ${var} AND (_find_result EQUAL -1))
+    set(_defaultprop)
+    foreach(_config DEBUG RELEASE)
+      if(${var}_${_config})
+        set(_defaultprop ${_defaultprop}$<$<CONFIG:${_config}>:${${var}_${_config}}>)
+      endif()
+    endforeach()
+    set_property(TARGET ${target} PROPERTY ${property} ${_defaultprop})
+  endif()
+
   if(map_var_to_prop_REQUIRED AND NOT _found)
     message(FATAL_ERROR "${target}: required variable ${var}${var_suffix} is undefined.")
   endif()
+  
+  get_target_property(_fullprop ${target} ${property})
+  verbose_message("${target}:${property} = ${_fullprop}")
 endfunction()
 
 #acceptable libtypes are SHARED, STATIC, INTERFACE, and UNKNOWN
 function(generate_import_target namespace libtype)
   set(_target ${namespace}::${namespace})
-  cmake_parse_arguments(generate_import_target "GLOBAL" "TARGET" "" ${ARGN})
+  cmake_parse_arguments(generate_import_target "LOCAL" "TARGET" "" ${ARGN})
   
   if(generate_import_target_TARGET)
     set(_target ${generate_import_target_TARGET})
@@ -82,9 +101,11 @@ function(generate_import_target namespace libtype)
   if(${namespace}_FOUND)
     verbose_message("Generating ${libtype} lib: ${_target} with namespace ${namespace}")
     
-    if(generate_import_target_GLOBAL)
-      set(_global GLOBAL)
+    set(_global GLOBAL)
+    if(generate_import_target_LOCAL)
+      unset(_global)
     endif()
+    
     add_library(${_target} ${libtype} IMPORTED ${_global})
 
     if(MSVC AND ${libtype} STREQUAL SHARED)
@@ -92,7 +113,11 @@ function(generate_import_target namespace libtype)
     endif()        
     
     if(NOT ${libtype} STREQUAL INTERFACE)
-      map_var_to_prop(${_target} IMPORTED_LOCATION ${namespace}_LIBRARY REQUIRED)
+      if(${libtype} STREQUAL SHARED AND (${namespace}_SHARED_LIB OR (${namespace}_SHARED_LIB_DEBUG AND ${namespace}_SHARED_LIB_RELEASE)))
+        map_var_to_prop(${_target} IMPORTED_LOCATION ${namespace}_SHARED_LIB REQUIRED)
+      else()
+        map_var_to_prop(${_target} IMPORTED_LOCATION ${namespace}_LIBRARY REQUIRED)
+      endif()
     endif()
     
     map_var_to_prop(${_target} INTERFACE_LINK_LIBRARIES ${namespace}_INTERFACE_LIBS) 

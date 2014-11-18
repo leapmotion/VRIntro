@@ -10,7 +10,7 @@
 # is actually "SDL2", not "SDL" anymore.  Thus a fully-qualified lib directory name
 # would be something like "SDL2-2.0.3", and not "SDL-2.0.3" as one would expect.
 #
-# Imported Targets (TODO: change SDL to SDL2)
+# Imported Targets
 # ^^^^^^^^^^^^^^^^
 #   SDL::SDL
 #     Basic import target. Use to build an application
@@ -20,7 +20,7 @@
 #     Advanced import target. contains only SDLMain.lib
 # Result Variables
 # ^^^^^^^^^^^^^^^^
-# This module defines the following variables (TODO: change SDL to SDL2)
+# This module defines the following variables
 #
 #   SDL_ROOT_DIR
 #
@@ -46,7 +46,7 @@
 #   SDL_LIBRARIES
 #     A legacy string - contains a list of all .lib files used by SDL, modified by SDL_BUILDING_LIBRARY.
 #
-# This module responds to the flag: (TODO: change SDL to SDL2)
+# This module responds to the flag:
 #
 # ::
 #
@@ -116,8 +116,71 @@
 # (To distribute this file outside of CMake, substitute the full
 #  License text for the above reference.)
 
-#set(_likely_folders SDL SDL12 SDL11 SDL2)
-include(LeapFindModuleHelpers)
+include(VerboseMessage)
+
+function(find_multitype_library shared_out static_out import_out)
+  list(REMOVE_AT ARGV 0) #remove shared_out
+  list(REMOVE_AT ARGV 0) #remove static_out
+  list(REMOVE_AT ARGV 0) #remove import_out
+
+  set(_oldlibsuffixes "${CMAKE_FIND_LIBRARY_SUFFIXES}")
+    set(CMAKE_FIND_LIBRARY_SUFFIXES "${CMAKE_SHARED_LIBRARY_SUFFIX}")
+    find_library(${shared_out} ${ARGV})
+    set(CMAKE_FIND_LIBRARY_SUFFIXES "${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    find_library(${static_out} ${ARGV})
+    set(CMAKE_FIND_LIBRARY_SUFFIXES "${CMAKE_IMPORT_LIBRARY_SUFFIX}")
+    find_library(${import_out} ${ARGV})
+  set(CMAKE_FIND_LIBRARY_SUFFIXES "${_oldlibsuffixes}")
+
+  #TODO:verify the types of the static & import libraries
+  if(MSVC)
+    #file(READ ${static_out})
+  endif()
+
+endfunction()
+
+#Checks <namespace>_SHARED_LIB, <namespace>_STATIC_LIB and <namespace>_IMPORT_LIB
+#And fills <namespace>_LIBRARY with the appropriate lib type depending on which is found
+#If both are found, it will default to shared.  We may, at a later time, also add verification
+#of if the static library is actually a static lib and not an import lib on windows.
+#It will then fill <namespace>_LIBRARY_TYPE with either SHARED or STATIC
+function(select_library_type namespace)
+  #select the primary library type
+  if(${namespace}_SHARED_LIB AND EXISTS "${${namespace}_SHARED_LIB}")
+    #add either the .lib or the .dylib to the libraries list
+    if(${namespace}_IMPORT_LIB AND EXISTS "${${namespace}_IMPORT_LIB}")
+      set(${namespace}_LIBRARIES "${${namespace}_LIBRARIES}" "${${namespace}_IMPORT_LIB}" PARENT_SCOPE)
+    else()
+      set(${namespace}_LIBRARIES "${${namespace}_LIBRARIES}" "${${namespace}_SHARED_LIB}" PARENT_SCOPE)
+    endif()
+
+    set(${namespace}_LIBRARY "${${namespace}_SHARED_LIB}" PARENT_SCOPE)
+    set(${namespace}_LIBRARY_TYPE "SHARED" PARENT_SCOPE)
+  elseif(${namespace}_STATIC_LIB AND EXISTS "${${namespace}_STATIC_LIB}")
+    set(${namespace}_LIBRARIES "${${namespace}_LIBRARIES}" "${${namespace}_STATIC_LIB}" PARENT_SCOPE)
+    set(${namespace}_LIBRARY "${${namespace}_STATIC_LIB}" PARENT_SCOPE)
+    set(${namespace}_LIBRARY_TYPE "STATIC" PARENT_SCOPE)
+  endif()
+
+endfunction()
+
+function(find_likely_dirs package dir_list_var path_list )
+  list(REMOVE_AT ARGV 0) #pop package name
+  list(REMOVE_AT ARGV 0) #pop dir_list_var
+
+  set(_dirs ${${dir_list_var}}) #make sure we're appending
+
+  foreach(_path ${ARGV})
+    file(GLOB _subdirs RELATIVE ${_path} ${_path}/*)
+    foreach(_subdir ${_subdirs})
+      if(IS_DIRECTORY ${_path}/${_subdir} AND _subdir MATCHES "^${package}*")
+        list(APPEND _dirs ${_path}/${_subdir})
+      endif()
+    endforeach()
+  endforeach()
+
+  set(${dir_list_var} "${_dirs}" PARENT_SCOPE)
+endfunction()
 
 function(sdl_parse_version_file filename major minor patch version_string)
   file(STRINGS "${filename}" _major_line REGEX "^#define[ \t]+SDL_MAJOR_VERSION[ \t]+[0-9]+$")
@@ -136,65 +199,113 @@ function(sdl_parse_version_file filename major minor patch version_string)
   set(${version_string} "${sdl_major}.${sdl_minor}.${sdl_patch}" PARENT_SCOPE)
 endfunction()
 
-if(NOT SDL_ROOT_DIR)
+#############################
+# The actual find module begins here
+#############################
+if(NOT EXISTS SDL_ROOT_DIR)
 
-  set(_likely_folders "")
-  set(_ok_folders "")
+  set(_likely_dirs "")
 
-  #Find any folders in the prefix path matching SDL2* and add them to the list of candidates
-  find_likely_folders(SDL2 _likely_folders "${CMAKE_PREFIX_PATH}")
+  # NOTE: this could be done much more cleanly if we write a multiple-return-value find_file and find_path.
+  # As it stands, cmake's find_file and find_path functions return at most one value, even if there are
+  # multiple matches, and which one it returns depends on a rather complicated prioritized list of dirs.
+  
+  #Find any dirs in the prefix path matching SDL* and add them to the list of candidates
+  find_likely_dirs(SDL _likely_dirs "${CMAKE_PREFIX_PATH}")
 
+  set(_best_version "")
+  
   #TODO: create a filter function that takes a function(to determine version given a path)
-  #and filters folders based on the package version & if EXACT has been set.
-  foreach(_folder ${_likely_folders})
-    find_file(_canidate_version_file
-        NAMES include/SDL2/SDL_version.h
-        HINTS $ENV{SDLDIR} ${_likely_folders}
+  #and filters dirs based on the package version & if EXACT has been set.
+  foreach(_dir ${_likely_dirs})
+    find_path(
+      _candidate_sdl2_root_dir
+      NAMES include/SDL_version.h
+            include/SDL2/SDL_version.h
+            include/SDL/SDL_version.h
+      HINTS $ENV{SDLDIR} ${_likely_dirs}
     )
-    mark_as_advanced(_canidate_version_file)
+    if(_candidate_sdl2_root_dir AND EXISTS ${_candidate_sdl2_root_dir})
+      find_file(
+        _version_file
+        NAMES SDL_version.h
+        PATHS ${_candidate_sdl2_root_dir}
+        PATH_SUFFIXES include include/SDL2 include/SDL
+        NO_DEFAULT_PATH
+      )
+      verbose_message("found SDL_version.h file in dir ${_candidate_sdl2_root_dir}")
+      if(_version_file AND EXISTS ${_version_file})
+        sdl_parse_version_file("${_version_file}" _major _minor _patch _version_string)
+        verbose_message("    version string = ${_version_string}")
 
-    #grab the version number from this one
-    if(_canidate_version_file AND EXISTS "${_canidate_version_file}")
-      sdl_parse_version_file("${_canidate_version_file}" _major _minor _patch _version_string)
-
-      #exact matches in front
-      if(${_version_string} STREQUAL ${SDL_FIND_VERSION} OR
-          (_major EQUAL SDL_FIND_VERSION_MAJOR AND
-           _minor EQUAL SDL_FIND_VERSION_MINOR AND
-           _patch EQUAL SDL_FIND_VERSION_PATCH) )
-        list(INSERT _ok_folders 0 "${_folder}")
-      endif()
-
-      if(NOT SDL_FIND_VERSION_EXACT)
+        #exact matches in front
+        set(_version_matches FALSE)
+        if(_version_string STREQUAL SDL_FIND_VERSION)
+          set(_version_matches TRUE)
+        endif()
         if(_major EQUAL SDL_FIND_VERSION_MAJOR AND
+           _minor EQUAL SDL_FIND_VERSION_MINOR AND
+           _patch EQUAL SDL_FIND_VERSION_PATCH)
+          set(_version_matches TRUE)
+        endif()
+        if(NOT SDL_FIND_VERSION_EXACT AND
+           _major EQUAL SDL_FIND_VERSION_MAJOR AND
            _version_string VERSION_GREATER SDL_FIND_VERSION)
-          list(APPEND _ok_folders "${_folder}")
+          set(_version_matches TRUE)
+        endif()
+
+        if(_version_matches)
+          verbose_message("    version ${_version_string} matches")
+          if(NOT _best_version OR _version_string VERSION_GREATER _best_version)
+            verbose_message("    setting best version")
+            set(_best_version ${_version_string})
+            set(SDL_ROOT_DIR ${_candidate_sdl2_root_dir})
+            set(SDL_VERSION_STRING ${_version_string})
+            set(SDL_VERSION_MAJOR ${_major})
+            set(SDL_VERSION_MINOR ${_minor})
+            set(SDL_VERSION_PATCH ${_patch})
+          endif()
         endif()
       endif()
     endif()
-
   endforeach()
-
-  find_path(SDL_ROOT_DIR
-    NAMES include/SDL2/SDL_version.h
-    HINTS $ENV{SDLDIR} ${_ok_folders}
-  )
+  verbose_message("SDL_ROOT_DIR = ${SDL_ROOT_DIR}")
+  verbose_message("SDL_VERSION_STRING = ${SDL_VERSION_STRING}")
+  verbose_message("SDL_VERSION_MAJOR = ${SDL_VERSION_MAJOR}")
+  verbose_message("SDL_VERSION_MINOR = ${SDL_VERSION_MINOR}")
+  verbose_message("SDL_VERSION_PATCH = ${SDL_VERSION_PATCH}")
+  unset(_version_file CACHE)
+  unset(_candidate_sdl2_root_dir CACHE)
 endif()
 
-find_path(SDL_INCLUDE_DIR SDL.h
-    HINTS
-      $ENV{SDLDIR}
-      ${SDL_ROOT_DIR}
+### Find SDL version by using predefined SDL root directory ###
+ find_file(
+        _version_file
+        NAMES SDL_version.h
+        PATHS ${SDL_ROOT_DIR}
+        PATH_SUFFIXES include include/SDL2 include/SDL
+        NO_DEFAULT_PATH
+      )
+sdl_parse_version_file("${_version_file}" _major _minor _patch _version_string)
+set(SDL_VERSION_MAJOR ${_major})
+
+# A find_path command analogous to the one used to derived SDL_ROOT_DIR is used here.
+find_path(
+    SDL_INCLUDE_DIR
+    NAMES SDL_version.h
+    HINTS ${SDL_ROOT_DIR}
     PATH_SUFFIXES
-      include/SDL2
-      include
-      include/SDL
+        include/SDL2
+        include
+        include/SDL
     NO_DEFAULT_PATH
 )
+verbose_message("SDL_INCLUDE_DIR = ${SDL_INCLUDE_DIR}")
 
-sdl_parse_version_file(${SDL_INCLUDE_DIR}/SDL_version.h SDL_VERSION_MAJOR SDL_VERSION_MINOR SDL_VERSION_PATCH SDL_VERSION_STRING)
-
-find_multitype_library(SDL_SHARED_LIB SDL_STATIC_LIB SDL_IMPORT_LIB
+find_multitype_library(
+  SDL_SHARED_LIB
+  SDL_STATIC_LIB
+  SDL_IMPORT_LIB
   NAMES
     SDL${SDL_VERSION_MAJOR}
   HINTS
@@ -209,6 +320,7 @@ select_library_type(SDL)
 find_library(SDL_MAIN_LIBRARY
   NAMES
     SDL${SDL_VERSION_MAJOR}main
+    SDLmain
   HINTS
     ENV{SDLDIR} ${SDL_ROOT_DIR}
   PATH_SUFFIXES
@@ -266,23 +378,30 @@ if(SDL_MAIN_LIBRARY AND EXISTS "${SDL_MAIN_LIBRARY}")
 endif()
 
 include(CreateImportTargetHelpers)
-generate_import_target(SDL_MAIN STATIC TARGET SDL::Main)
 
-include(CreateImportTargetHelpers)
-if(SDL_LIBRARY MATCHES "${CMAKE_SHARED_LIBRARY_SUFFIX}$")
-  generate_import_target(SDL SHARED TARGET SDL::Library)
-elseif(SDL_LIBRARY MATCHES "${CMAKE_STATIC_LIBRARY_SUFFIX}$")
-  generate_import_target(SDL STATIC TARGET SDL::Library)
-else()
-  message(FATAL_ERROR "Unable to determine library type of file ${SDL_LIBRARY}")
-endif()
+if(SDL_FOUND AND NOT TARGET SDL::SDL)
+  generate_import_target(SDL_MAIN STATIC TARGET SDL::Main)
 
-add_library(SDL::SDL INTERFACE IMPORTED GLOBAL)
-target_link_libraries(SDL::SDL INTERFACE SDL::Library SDL::Main)
+  include(CreateImportTargetHelpers)
+  if(SDL_LIBRARY MATCHES "${CMAKE_SHARED_LIBRARY_SUFFIX}$")
+    generate_import_target(SDL SHARED TARGET SDL::Library)
+  elseif(SDL_LIBRARY MATCHES "${CMAKE_STATIC_LIBRARY_SUFFIX}$")
+    generate_import_target(SDL STATIC TARGET SDL::Library)
+  else()
+    message(FATAL_ERROR "Unable to determine library type of file ${SDL_LIBRARY}")
+  endif()
 
-#HACK FOR MAC X11 DEPENDENCY
-#TODO - Create a modernized FindX11.cmake module, make SDL depend on it on macs
-if(APPLE)
-  find_package(X11 REQUIRED)
-  set_property(TARGET SDL::SDL APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${X11_INCLUDE_DIR})
+  add_library(SDL::SDL INTERFACE IMPORTED GLOBAL)
+  set_property(TARGET SDL::SDL APPEND PROPERTY INTERFACE_LINK_LIBRARIES SDL::Library SDL::Main)
+
+  # NOTE: this is commented out because SDL does not in principle need to depend
+  # on X11 (it should be using Cocoa), and thus the SDL library we use should be
+  # configured to not use X11.  Jon has rolled an SDL build with X11 disabled, and
+  # that build should be making it into our external libraries.
+  # # HACK FOR MAC X11 DEPENDENCY
+  # # TODO - Create a modernized FindX11.cmake module, make SDL depend on it on macs
+  # if(APPLE)
+  #   find_package(X11 REQUIRED)
+  #   set_property(TARGET SDL::SDL APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${X11_INCLUDE_DIR})
+  # endif()
 endif()

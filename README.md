@@ -11,19 +11,19 @@ First add the cmake-module repo as a remote, so you can more easily reference it
 
 To setup cmake-modules in your repository (only run once as a setup step):
 ```
-  git subtree add --prefix cmake-modules cmake-modules-repo master
+  git subtree add --prefix cmake-modules cmake-modules-repo develop
 ```
 
 To update the copy of cmake-modules in your repository from the latest code in the cmake-modules repo:
 ```
-  git fetch cmake-modules-repo master
-  git subtree pull --prefix cmake-modules cmake-modules-repo master
+  git fetch cmake-modules-repo develop
+  git subtree pull --prefix cmake-modules cmake-modules-repo develop
 ```
 
 To push changes from your repository upstream into the cmake-module repo:
 ```
   git subtree push --prefix cmake-modules cmake-modules-repo <branch>
-  Open a pull request to merge <branch> to master
+  Open a pull request to merge <branch> to develop
 ```
 
 
@@ -142,3 +142,8 @@ all components specified as arguments to find_package. Private import targets sh
 
 - The organization of the Components (with its component and library dependencies) should
   be implemented using a cmake module, so little redundant boilerplate is necessary.
+
+- Write variants of find_file and find_path which actually return ALL matches, instead of
+  an ill-defined single match.  This functionality is distinctly lacking in cmake, and
+  causes nontrivial problems when trying to find files/paths.
+
