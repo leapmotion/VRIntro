@@ -28,7 +28,7 @@ set(Leap_INCLUDE_DIR "${Leap_ROOT_DIR}/include")
 if(MSVC)
   find_library(Leap_IMPORT_LIB_RELEASE "Leap.lib" HINTS "${Leap_ROOT_DIR}/lib/x86")
   find_library(Leap_IMPORT_LIB_DEBUG "Leapd.lib" HINTS "${Leap_ROOT_DIR}/lib/x86")
-  
+
   find_file(Leap_LIBRARY_RELEASE
             NAMES Leap.dll
             HINTS "${Leap_ROOT_DIR}/lib/x86")
@@ -39,16 +39,16 @@ if(MSVC)
   mark_as_advanced(Leap_IMPORT_LIB_RELEASE Leap_IMPORT_LIB_DEBUG)
 else()
   if(USE_LIBCXX)
-    set(_libdir ${Leap_ROOT_DIR}/lib/libc++)
-  else()
     set(_libdir ${Leap_ROOT_DIR}/lib)
+  else()
+    set(_libdir ${Leap_ROOT_DIR}/lib/libstdc++)
   endif()
-  
+
   find_library(Leap_LIBRARY_RELEASE
             NAMES libLeap.dylib
             HINTS "${_libdir}")
   find_library(Leap_LIBRARY_DEBUG
-            NAMES libLeapd.dylib 
+            NAMES libLeapd.dylib
                   libLeap.dylib #fallback on the release library
             HINTS "${_libdir}")
 endif()
