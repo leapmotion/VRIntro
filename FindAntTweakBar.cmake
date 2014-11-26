@@ -15,6 +15,7 @@
 #   AntTweakBar_FOUND
 #   AntTweakBar_INCLUDE_DIR
 #   AntTweakBar_LIBRARIES
+#   AntTweakBar_64_BIT - can be overridden
 #
 find_path(AntTweakBar_DIR
           NAMES include/AntTweakBar.h
@@ -27,15 +28,21 @@ find_path(
     PATH_SUFFIXES include    
     NO_DEFAULT_PATH
     )
-	
-if (CMAKE_SIZEOF_VOID_P EQUAL 8) # 64bit
-  set(BUILD_BIT_TYPE "x64")
-else() # 32bit
-  set(BUILD_BIT_TYPE "x86")
-endif()   
+
+if(DEFINED BUILD_64_BIT)
+  set(AntTweakBar_64_BIT ON)
+endif()
+
+if(NOT DEFINED AntTweakBar_64_BIT)
+  if (CMAKE_SIZEOF_VOID_P EQUAL 8) # 64bit
+    set(AntTweakBar_64_BIT ON)
+  else() # 32bit
+    set(AntTweakBar_64_BIT OFF)
+  endif()   
+endif()
 
 if(MSVC)
-  if("${BUILD_BIT_TYPE}" STREQUAL "x64")
+  if(AntTweakBar_64_BIT)
     find_library(AntTweakBar_LIBRARY_RELEASE "AntTweakBar64.lib" HINTS "${AntTweakBar_DIR}" PATH_SUFFIXES lib)
     find_library(AntTweakBar_LIBRARY_DEBUG "AntTweakBar64.lib" HINTS "${AntTweakBar_DIR}" PATH_SUFFIXES lib/debug)
   else()
