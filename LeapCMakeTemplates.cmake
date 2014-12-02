@@ -7,7 +7,7 @@
 # Not reccomended for use outside of the Leap Motion engineering group,
 # though you're welcome to define your own.
 
-macro(leap_find_external_libraries pc_variant)
+macro(leap_find_external_libraries)
   find_path(EXTERNAL_LIBRARY_DIR "eigen-3.2.1/Eigen/CmakeLists.txt"
     PATHS
       "$ENV{EXTERNAL_LIBRARY_DIR}"
