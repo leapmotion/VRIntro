@@ -40,7 +40,7 @@
 #     Where to find SDLmain.lib/.a
 #   SDL_LINK_TYPE
 #     Either STATIC or SHARED depending on if SDL.dll/dylib is found.  If both are available,
-#     defaults to STATIC.  Setting this in the cache will attempt to force one or the other
+#     defaults to SHARED.  Setting this in the cache will attempt to force one or the other
 #   SDL_VERSION_STRING
 #     A human-readable string containing the version of SDL
 #   SDL_LIBRARIES
@@ -141,16 +141,12 @@ endfunction()
 
 #Checks <namespace>_SHARED_LIB, <namespace>_STATIC_LIB and <namespace>_IMPORT_LIB
 #And fills <namespace>_LIBRARY with the appropriate lib type depending on which is found
-#If both are found, it will default to static.  We may, at a later time, also add verification
+#If both are found, it will default to shared.  We may, at a later time, also add verification
 #of if the static library is actually a static lib and not an import lib on windows.
 #It will then fill <namespace>_LIBRARY_TYPE with either SHARED or STATIC
 function(select_library_type namespace)
   #select the primary library type
-  if(${namespace}_STATIC_LIB AND EXISTS "${${namespace}_STATIC_LIB}")
-    set(${namespace}_LIBRARIES "${${namespace}_LIBRARIES}" "${${namespace}_STATIC_LIB}" PARENT_SCOPE)
-    set(${namespace}_LIBRARY "${${namespace}_STATIC_LIB}" PARENT_SCOPE)
-    set(${namespace}_LIBRARY_TYPE "STATIC" PARENT_SCOPE)
-  elseif(${namespace}_SHARED_LIB AND EXISTS "${${namespace}_SHARED_LIB}")
+  if(${namespace}_SHARED_LIB AND EXISTS "${${namespace}_SHARED_LIB}")
     #add either the .lib or the .dylib to the libraries list
     if(${namespace}_IMPORT_LIB AND EXISTS "${${namespace}_IMPORT_LIB}")
       set(${namespace}_LIBRARIES "${${namespace}_LIBRARIES}" "${${namespace}_IMPORT_LIB}" PARENT_SCOPE)
@@ -160,6 +156,10 @@ function(select_library_type namespace)
 
     set(${namespace}_LIBRARY "${${namespace}_SHARED_LIB}" PARENT_SCOPE)
     set(${namespace}_LIBRARY_TYPE "SHARED" PARENT_SCOPE)
+  elseif(${namespace}_STATIC_LIB AND EXISTS "${${namespace}_STATIC_LIB}")
+    set(${namespace}_LIBRARIES "${${namespace}_LIBRARIES}" "${${namespace}_STATIC_LIB}" PARENT_SCOPE)
+    set(${namespace}_LIBRARY "${${namespace}_STATIC_LIB}" PARENT_SCOPE)
+    set(${namespace}_LIBRARY_TYPE "STATIC" PARENT_SCOPE)
   endif()
 
 endfunction()
