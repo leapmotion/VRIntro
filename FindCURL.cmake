@@ -40,3 +40,4 @@ find_package_handle_standard_args(CURL DEFAULT_MSG CURL_INCLUDE_DIR CURL_LIBRARI
 
 include(CreateImportTargetHelpers)
 generate_import_target(CURL STATIC)
+set_property(TARGET CURL::CURL APPEND PROPERTY INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
