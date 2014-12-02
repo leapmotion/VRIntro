@@ -16,6 +16,10 @@ macro(leap_find_external_libraries)
       "/opt/local/Libraries"
   )
 
+  if(NOT IS_DIRECTORY ${EXTERNAL_LIBRARY_DIR})
+    message(FATAL_ERROR "EXTERNAL_LIBRARY_DIR not found, please specify a folder to look for external libraries")
+  endif()
+
   list(INSERT CMAKE_PREFIX_PATH 0 "${EXTERNAL_LIBRARY_DIR}")
 endmacro()
 
