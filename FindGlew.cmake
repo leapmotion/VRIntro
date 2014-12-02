@@ -15,6 +15,7 @@
 #   Glew_FOUND
 #   Glew_INCLUDE_DIR
 #   Glew_LIBRARIES
+#   Glew_USE_64_BIT
 #
 find_path(Glew_ROOT_DIR
           NAMES include/GL/glew.h
@@ -27,15 +28,22 @@ find_path(
     PATH_SUFFIXES include    
     NO_DEFAULT_PATH
     )
-    
+
+if(Glew_USE_64_BIT)
+  set(Glew_BIT_LIB lib64)
+else()
+  set(Glew_BIT_LIB lib32)
+endif()
+
 if(MSVC)
   find_library(Glew_LIBRARY_RELEASE "glew32s.lib" HINTS "${Glew_ROOT_DIR}" PATH_SUFFIXES lib)
   find_library(Glew_LIBRARY_DEBUG "glew32s.lib" HINTS "${Glew_ROOT_DIR}" PATH_SUFFIXES lib)
 else()
-  # Linux's glew-1.9.0 package's libs are in lib64
-  find_library(Glew_LIBRARY_RELEASE "libGLEW.a" HINTS "${Glew_ROOT_DIR}" PATH_SUFFIXES lib lib64)
-  find_library(Glew_LIBRARY_DEBUG "libGLEW.a" HINTS "${Glew_ROOT_DIR}" PATH_SUFFIXES lib lib64)
+  # Linux's glew-1.9.0 package's libs are in
+  find_library(Glew_LIBRARY_RELEASE "libGLEW.a" HINTS "${Glew_ROOT_DIR}" PATH_SUFFIXES lib ${Glew_BIT_LIB})
+  find_library(Glew_LIBRARY_DEBUG "libGLEW.a" HINTS "${Glew_ROOT_DIR}" PATH_SUFFIXES lib ${Glew_BIT_LIB})
 endif()
+
 include(SelectConfigurations)
 select_configurations(Glew LIBRARY LIBRARIES)
 
