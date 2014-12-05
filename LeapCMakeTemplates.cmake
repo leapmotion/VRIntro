@@ -46,6 +46,7 @@ macro(leap_use_standard_platform_settings)
     set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++11")
     set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++")
+    list(APPEND CMAKE_FIND_LIBRARY_PREFIXES "") #Adds the null set so that we can find libraries that don't start with lib
     set(USE_LIBCXX ON)
   endif()
 
