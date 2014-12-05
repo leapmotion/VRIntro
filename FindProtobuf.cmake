@@ -13,7 +13,6 @@ find_path(Protobuf_ROOT_DIR
 
 set(Protobuf_INCLUDE_DIR ${Protobuf_ROOT_DIR}/include CACHE STRING "")
 
-unset(Protobuf_LIBRARY CACHE)
 find_library(Protobuf_LIBRARY
   NAMES protobuf libprotobuf #This is dumb, but nessecary because on mac, the prefix is "lib", but on windows its ""
   HINTS "${Protobuf_ROOT_DIR}/lib"
@@ -24,6 +23,7 @@ find_library(Protobuf_LIBRARY_DEBUG
   NAMES protobuf libprotobuf
   HINTS ${Protobuf_ROOT_DIR}/lib/Debug
 )
+mark_as_advanced(Protobuf_LIBRARY_DEBUG)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Protobuf DEFAULT_MSG
