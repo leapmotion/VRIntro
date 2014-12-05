@@ -15,13 +15,13 @@ set(Protobuf_INCLUDE_DIR ${Protobuf_ROOT_DIR}/include CACHE STRING "")
 
 unset(Protobuf_LIBRARY CACHE)
 find_library(Protobuf_LIBRARY
-  NAMES protobuf
+  NAMES protobuf libprotobuf #This is dumb, but nessecary because on mac, the prefix is "lib", but on windows its ""
   HINTS "${Protobuf_ROOT_DIR}/lib"
   		"${Protobuf_ROOT_DIR}/lib/Release"
 )
 
 find_library(Protobuf_LIBRARY_DEBUG
-  NAMES protobuf
+  NAMES protobuf libprotobuf
   HINTS ${Protobuf_ROOT_DIR}/lib/Debug
 )
 
