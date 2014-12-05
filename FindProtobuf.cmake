@@ -13,6 +13,10 @@ find_path(Protobuf_ROOT_DIR
 
 set(Protobuf_INCLUDE_DIR ${Protobuf_ROOT_DIR}/include CACHE STRING "")
 
+if(DEFINED Protobuf_LIBRARY AND NOT EXISTS ${Protobuf_LIBRARY})
+  unset(Protobuf_LIBRARY CACHE)
+endif()
+
 find_library(Protobuf_LIBRARY
   NAMES protobuf libprotobuf #This is dumb, but nessecary because on mac, the prefix is "lib", but on windows its ""
   HINTS "${Protobuf_ROOT_DIR}/lib"
