@@ -274,7 +274,6 @@ if(NOT EXISTS SDL_ROOT_DIR)
   verbose_message("SDL_VERSION_MAJOR = ${SDL_VERSION_MAJOR}")
   verbose_message("SDL_VERSION_MINOR = ${SDL_VERSION_MINOR}")
   verbose_message("SDL_VERSION_PATCH = ${SDL_VERSION_PATCH}")
-  unset(_version_file CACHE)
   unset(_candidate_sdl2_root_dir CACHE)
 endif()
 
@@ -288,6 +287,7 @@ endif()
       )
 sdl_parse_version_file("${_version_file}" _major _minor _patch _version_string)
 set(SDL_VERSION_MAJOR ${_major})
+unset(_version_file CACHE)
 
 # A find_path command analogous to the one used to derived SDL_ROOT_DIR is used here.
 find_path(
