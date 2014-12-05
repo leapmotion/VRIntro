@@ -1,16 +1,9 @@
 include(CreateImportTargetHelpers)
 
-message(USE_LIBCXX=${USE_LIBCXX})
 set(_suffix "")
-
 if(${USE_LIBCXX})
-	message("Setting protobuf suffix")
  	set(_suffix "-libc++")
  endif()
-
-unset(Protobuf_ROOT_DIR CACHE)
-unset(Protobuf_LIBRARY CACHE)
-unset(Protobuf_LIBRARY_DEBUG CACHE)
 
 find_path(Protobuf_ROOT_DIR
   NAMES include/google/protobuf/descriptor.h
