@@ -37,7 +37,7 @@ else()
   generate_import_target(OPENSSL_CRYPTO STATIC TARGET OpenSSL::Crypto)
   generate_import_target(OPENSSL_SSL STATIC TARGET OpenSSL::SSL)
   generate_import_target(OPENSSL INTERFACE TARGET OpenSSL::OpenSSL)
-  target_link_libraries(OpenSSL::OpenSSL INTERFACE OpenSSL::Crypto OpenSSL::SSL)
+  target_link_libraries(OpenSSL::OpenSSL INTERFACE OpenSSL::SSL OpenSSL::Crypto)
 endif()
 
 
