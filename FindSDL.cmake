@@ -38,7 +38,7 @@
 #     Where to find SDL.lib (Windows only) if it exists
 #   SDL_MAIN_LIBRARY
 #     Where to find SDLmain.lib/.a
-#   SDL_LINK_TYPE
+#   SDL_LIBRARY_TYPE
 #     Either STATIC or SHARED depending on if SDL.dll/dylib is found.  If both are available,
 #     defaults to SHARED.  Setting this in the cache will attempt to force one or the other
 #   SDL_VERSION_STRING
@@ -146,7 +146,7 @@ endfunction()
 #It will then fill <namespace>_LIBRARY_TYPE with either SHARED or STATIC
 function(select_library_type namespace)
   #select the primary library type
-  if(${namespace}_SHARED_LIB AND EXISTS "${${namespace}_SHARED_LIB}")
+  if(${namespace}_SHARED_LIB AND EXISTS "${${namespace}_SHARED_LIB}" AND (NOT DEFINED ${namespace}_LIBRARY_TYPE OR ${namespace}_LIBRARY_TYPE EQUAL "SHARED") )
     #add either the .lib or the .dylib to the libraries list
     if(${namespace}_IMPORT_LIB AND EXISTS "${${namespace}_IMPORT_LIB}")
       set(${namespace}_LIBRARIES "${${namespace}_LIBRARIES}" "${${namespace}_IMPORT_LIB}" PARENT_SCOPE)
@@ -156,7 +156,7 @@ function(select_library_type namespace)
 
     set(${namespace}_LIBRARY "${${namespace}_SHARED_LIB}" PARENT_SCOPE)
     set(${namespace}_LIBRARY_TYPE "SHARED" PARENT_SCOPE)
-  elseif(${namespace}_STATIC_LIB AND EXISTS "${${namespace}_STATIC_LIB}")
+  elseif(${namespace}_STATIC_LIB AND EXISTS "${${namespace}_STATIC_LIB}" AND (NOT DEFINED ${namespace}_LIBRARY_TYPE OR ${namespace}_LIBRARY_TYPE EQUAL "STATIC"))
     set(${namespace}_LIBRARIES "${${namespace}_LIBRARIES}" "${${namespace}_STATIC_LIB}" PARENT_SCOPE)
     set(${namespace}_LIBRARY "${${namespace}_STATIC_LIB}" PARENT_SCOPE)
     set(${namespace}_LIBRARY_TYPE "STATIC" PARENT_SCOPE)
