@@ -41,5 +41,3 @@ else()
   generate_import_target(OPENSSL INTERFACE TARGET OpenSSL::OpenSSL)
   target_link_libraries(OpenSSL::OpenSSL INTERFACE OpenSSL::SSL OpenSSL::Crypto)
 endif()
-
-
