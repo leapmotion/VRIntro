@@ -146,7 +146,8 @@ endfunction()
 #It will then fill <namespace>_LIBRARY_TYPE with either SHARED or STATIC
 function(select_library_type namespace)
   #select the primary library type
-  if(${namespace}_SHARED_LIB AND EXISTS "${${namespace}_SHARED_LIB}" AND (NOT DEFINED ${namespace}_LIBRARY_TYPE OR ${namespace}_LIBRARY_TYPE EQUAL "SHARED") )
+
+  if(${namespace}_SHARED_LIB AND EXISTS "${${namespace}_SHARED_LIB}" AND (NOT DEFINED ${namespace}_LIBRARY_TYPE OR ${namespace}_LIBRARY_TYPE STREQUAL "SHARED") )
     #add either the .lib or the .dylib to the libraries list
     if(${namespace}_IMPORT_LIB AND EXISTS "${${namespace}_IMPORT_LIB}")
       set(${namespace}_LIBRARIES "${${namespace}_LIBRARIES}" "${${namespace}_IMPORT_LIB}" PARENT_SCOPE)
@@ -156,7 +157,7 @@ function(select_library_type namespace)
 
     set(${namespace}_LIBRARY "${${namespace}_SHARED_LIB}" PARENT_SCOPE)
     set(${namespace}_LIBRARY_TYPE "SHARED" PARENT_SCOPE)
-  elseif(${namespace}_STATIC_LIB AND EXISTS "${${namespace}_STATIC_LIB}" AND (NOT DEFINED ${namespace}_LIBRARY_TYPE OR ${namespace}_LIBRARY_TYPE EQUAL "STATIC"))
+  elseif(${namespace}_STATIC_LIB AND EXISTS "${${namespace}_STATIC_LIB}" AND (NOT DEFINED ${namespace}_LIBRARY_TYPE OR ${namespace}_LIBRARY_TYPE STREQUAL "STATIC"))
     set(${namespace}_LIBRARIES "${${namespace}_LIBRARIES}" "${${namespace}_STATIC_LIB}" PARENT_SCOPE)
     set(${namespace}_LIBRARY "${${namespace}_STATIC_LIB}" PARENT_SCOPE)
     set(${namespace}_LIBRARY_TYPE "STATIC" PARENT_SCOPE)
