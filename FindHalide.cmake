@@ -32,7 +32,8 @@ find_path( Halide_INCLUDE_DIR
 find_library(Halide_LIBRARY Halide HINTS "${Halide_ROOT_DIR}" PATH_SUFFIXES bin)
 if(WIN32)
   set(Halide_IMPORT_LIB ${Halide_LIBRARY})
-	find_library(Halide_SHARED_LIB Halide.dll "$[Halide_ROOT_DIR}" PATH_SUFFIXES bin)
+  find_library(Halide_SHARED_LIB Halide.dll "$[Halide_ROOT_DIR}" PATH_SUFFIXES bin)
+  mark_as_advanced(Halide_SHARED_LIB)
 endif()
 
 include(FindPackageHandleStandardArgs)
