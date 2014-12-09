@@ -18,8 +18,7 @@
 
 find_path(Halide_ROOT_DIR
           NAMES include/Halide.h
-          PATH_SUFFIXES Halide halide Halide-${Halide_FIND_VERSION} halide-${Halide_FIND_VERSION}
-)
+          PATH_SUFFIXES halide)
 
 find_path( Halide_INCLUDE_DIR
            NAMES Halide.h
@@ -28,10 +27,10 @@ find_path( Halide_INCLUDE_DIR
            NO_DEFAULT_PATH 
 )
 
-find_library(Halide_LIBRARY "Halide" HINTS "${Halide_ROOT_DIR}" PATH_SUFFIXES bin)
+find_library(Halide_LIBRARY Halide HINTS "${Halide_ROOT_DIR}" PATH_SUFFIXES bin)
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(Halide DEFAULT_MSG Halide_INCLUDE_DIR Haide_LIBRARY)
+find_package_handle_standard_args(Halide DEFAULT_MSG Halide_INCLUDE_DIR Halide_LIBRARY)
 
 include(CreateImportTargetHelpers)
 generate_import_target(Halide STATIC)
