@@ -8,11 +8,18 @@
 # though you're welcome to define your own.
 
 macro(leap_find_external_libraries)
+  if(BUILD_ANDROID)
+    set(_lib_suffix -android)
+  endif()
+
   find_path(EXTERNAL_LIBRARY_DIR "eigen-3.2.1/Eigen/CmakeLists.txt"
     PATHS
+      "$ENV{EXTERNAL_LIBRARY_DIR}${_lib_suffix}"
+      "$ENV{LIBRARIES_PATH}${_lib_suffix}"
+      "$ENV{PATH}"
+      "/opt/local/Libraries${_lib_suffix}"
       "$ENV{EXTERNAL_LIBRARY_DIR}"
       "$ENV{LIBRARIES_PATH}"
-      "$ENV{PATH}"
       "/opt/local/Libraries"
   )
 
