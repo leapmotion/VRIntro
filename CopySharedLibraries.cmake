@@ -73,6 +73,9 @@ function(copy_shared_libraries target)
               COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_imported_location}" "$<TARGET_FILE_DIR:${target}>/../Frameworks/"
               COMMAND install_name_tool -change @loader_path/libLeap.dylib @loader_path/../Frameworks/libLeap.dylib "$<TARGET_FILE:${target}>")
             #call install_name_tool and fixup the dylib paths here:
+          else()
+            add_custom_command(TARGET ${target} POST_BUILD
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different \"${_imported_location}\" \"$<TARGET_FILE_DIR:${target}>\")
           endif()
         else()
           message(WARNING "Automatic handling of shared libraries is unimplemented on this platform")
