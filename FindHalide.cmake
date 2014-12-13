@@ -83,21 +83,28 @@ function(add_halide_generator sourcevar generator_file aot_file)
   endif()
 
   get_filename_component(_filepath ${generator_file} ABSOLUTE)
-  
-  #This isn't exactly ideal - add_custom_command would be better but I'm not sure
-  #how to make it compile and run a thing 
-  try_run(_run_result _compile_result ${CMAKE_BINARY_DIR} ${_filepath}
-    CMAKE_FLAGS "-DCMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD=c++11 -DCMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY=libc++"
-    LINK_LIBRARIES Halide::Halide ${_link_flags}
-    COMPILE_DEFINITIONS ${_compile_flags}
-    COMPILE_OUTPUT_VARIABLE _compile_output
-    RUN_OUTPUT_VARIABLE _run_output
-    ARGS ${CMAKE_BINARY_DIR}/${aot_file}
-  )
+  get_filename_component(_fileroot ${_filepath} NAME_WE)
+
+  if(NOT WIN32)
+    #TODO:Replace this with add_custom_command
+    execute_process(
+      COMMAND pwd
+      COMMAND mkdir -p HalideGenerators
+      COMMAND clang++ "${_filepath}" -o HalideGenerators/${_fileroot} -I${Halide_INCLUDE_DIR} ${_compile_flags} ${Halide_LIBRARY} ${_link_flags}
+      COMMAND "HalideGenerators/${_fileroot}" "${aot_file}"
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+      RESULT_VARIABLE _result
+      OUTPUT_VARIABLE _output
+      ERROR_VARIABLE _error
+    )  
+  else()
+    message(WARNING "add_halide_generator not currently defined for this platform")
+  endif()
+
 
   set(${sourcevar} ${${sourcevar}} ${generator_file} ${CMAKE_BINARY_DIR}/${aot_file}.h ${CMAKE_BINARY_DIR}/${aot_file}.o PARENT_SCOPE)
   set_source_files_properties( ${generator_file} PROPERTIES HEADER_FILE_ONLY TRUE)
   source_group("Halide Generators" FILES ${generator_file})
-  #message("compile=${_compile_result},${_compile_output}")
-  #message("run=${_run_result},${_run_output}")
+#  message("res=${_result},out=${_output},err=${_error}")
+#  message("run=${_run_result},${_run_output}")
 endfunction()
