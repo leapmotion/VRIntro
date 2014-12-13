@@ -71,6 +71,7 @@ endif()
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Halide DEFAULT_MSG Halide_ROOT_DIR Halide_INCLUDE_DIR Halide_LIBRARY)
 
+include(CreateImportTargetHelpers)
 generate_import_target(Halide ${Halide_LIBRARY_TYPE})
 
 function(add_halide_generator sourcevar generator_file aot_file)
