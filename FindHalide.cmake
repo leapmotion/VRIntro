@@ -88,9 +88,14 @@ function(add_halide_generator sourcevar generator_file aot_file)
   if(NOT WIN32)
     #TODO:Replace this with add_custom_command
     execute_process(
-      COMMAND pwd
       COMMAND mkdir -p HalideGenerators
       COMMAND clang++ "${_filepath}" -o HalideGenerators/${_fileroot} -I${Halide_INCLUDE_DIR} ${_compile_flags} ${Halide_LIBRARY} ${_link_flags}
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+      RESULT_VARIABLE _result
+      OUTPUT_VARIABLE _output
+      ERROR_VARIABLE _error
+    )
+    execute_process(
       COMMAND "HalideGenerators/${_fileroot}" "${aot_file}"
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
       RESULT_VARIABLE _result
@@ -105,6 +110,5 @@ function(add_halide_generator sourcevar generator_file aot_file)
   set(${sourcevar} ${${sourcevar}} ${generator_file} ${CMAKE_BINARY_DIR}/${aot_file}.h ${CMAKE_BINARY_DIR}/${aot_file}.o PARENT_SCOPE)
   set_source_files_properties( ${generator_file} PROPERTIES HEADER_FILE_ONLY TRUE)
   source_group("Halide Generators" FILES ${generator_file})
-#  message("res=${_result},out=${_output},err=${_error}")
-#  message("run=${_run_result},${_run_output}")
+  #  message("run=${_run_result},${_run_output}")
 endfunction()
