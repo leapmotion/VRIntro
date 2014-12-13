@@ -92,11 +92,11 @@ function(add_halide_generator sourcevar generator_file aot_file)
     COMPILE_DEFINITIONS ${_compile_flags}
     COMPILE_OUTPUT_VARIABLE _compile_output
     RUN_OUTPUT_VARIABLE _run_output
-    ARGS ${aot_file}
+    ARGS ${CMAKE_BINARY_DIR}/${aot_file}
   )
 
   set(${sourcevar} ${${sourcevar}} ${generator_file} ${CMAKE_BINARY_DIR}/${aot_file}.h ${CMAKE_BINARY_DIR}/${aot_file}.o PARENT_SCOPE)
-  set_property(SOURCE ${generator_file} PROPERTY HEADER_FILE_ONLY TRUE)
+  set_source_files_properties( ${generator_file} PROPERTIES HEADER_FILE_ONLY TRUE)
   source_group("Halide Generators" FILES ${generator_file})
   #message("compile=${_compile_result},${_compile_output}")
   #message("run=${_run_result},${_run_output}")
