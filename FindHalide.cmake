@@ -77,7 +77,11 @@ generate_import_target(Halide ${Halide_LIBRARY_TYPE})
 function(add_halide_generator sourcevar generator_file aot_file)
   if(NOT WIN32)
     set(_compile_flags "-std=c++11")
-    set(_link_flags "-lz")
+    if(${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux")
+      set(_link_flags -lpthread -lz -ldl)
+    else()
+      set(_link_flags -lz)
+    endif()
   else()
     set(_link_flags "/STACK:8388608,1048576")
   endif()
@@ -98,9 +102,6 @@ function(add_halide_generator sourcevar generator_file aot_file)
     execute_process(
       COMMAND "HalideGenerators/${_fileroot}" "${aot_file}"
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-      RESULT_VARIABLE _result
-      OUTPUT_VARIABLE _output
-      ERROR_VARIABLE _error
     )  
   else()
     message(WARNING "add_halide_generator not currently defined for this platform")
@@ -110,5 +111,5 @@ function(add_halide_generator sourcevar generator_file aot_file)
   set(${sourcevar} ${${sourcevar}} ${generator_file} ${CMAKE_BINARY_DIR}/${aot_file}.h ${CMAKE_BINARY_DIR}/${aot_file}.o PARENT_SCOPE)
   set_source_files_properties( ${generator_file} PROPERTIES HEADER_FILE_ONLY TRUE)
   source_group("Halide Generators" FILES ${generator_file})
-  #  message("run=${_run_result},${_run_output}")
+  #message("res=${_result},out=${_output},err=${_error}")
 endfunction()
