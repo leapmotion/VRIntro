@@ -92,6 +92,7 @@ function(add_halide_generator sourcevar generator_file aot_file)
   endif()
 
   get_filename_component(_filepath ${generator_file} ABSOLUTE)
+  get_filename_component(_filename ${generator_file} NAME)
   get_filename_component(_fileroot ${_filepath} NAME_WE)
 
   if(NOT WIN32)
@@ -109,23 +110,26 @@ function(add_halide_generator sourcevar generator_file aot_file)
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )  
   else()
-    add_executable(${_fileroot} ${_filepath})
+    add_executable(${_fileroot} ${_filename})
     include_directories(${Halide_INCLUDE_DIR})
     target_link_libraries(${_fileroot} ${Halide_STATIC_LIB})
     # FIXME: what's now the proper way to grab DLLs required for the build process
     file(COPY ${Halide_SHARED_LIB} DESTINATION ${PROJECT_BINARY_DIR}/bin/Release/)
     file(COPY ${Halide_SHARED_LIB} DESTINATION ${PROJECT_BINARY_DIR}/bin/Debug/)
     add_custom_command(
-      OUTPUT ${CMAKE_BINARY_DIR}/${aot_file}.h ${CMAKE_BINARY_DIR}/${aot_file}.o
-      COMMAND "${_fileroot}" "${aot_file}"
-      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-      MAIN_DEPENDENCY "${_fileroot}"
+      OUTPUT ${PROJECT_BINARY_DIR}/${aot_file}.h ${PROJECT_BINARY_DIR}/${aot_file}.o
+      WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+      COMMAND "${PROJECT_BINARY_DIR}/bin/Release/${_fileroot}" "${aot_file}"
+      DEPENDENCIES "${_fileroot}"
     )
   endif()
 
-
   set(${sourcevar} ${${sourcevar}} ${generator_file} ${CMAKE_BINARY_DIR}/${aot_file}.h ${CMAKE_BINARY_DIR}/${aot_file}.o PARENT_SCOPE)
-  set_source_files_properties( ${generator_file} PROPERTIES HEADER_FILE_ONLY TRUE)
-  source_group("Halide Generators" FILES ${generator_file})
+  if(WIN32)
+    source_group("Source Files" FILES ${generator_file})
+  else()
+    set_source_files_properties( ${generator_file} PROPERTIES HEADER_FILE_ONLY TRUE)
+    source_group("Halide Generators" FILES ${generator_file})
+  endif()
   #message("run=${_run_result},${_run_output}")
 endfunction()
