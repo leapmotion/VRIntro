@@ -120,7 +120,7 @@ function(add_halide_generator sourcevar generator_file aot_file)
       OUTPUT ${PROJECT_BINARY_DIR}/${aot_file}.h ${PROJECT_BINARY_DIR}/${aot_file}.o
       WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
       COMMAND "${PROJECT_BINARY_DIR}/bin/Release/${_fileroot}" "${aot_file}"
-      DEPENDENCIES "${_fileroot}"
+      DEPENDS "${_fileroot}"
     )
   endif()
 
