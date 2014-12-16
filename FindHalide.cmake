@@ -60,6 +60,10 @@ else()
     list(INSERT CMAKE_FIND_LIBRARY_SUFFIXES 0 .dll)
     find_library(Halide_SHARED_LIB Halide HINTS "${Halide_ROOT_DIR}" PATH_SUFFIXES bin)
     list(REMOVE_AT CMAKE_FIND_LIBRARY_SUFFIXES 0)
+
+    list(INSERT CMAKE_FIND_LIBRARY_SUFFIXES 0 .lib)
+    find_library(Halide_STATIC_LIB Halide HINTS "${Halide_ROOT_DIR}" PATH_SUFFIXES bin)
+    list(REMOVE_AT CMAKE_FIND_LIBRARY_SUFFIXES 0)
   else()
     message(FATAL_ERROR "Halide find module not implemented for shared config on non-win32 platforms")
   endif()
@@ -83,7 +87,8 @@ function(add_halide_generator sourcevar generator_file aot_file)
       set(_link_flags -lz)
     endif()
   else()
-    set(_link_flags "/STACK:8388608,1048576")
+    set(_compile_flags "/I \"C:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/include\"")
+    set(_link_flags /STACK:8388608,1048576 /link /libpath "C:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/lib" /libpath "C:/Program Files (x86)/Microsoft SDKs/Windows/v7.0A/lib")
   endif()
 
   get_filename_component(_filepath ${generator_file} ABSOLUTE)
@@ -104,12 +109,23 @@ function(add_halide_generator sourcevar generator_file aot_file)
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )  
   else()
-    message(WARNING "add_halide_generator not currently defined for this platform")
+    add_executable(${_fileroot} ${_filepath})
+    include_directories(${Halide_INCLUDE_DIR})
+    target_link_libraries(${_fileroot} ${Halide_STATIC_LIB})
+    # FIXME: what's now the proper way to grab DLLs required for the build process
+    file(COPY ${Halide_SHARED_LIB} DESTINATION ${PROJECT_BINARY_DIR}/bin/Release/)
+    file(COPY ${Halide_SHARED_LIB} DESTINATION ${PROJECT_BINARY_DIR}/bin/Debug/)
+    add_custom_command(
+      OUTPUT ${CMAKE_BINARY_DIR}/${aot_file}.h ${CMAKE_BINARY_DIR}/${aot_file}.o
+      COMMAND "${_fileroot}" "${aot_file}"
+      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+      MAIN_DEPENDENCY "${_fileroot}"
+    )
   endif()
 
 
   set(${sourcevar} ${${sourcevar}} ${generator_file} ${CMAKE_BINARY_DIR}/${aot_file}.h ${CMAKE_BINARY_DIR}/${aot_file}.o PARENT_SCOPE)
   set_source_files_properties( ${generator_file} PROPERTIES HEADER_FILE_ONLY TRUE)
   source_group("Halide Generators" FILES ${generator_file})
-  #message("res=${_result},out=${_output},err=${_error}")
+  #message("run=${_run_result},${_run_output}")
 endfunction()
