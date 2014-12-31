@@ -23,8 +23,16 @@ find_path(OculusSDK_ROOT_DIR NAMES "LibOVR/Include/OVR.h" PATH_SUFFIXES OculusSD
 set(OculusSDK_INCLUDE_DIR "${OculusSDK_ROOT_DIR}/LibOVR/Include" "${OculusSDK_ROOT_DIR}/LibOVR/Src")
 
 if(MSVC)
-  find_library(OculusSDK_LIBRARY_RELEASE "libovr.lib" HINTS "${OculusSDK_ROOT_DIR}/LibOVR/Lib/Win32/VS2013" PATH_SUFFIXES lib)
-  find_library(OculusSDK_LIBRARY_DEBUG "libovrd.lib" HINTS "${OculusSDK_ROOT_DIR}/LibOVR/Lib/Win32/VS2013" PATH_SUFFIXES lib)
+  if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(Oculus_ARCHITECTURE x64)
+    set(Oculus_ARCHITECTURE_SUFFIX 64)
+  else()
+    set(Oculus_ARCHITECTURE Win32)
+    set(Oculus_ARCHITECTURE_SUFFIX)
+  endif()
+
+  find_library(OculusSDK_LIBRARY_RELEASE "libovr${Oculus_ARCHITECTURE_SUFFIX}.lib" HINTS "${OculusSDK_ROOT_DIR}/LibOVR/Lib/${Oculus_ARCHITECTURE}/VS2013" PATH_SUFFIXES lib)
+  find_library(OculusSDK_LIBRARY_DEBUG "libovr${Oculus_ARCHITECTURE_SUFFIX}d.lib" HINTS "${OculusSDK_ROOT_DIR}/LibOVR/Lib/${Oculus_ARCHITECTURE}/VS2013" PATH_SUFFIXES lib)
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") # Mac
   find_library(OculusSDK_LIBRARY_RELEASE "libovr.a" HINTS "${OculusSDK_ROOT_DIR}/LibOVR/Lib/Mac/Release" PATH_SUFFIXES lib)
   find_library(OculusSDK_LIBRARY_DEBUG "libovr.a" HINTS "${OculusSDK_ROOT_DIR}/LibOVR/Lib/Mac/Debug" PATH_SUFFIXES lib)
