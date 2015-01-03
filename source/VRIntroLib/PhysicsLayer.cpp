@@ -377,7 +377,7 @@ void BulletWrapper::utilSyncHandRepresentations(const EigenTypes::Vector3f& head
       // Update hand
       BulletHandRepresentation& handRepresentation = m_HandRepresentations[idx];
       updateHandRepresentation(skeletonHand, handRepresentation, deltaTime);
-      updateObjectHolding(skeletonHand, handRepresentation, deltaTime);
+      //updateObjectHolding(skeletonHand, handRepresentation, deltaTime);
     }
   }
 
