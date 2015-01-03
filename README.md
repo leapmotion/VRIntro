@@ -22,7 +22,7 @@ Be sure to select "Allow Images" and "Optimize for top-down tracking" in the Lea
 ##### How to build (Win32)
 
 1. Get CMake 3.0+ and Microsoft Visual Studio 2013 Update 3
-2. Download libraries here https://leapmotion.box.com/s/4ea6vdx2h1hidxz7vmhm
+2. Download libraries here https://leapmotion.box.com/s/ujxqevpwdr06ccybwq2m
 3. Extract the zip file into a local folder
 4. Obtain Oculus Rift SDK 0.4.2+, and the latest LeapSDK, and copy "OculusSDK" and "LeapSDK" into the folder mentioned in step 3
 5. Run CMake and set the source directory to this repository
