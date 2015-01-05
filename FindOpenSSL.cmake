@@ -20,11 +20,18 @@ if(MSVC)
   include(SelectConfigurations)
   select_configurations(LIB_EAY LIBRARY)
   select_configurations(SSL_EAY LIBRARY)
+  
+  add_library(OpenSSL::SSL STATIC IMPORTED)
+  set_target_properties(OpenSSL::SSL PROPERTIES IMPORTED_LOCATION_DEBUG ${LIB_EAY_DEBUG})
+  set_target_properties(OpenSSL::SSL PROPERTIES IMPORTED_LOCATION_RELEASE ${LIB_EAY_RELEASE})
 
-  set(OPENSSL_LIBRARIES "${SSL_EAY_LIBRARY} ${LIB_EAY_LIBRARY}")
-  set(OPENSSL_LIBRARY_DEBUG "${LIB_EAY_DEBUG};${SSL_EAY_DEBUG}")
-  set(OPENSSL_LIBRARY_RELEASE "${LIB_EAY_RELEASE};${SSL_EAY_RELEASE}")
-  generate_import_target(OPENSSL STATIC TARGET OpenSSL::OpenSSL)
+  add_library(OpenSSL::Crypto STATIC IMPORTED)
+  set_target_properties(OpenSSL::Crypto PROPERTIES IMPORTED_LOCATION_DEBUG ${SSL_EAY_DEBUG})
+  set_target_properties(OpenSSL::Crypto PROPERTIES IMPORTED_LOCATION_RELEASE ${SSL_EAY_RELEASE})
+
+  add_library(OpenSSL::OpenSSL INTERFACE IMPORTED GLOBAL)
+  target_link_libraries(OpenSSL::OpenSSL INTERFACE OpenSSL::SSL OpenSSL::Crypto)
+  set_target_properties(OpenSSL::OpenSSL PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${OPENSSL_INCLUDE_DIR})
 
 else()
   include(${CMAKE_ROOT}/Modules/FindOpenSSL.cmake)
@@ -34,10 +41,13 @@ else()
   if(EXISTS "${OPENSSL_SSL_LIBRARY}")
     set(OPENSSL_SSL_FOUND TRUE)
   endif()
+  
   generate_import_target(OPENSSL_CRYPTO STATIC TARGET OpenSSL::Crypto)
   set_property(TARGET OpenSSL::Crypto APPEND PROPERTY INTERFACE_LINK_LIBRARIES -ldl)
+  
   generate_import_target(OPENSSL_SSL STATIC TARGET OpenSSL::SSL)
   set_property(TARGET OpenSSL::SSL APPEND PROPERTY INTERFACE_LINK_LIBRARIES -ldl)
+
   generate_import_target(OPENSSL INTERFACE TARGET OpenSSL::OpenSSL)
   target_link_libraries(OpenSSL::OpenSSL INTERFACE OpenSSL::SSL OpenSSL::Crypto)
 endif()
