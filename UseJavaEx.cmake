@@ -191,7 +191,7 @@ function(add_jar_ex _TARGET_NAME)
             COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_JAVA_CLASS_OUTPUT_PATH}/java_compiled_${_TARGET_NAME}
             DEPENDS ${_JAVA_COMPILE_FILES} ${_JAVA_COMPILE_DEPENDS} ${_add_jar_FILELIST}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            COMMENT "Building Java objects for ${_TARGET_NAME}.jar"
+            COMMENT "Building Java objects for ${_JAVA_TARGET_OUTPUT_NAME}"
         )
         add_custom_command(
             OUTPUT ${CMAKE_JAVA_CLASS_OUTPUT_PATH}/java_class_filelist
