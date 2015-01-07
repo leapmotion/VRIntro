@@ -17,6 +17,7 @@ function(define_post_build_resource_copy_rules)
     set(_one_value_args
         TARGET
         RELATIVE_PATH_BASE
+        RESOURCE_PATH_BASE
     )
     set(_multi_value_args
         RELATIVE_PATH_RESOURCES
@@ -36,6 +37,14 @@ function(define_post_build_resource_copy_rules)
     if(_arg_RELATIVE_PATH_BASE)
         set(_resources_dir "${_arg_RELATIVE_PATH_BASE}")
     endif()
+    
+    # The "base" resources dir of where the resources are relative to
+    set(_resource_base_dir ${CMAKE_CURRENT_SOURCE_DIR})
+    # Override it with the RESOURCE_PATH_BASE value if specified.
+    if(_arg_RESOURCE_PATH_BASE)
+        set(_resource_base_dir "${_arg_RESOURCE_PATH_BASE}")
+    endif()
+    
     # Decide where the resources directory is on each platform.
     if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") # This is the correct way to detect Mac OS X operating system -- see http://www.openguru.com/2009/04/cmake-detecting-platformoperating.html
         # TODO: apparently there is a different "correct" way to install files on Mac;
@@ -65,7 +74,7 @@ function(define_post_build_resource_copy_rules)
         add_custom_command(
             TARGET ${_arg_TARGET}
             POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/${_resource}" "${_resources_dir}/${_resource}"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_resource_base_dir}/${_resource}" "${_resources_dir}/${_resource}"
         )
     endforeach()
     foreach(_resource ${_arg_ABSOLUTE_PATH_RESOURCES})
