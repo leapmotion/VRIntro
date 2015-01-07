@@ -119,7 +119,7 @@ function(add_halide_generator sourcevar generator_file aot_file)
     add_custom_command(
       OUTPUT ${PROJECT_BINARY_DIR}/${aot_file}.h ${PROJECT_BINARY_DIR}/${aot_file}.o
       WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-      COMMAND "${PROJECT_BINARY_DIR}/bin/Release/${_fileroot}" "${aot_file}"
+      COMMAND "$<TARGET_FILE:${_fileroot}>" "${aot_file}"
       DEPENDS "${_fileroot}"
     )
   endif()
