@@ -34,6 +34,11 @@ function(define_post_build_resource_copy_rules)
         message(SEND_ERROR "must specify a value for TARGET in define_post_build_resource_copy_rules")
         return()
     endif()
+    
+    if(_arg_RELATIVE_PATH_BASE OR _arg_RELATIVE_PATH_RESOURCES OR _arg_ABSOLUTE_PATH_RESOURCES)
+        message(SEND_ERROR "using the old argument names. Please read the documentation and update your arguments")
+        return()
+    endif()
 
     # The "base" resources dir which may be appended to, depending on the platform and other conditions.
     set(_destination_dir "${PROJECT_BINARY_DIR}")
