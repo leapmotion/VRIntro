@@ -113,6 +113,7 @@ function(add_halide_generator sourcevar generator_file aot_file)
     add_executable(${_fileroot} ${_filename})
     include_directories(${Halide_INCLUDE_DIR})
     target_link_libraries(${_fileroot} ${Halide_STATIC_LIB})
+    set_property(TARGET ${_fileroot} PROPERTY FOLDER "Halide Generators")
     # FIXME: what's now the proper way to grab DLLs required for the build process
     file(COPY ${Halide_SHARED_LIB} DESTINATION ${PROJECT_BINARY_DIR}/bin/Release/)
     file(COPY ${Halide_SHARED_LIB} DESTINATION ${PROJECT_BINARY_DIR}/bin/Debug/)
