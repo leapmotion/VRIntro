@@ -9,12 +9,12 @@
 #
 # Helper Functions
 # ^^^^^^^^^^^^^^^^
-# add_halide_generator(sourcevar generator_file aot_file_root) 
-#  Given a .cpp file with a main function that takes as an argument the name of the 
+# add_halide_generator(sourcevar generator_file aot_file_root)
+#  Given a .cpp file with a main function that takes as an argument the name of the
 #  Halide AoT .h/.o file pair to generate, compiles and runs said program and outputs
 #  the file pair to the current CMAKE_BINARY_DIR. It then appends the full path to
 #  aot_file_root.h and aot_file_root.o to sourcevar.
-#  
+#
 # Interface Targets
 # ^^^^^^^^^^^^^^^^^
 #   Halide::Halide
@@ -106,26 +106,29 @@ function(add_halide_generator sourcevar generator_file aot_file)
       ERROR_VARIABLE _error
     )
     execute_process(
-      COMMAND "HalideGenerators/${_fileroot}" "${aot_file}"
+      COMMAND "HalideGenerators/${_fileroot}" "${aot_file}" ${ARGN}
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    )  
+    )
   else()
-    add_executable(${_fileroot} ${_filename})
-    include_directories(${Halide_INCLUDE_DIR})
-    target_link_libraries(${_fileroot} ${Halide_STATIC_LIB})
-    set_property(TARGET ${_fileroot} PROPERTY FOLDER "Halide Generators")
-    # FIXME: what's now the proper way to grab DLLs required for the build process
-    file(COPY ${Halide_SHARED_LIB} DESTINATION ${PROJECT_BINARY_DIR}/bin/Release/)
-    file(COPY ${Halide_SHARED_LIB} DESTINATION ${PROJECT_BINARY_DIR}/bin/Debug/)
+    if(NOT TARGET ${_fileroot})
+      add_executable(${_fileroot} ${_filename})
+      include_directories(${Halide_INCLUDE_DIR})
+      target_link_libraries(${_fileroot} ${Halide_STATIC_LIB})
+      set_property(TARGET ${_fileroot} PROPERTY FOLDER "Halide Generators")
+      # FIXME: what's now the proper way to grab DLLs required for the build process
+      file(COPY ${Halide_SHARED_LIB} DESTINATION ${PROJECT_BINARY_DIR}/bin/Release/)
+      file(COPY ${Halide_SHARED_LIB} DESTINATION ${PROJECT_BINARY_DIR}/bin/Debug/)
+    endif()
+
     add_custom_command(
       OUTPUT ${PROJECT_BINARY_DIR}/${aot_file}.h ${PROJECT_BINARY_DIR}/${aot_file}.o
       WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-      COMMAND "${PROJECT_BINARY_DIR}/bin/Release/${_fileroot}" "${aot_file}"
+      COMMAND "${PROJECT_BINARY_DIR}/bin/Release/${_fileroot}" "${aot_file}" ${ARGN}
       DEPENDS "${_fileroot}"
     )
   endif()
 
-  set(${sourcevar} ${${sourcevar}} ${generator_file} ${CMAKE_BINARY_DIR}/${aot_file}.h ${CMAKE_BINARY_DIR}/${aot_file}.o PARENT_SCOPE)
+  set(${sourcevar} ${${sourcevar}} ${generator_file} ${PROJECT_BINARY_DIR}/${aot_file}.h ${PROJECT_BINARY_DIR}/${aot_file}.o PARENT_SCOPE)
   if(WIN32)
     source_group("Source Files" FILES ${generator_file})
   else()
