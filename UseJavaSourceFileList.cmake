@@ -22,16 +22,15 @@
 # or more java source directories.  Produces output suitable for use
 # with javac's @ source file argument.
 #
-# JAVA_SOURCE_DIR_PATHS - colon (:) separated string of java source directories
+# JAVA_SOURCE_DIR_PATHS - semicolon (;) separated string of java source directories
 # JAVA_SOURCE_FILE_LIST - name of text file to write
 #
 
 if (JAVA_SOURCE_DIR_PATHS)
-    string(REPLACE ":" ";" JAVA_SOURCE_DIR_PATHS_LIST ${JAVA_SOURCE_DIR_PATHS})
     message(STATUS "Java source paths: ${JAVA_SOURCE_DIR_PATHS}")
 
     set(_JAVA_GLOBBED_FILES)
-    foreach(JAVA_SOURCE_DIR_PATH ${JAVA_SOURCE_DIR_PATHS_LIST})
+    foreach(JAVA_SOURCE_DIR_PATH ${JAVA_SOURCE_DIR_PATHS})
         if (EXISTS "${JAVA_SOURCE_DIR_PATH}")
             file(GLOB_RECURSE _JAVA_GLOBBED_TMP_FILES "${JAVA_SOURCE_DIR_PATH}/*.java")
             if (_JAVA_GLOBBED_TMP_FILES)

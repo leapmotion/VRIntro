@@ -9,4 +9,5 @@
 # Copyright (c) 2006-2010 Mathieu Malaterre <mathieu.malaterre@gmail.com>
 #
 
+set( CSHARP_COMPILER ${CSHARP_DOTNET_COMPILER_${CSHARP_DOTNET_VERSION}} )
 message( STATUS "Using .NET compiler version ${CSHARP_DOTNET_VERSION}" )
