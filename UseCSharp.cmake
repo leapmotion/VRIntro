@@ -49,6 +49,8 @@ endmacro( CSHARP_ADD_EXECUTABLE )
 # Private macro
 macro( CSHARP_ADD_PROJECT type name )
   set( refs "/reference:System.dll" )
+  set( win32res )
+  set( keyfile )
   set( sources )
   set( sources_dep )
 
@@ -63,6 +65,12 @@ macro( CSHARP_ADD_PROJECT type name )
     if( ${it} MATCHES "(.*)(dll)" )
        # Argument is a dll, add reference
        list( APPEND refs /reference:${it} )
+    elseif( ${it} MATCHES "(.*)(res)" )
+       # Argument is a win32 resource, add win32res
+       list( APPEND win32res /win32res:${it} )
+    elseif( ${it} MATCHES "(.*)(snk)" )
+       # Argument is a strong name key, add keyfile
+       list( APPEND keyfile /keyfile:${it} )
     else( )
       # Argument is a source file
       if( EXISTS ${it} )
@@ -95,12 +103,12 @@ macro( CSHARP_ADD_PROJECT type name )
   endif (WIN32)
 
   # Add custom target and command
-  # MESSAGE( STATUS "Adding C# ${type} ${name}: '${CSHARP_COMPILER} /t:${type} /out:${name}.${output} /platform:${CSHARP_PLATFORM} ${CSHARP_SDK} ${refs} ${sources}'" )
+  # MESSAGE( STATUS "Adding C# ${type} ${name}: '${CSHARP_COMPILER} /t:${type} /out:${name}.${output} /platform:${CSHARP_PLATFORM} ${CSHARP_SDK} ${refs} ${win32res} ${keyfile} ${sources}'" )
   add_custom_command(
     COMMENT "Compiling C# ${type} ${name}.${output}"
     OUTPUT ${CSHARP_BINARY_DIRECTORY}/${name}.${output}
     COMMAND ${CSHARP_COMPILER}
-    ARGS /t:${type} /out:${name}.${output} /platform:${CSHARP_PLATFORM} ${CSHARP_SDK} ${refs} ${sources}
+    ARGS /t:${type} /out:${name}.${output} /platform:${CSHARP_PLATFORM} ${CSHARP_SDK} ${refs} ${win32res} ${keyfile} ${sources}
     WORKING_DIRECTORY ${CSHARP_BINARY_DIRECTORY}
     DEPENDS ${sources_dep}
   )
