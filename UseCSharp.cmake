@@ -62,16 +62,15 @@ macro( CSHARP_ADD_PROJECT type name )
 
   # Step through each argument
   foreach( it ${ARGN} )
-    if( ${it} MATCHES "(.*)(dll)" )
+    get_filename_component(_CSHARP_EXT ${it} EXT)
+    if( _CSHARP_EXT MATCHES ".dll" )
        # Argument is a dll, add reference
        list( APPEND refs /reference:${it} )
-    elseif( ${it} MATCHES "(.*)(res)" )
-       # Argument is a win32 resource, add win32res
-       list( APPEND win32res /win32res:${it} )
-    elseif( ${it} MATCHES "(.*)(snk)" )
-       # Argument is a strong name key, add keyfile
+    elseif( _CSHARP_EXT MATCHES ".snk" )
        list( APPEND keyfile /keyfile:${it} )
-    else( )
+    elseif( _CSHARP_EXT MATCHES ".res" )
+       list( APPEND win32res /win32res:${it} )
+    elseif( _CSHARP_EXT MATCHES ".cs" )
       # Argument is a source file
       if( EXISTS ${it} )
         list( APPEND sources ${it} )
