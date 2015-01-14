@@ -47,9 +47,10 @@ macro( CSHARP_ADD_EXECUTABLE name )
 endmacro( CSHARP_ADD_EXECUTABLE )
 
 # Private macro
-macro( CSHARP_ADD_PROJECT type name )
+function( CSHARP_ADD_PROJECT type name )
   set( refs "/reference:System.dll" )
   set( win32res )
+  set( win23res_dep )
   set( keyfile )
   set( sources )
   set( sources_dep )
@@ -62,7 +63,7 @@ macro( CSHARP_ADD_PROJECT type name )
 
   # Step through each argument
   foreach( it ${ARGN} )
-    get_filename_component(_CSHARP_EXT ${it} EXT)
+    get_filename_component( _CSHARP_EXT ${it} EXT )
     if( _CSHARP_EXT MATCHES ".dll" )
        # Argument is a dll, add reference
        list( APPEND refs /reference:${it} )
@@ -70,6 +71,20 @@ macro( CSHARP_ADD_PROJECT type name )
        list( APPEND keyfile /keyfile:${it} )
     elseif( _CSHARP_EXT MATCHES ".res" )
        list( APPEND win32res /win32res:${it} )
+    elseif( _CSHARP_EXT MATCHES ".rc" )
+       if( MSVC )
+         get_filename_component( _RC_BASENAME ${it} NAME )
+         string( REGEX REPLACE ".rc$" ".res" _RES_BASENAME "${_RC_BASENAME}" )
+         set( _RES_PATH ${CMAKE_CURRENT_BINARY_DIR}/${_RES_BASENAME})
+         list( APPEND win32res /win32res:${_RES_PATH} )
+         list( APPEND win32res_dep ${_RES_PATH} )
+         add_custom_command(
+           OUTPUT ${_RES_PATH}
+           DEPENDS ${it}
+           WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+           COMMAND ${CMAKE_RC_COMPILER} /fo${_RES_PATH} ${it}
+         )
+       endif()
     elseif( _CSHARP_EXT MATCHES ".cs" )
       # Argument is a source file
       if( EXISTS ${it} )
@@ -109,11 +124,11 @@ macro( CSHARP_ADD_PROJECT type name )
     COMMAND ${CSHARP_COMPILER}
     ARGS /t:${type} /out:${name}.${output} /platform:${CSHARP_PLATFORM} ${CSHARP_SDK} ${refs} ${win32res} ${keyfile} ${sources}
     WORKING_DIRECTORY ${CSHARP_BINARY_DIRECTORY}
-    DEPENDS ${sources_dep}
+    DEPENDS ${sources_dep} ${win32res_dep}
   )
   add_custom_target(
     ${name} ALL
     DEPENDS ${CSHARP_BINARY_DIRECTORY}/${name}.${output}
-    SOURCES ${sources_dep}
+    SOURCES ${sources_dep} ${win32res_dep}
   )
-endmacro( CSHARP_ADD_PROJECT )
+endfunction( CSHARP_ADD_PROJECT )
