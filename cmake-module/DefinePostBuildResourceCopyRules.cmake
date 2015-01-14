@@ -3,6 +3,7 @@
 # DefinePostBuildResourceCopyRules
 # --------------
 #
+# Created by Victor Dods.
 # Hides the nastiness of defining platform-specific rules for installing
 # resource files post-build.
 
