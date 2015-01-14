@@ -3,7 +3,7 @@
 # ---------------------
 #
 # Created by Walter Gray
-# See CreateImportTargetHelpers.cmake for a suite of functions suitable for writing Find 
+# See CreateImportTargetHelpers.cmake for a suite of functions suitable for writing Find
 # modules compatible with this approach.
 #
 # ========================
@@ -25,7 +25,7 @@ include(CMakeParseArguments)
 function(target_imported_libraries target)
   list(REMOVE_AT ARGV 0) #pop the target
   cmake_parse_arguments(target_imported_libraries "" "LINK_TYPE" "" ${ARGV})
-  
+
   set(_library_list ${target_imported_libraries_UNPARSED_ARGUMENTS})
 
   target_link_libraries(${target} ${target_imported_libraries_LINK_TYPE} ${_library_list})
@@ -63,10 +63,10 @@ function(target_imported_libraries target)
       get_target_property(_type ${_import_lib} TYPE)
       get_target_property(_imported ${_import_lib} IMPORTED)
       if((${_type} STREQUAL SHARED_LIBRARY OR ${_type} STREQUAL MODULE_LIBRARY) AND ${_imported})
-        
+
         set(_found_configs_expr)
         set(_imported_location)
-        
+
         #if only the _<Config> variants are set, create a generator expression.
         get_target_property(_imported_location ${_import_lib} IMPORTED_LOCATION)
         if(NOT _imported_location)
@@ -88,7 +88,12 @@ function(target_imported_libraries target)
         endif()
 
         if(MSVC)
-          add_custom_command(TARGET ${target} POST_BUILD 
+          if(_install_subdir)
+            add_custom_command(TARGET ${target} POST_BUILD
+              COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${target}>${_install_subdir}")
+          endif()
+
+          add_custom_command(TARGET ${target} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different \"${_imported_location}\" \"$<TARGET_FILE_DIR:${target}>${_install_subdir}\")
         elseif(APPLE)
           get_target_property(_is_bundle ${target} MACOSX_BUNDLE)
