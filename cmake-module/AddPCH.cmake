@@ -1,5 +1,8 @@
-#MSVC pch macro.  Copied from http://pastebin.com/84dm5rXZ
-macro(ADD_MSVC_PRECOMPILED_HEADER PrecompiledHeader PrecompiledSource SourcesVar)
+#MSVC pch helper.  Copied from http://pastebin.com/84dm5rXZ and modified by Walter Gray.
+#Files already in SourcesVar will be marked as using a PCH, then the pch files will be
+#appended to the list.
+
+function(add_pch SourcesVar PrecompiledHeader PrecompiledSource)
   if(MSVC)
     set_source_files_properties(${PrecompiledSource}
         PROPERTIES
@@ -13,6 +16,6 @@ macro(ADD_MSVC_PRECOMPILED_HEADER PrecompiledHeader PrecompiledSource SourcesVar
             )
     endforeach( src_file ${${SourcesVar}} )
     list(APPEND ${SourcesVar} ${PrecompiledHeader} ${PrecompiledSource})
-    add_compile_options(/Yu)
+    set(${SourcesVar} ${${SourcesVar}} PARENT_SCOPE)
   endif(MSVC)
-endmacro(ADD_MSVC_PRECOMPILED_HEADER)
+endfunction(add_pch)

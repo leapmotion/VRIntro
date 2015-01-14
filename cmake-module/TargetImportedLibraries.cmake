@@ -26,7 +26,7 @@ function(target_imported_libraries target)
   cmake_parse_arguments(target_imported_libraries "" "LINK_TYPE" "" ${ARGV})
   
   set(_library_list ${target_imported_libraries_UNPARSED_ARGUMENTS})
-  target_link_libraries(${target} ${target_link_libraries_LINK_TYPE} ${_library_list})
+  target_link_libraries(${target} ${target_imported_libraries_LINK_TYPE} ${_library_list})
 
   #early out if the target isn't an EXECUTABLE
   get_target_property(_target_type ${target} TYPE)
@@ -59,47 +59,33 @@ function(target_imported_libraries target)
 
       get_target_property(_type ${_import_lib} TYPE)
       get_target_property(_imported ${_import_lib} IMPORTED)
-      if((${_type} STREQUAL SHARED_LIBRARY) AND ${_imported})
+      if(${_type} STREQUAL SHARED_LIBRARY AND ${_imported})
         
         set(_found_configs_expr)
-        set(_target_expr)
-        foreach(_config DEBUG RELEASE)
-          set(_config_suffix _${_config})
-          
-          get_target_property(_dylib${_config} ${_import_lib} IMPORTED_LOCATION${_config_suffix})
-          if(_dylib${_config})
-            list(APPEND _found_configs_expr "$<CONFIG:${_config}>")
-            set(_target_expr "${_target_expr}$<$<CONFIG:${_config}>:${_dylib${_config}}>")
-          endif()
-        endforeach()
+        set(_imported_location)
         
-        #The default case requires special handling
-        get_target_property(_dylib ${_import_lib} IMPORTED_LOCATION)
-        if(_dylib)
-          if(_found_configs_expr)
-              #For some reason, generator expressions require their lists to be , delimited
-              string(REPLACE ";" "," _found_configs_expr "${_found_configs_expr}")
-            set(_target_expr "${_target_expr}$<$<NOT:$<OR:${_found_configs_expr}>>:${_dylib}>")
-          else()
-            set(_target_expr "${_dylib}")
+        #if only the _<Config> variants are set, create a generator expression.
+        get_target_property(_imported_location ${_import_lib} IMPORTED_LOCATION)
+        if(NOT _imported_location)
+          get_target_property(_imported_location_debug ${_import_lib} IMPORTED_LOCATION_DEBUG)
+          get_target_property(_imported_location_release ${_import_lib} IMPORTED_LOCATION_RELEASE)
+          if(NOT _imported_location_debug AND NOT _imported_location_release)
+            message(FATAL_ERROR "No IMPORTED_LOCATION specified for SHARED import target ${_import_lib}")
           endif()
+          set(_imported_location "$<$<CONFIG:DEBUG>:${_imported_location_debug}>$<$<CONFIG:RELEASE>:${_imported_location_release}>")
         endif()
-          
-        if(NOT _target_expr)
-          message(FATAL_ERROR "No dylib specified for SHARED import target ${_import_lib}")
-        endif()
-        
-        verbose_message("Adding copy command for ${_import_lib}: ${_target_expr}")
+
+        verbose_message("Adding copy command for ${_import_lib}: ${_imported_location}")
 
         if(MSVC)
           add_custom_command(TARGET ${target} POST_BUILD 
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different \"${_target_expr}\" \"$<TARGET_FILE_DIR:${target}>\")
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different \"${_imported_location}\" \"$<TARGET_FILE_DIR:${target}>\")
         elseif(APPLE)
           get_target_property(_is_bundle ${target} MACOSX_BUNDLE)
           if(_is_bundle)
             add_custom_command(TARGET ${target} POST_BUILD
-              COMMAND ${CMAKE_COMMAND} -E make_directory \"$<TARGET_FILE_DIR:${target}>/../Frameworks/\"
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different \"${_target_expr}\" \"$<TARGET_FILE_DIR:${target}>/../Frameworks/\"
+              COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${target}>/../Frameworks/"
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_imported_location}" "$<TARGET_FILE_DIR:${target}>/../Frameworks/"
               COMMAND install_name_tool -change @loader_path/libLeap.dylib @loader_path/../Frameworks/libLeap.dylib "$<TARGET_FILE:${target}>")
             #call install_name_tool and fixup the dylib paths here:
           endif()

@@ -10,16 +10,17 @@
 #
 # Variables
 # ^^^^^^^^^
-#   Oculus_ROOT_DIR
-#   Oculus_FOUND
-#   Oculus_INCLUDE_DIR
-#   Oculus_LIBRARIES
+#   OculusSDK_ROOT_DIR
+#   OculusSDK_INCLUDE_DIR
+#   OculusSDK_LIBRARIES_RELEASE
+#   OculusSDK_LIBRARIES_DEBUG
 #
 
 
 find_path(OculusSDK_ROOT_DIR NAMES "LibOVR/Include/OVR.h" PATH_SUFFIXES OculusSDK)
 
-set(OculusSDK_INCLUDE_DIR ${OculusSDK_ROOT_DIR}/LibOVR/Include)
+#We include the src directory as well since we need OVR_CAPI_GL/D3D
+set(OculusSDK_INCLUDE_DIR "${OculusSDK_ROOT_DIR}/LibOVR/Include" "${OculusSDK_ROOT_DIR}/LibOVR/Src")
 
 if(MSVC)
   find_library(OculusSDK_LIBRARY_RELEASE "libovr.lib" HINTS "${OculusSDK_ROOT_DIR}/LibOVR/Lib/Win32/VS2013" PATH_SUFFIXES lib)
@@ -39,3 +40,8 @@ find_package_handle_standard_args(OculusSDK DEFAULT_MSG OculusSDK_ROOT_DIR Oculu
 include(CreateImportTargetHelpers)
 
 generate_import_target(OculusSDK STATIC)
+
+if(WIN32)
+  #Oculus dev kit relies on winmm and winsock2
+  target_link_libraries(OculusSDK::OculusSDK INTERFACE winmm Ws2_32)
+endif()
