@@ -29,8 +29,13 @@ find_library(Protobuf_LIBRARY_DEBUG
 )
 mark_as_advanced(Protobuf_LIBRARY_DEBUG)
 
+find_program(Protobuf_protoc protoc HINTS ${Protobuf_ROOT_DIR} PATH_SUFFIXES bin${CROSS_COMPILE_EXE_TYPE})
+
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Protobuf DEFAULT_MSG
     Protobuf_LIBRARY Protobuf_INCLUDE_DIR)
 
 generate_import_target(Protobuf STATIC)
+
+add_executable(Protobuf::protoc IMPORTED)
+set_property(TARGET Protobuf::protoc PROPERTY IMPORTED_LOCATION ${Protobuf_protoc})
