@@ -79,63 +79,42 @@ include(CreateImportTargetHelpers)
 generate_import_target(Halide ${Halide_LIBRARY_TYPE})
 
 function(add_halide_generator sourcevar generator_file aot_file)
-  if(NOT WIN32)
-    set(_compile_flags "-std=c++11")
-    if(${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux")
-      set(_link_flags -lpthread -lz -ldl)
-    else()
-      set(_link_flags -lz)
-    endif()
-  else()
-    set(_compile_flags "/I \"C:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/include\"")
-    set(_link_flags /STACK:8388608,1048576 /link /libpath "C:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/lib" /libpath "C:/Program Files (x86)/Microsoft SDKs/Windows/v7.0A/lib")
-  endif()
-
   get_filename_component(_filepath ${generator_file} ABSOLUTE)
   get_filename_component(_filename ${generator_file} NAME)
   get_filename_component(_fileroot ${_filepath} NAME_WE)
 
-  if(NOT WIN32)
-    #TODO:Replace this with add_custom_command
-    execute_process(
-      COMMAND mkdir -p HalideGenerators
-      COMMAND clang++ "${_filepath}" -o HalideGenerators/${_fileroot} -I${Halide_INCLUDE_DIR} ${_compile_flags} ${Halide_LIBRARY} ${_link_flags}
-      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-      RESULT_VARIABLE _result
-      OUTPUT_VARIABLE _output
-      ERROR_VARIABLE _error
-    )
-    execute_process(
-      COMMAND "HalideGenerators/${_fileroot}" "${aot_file}" ${ARGN}
-      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    )
-  else()
-    if(NOT TARGET ${_fileroot})
-      add_executable(${_fileroot} ${_filename})
-      target_include_directories(${_fileroot} PUBLIC ${Halide_INCLUDE_DIR})
-      target_link_libraries(${_fileroot} ${Halide_STATIC_LIB})
+  if(NOT TARGET ${_fileroot})
+    message("add_executable(${_fileroot} ${_filename})")
+    add_executable(${_fileroot} ${_filename})
+    get_target_property(_sources ${_fileroot} SOURCES)
+    message(_sources=${_sources})
+    set_property(TARGET ${_fileroot} PROPERTY FOLDER "Halide Generators")
+
+    target_include_directories(${_fileroot} PUBLIC ${Halide_INCLUDE_DIR})
+    target_link_libraries(${_fileroot} PUBLIC ${Halide_STATIC_LIB})
+
+    if(WIN32)
       target_compile_options(${_fileroot} PRIVATE /MD /U_DEBUG)
 
-      set_property(TARGET ${_fileroot} PROPERTY FOLDER "Halide Generators")
       # FIXME: what's now the proper way to grab DLLs required for the build process
       file(COPY ${Halide_SHARED_LIB} DESTINATION ${PROJECT_BINARY_DIR}/bin/Release/)
       file(COPY ${Halide_SHARED_LIB} DESTINATION ${PROJECT_BINARY_DIR}/bin/Debug/)
+    else()
+      if(${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux")
+        target_link_libraries(${_fileroot} PUBLIC -lpthread -lz -ldl)
+      else()
+        target_link_libraries(${_fileroot} PUBLIC -lz)
+      endif()
     endif()
-
-    add_custom_command(
-      OUTPUT ${PROJECT_BINARY_DIR}/${aot_file}.h ${PROJECT_BINARY_DIR}/${aot_file}.o
-      WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-      COMMAND "$<TARGET_FILE:${_fileroot}>" "${aot_file}" ${ARGN}
-      DEPENDS "${_fileroot}"
-    )
   endif()
 
-  set(${sourcevar} ${${sourcevar}} ${generator_file} ${PROJECT_BINARY_DIR}/${aot_file}.h ${PROJECT_BINARY_DIR}/${aot_file}.o PARENT_SCOPE)
-  if(WIN32)
-    source_group("Source Files" FILES ${generator_file})
-  else()
-    set_source_files_properties( ${generator_file} PROPERTIES HEADER_FILE_ONLY TRUE)
-    source_group("Halide Generators" FILES ${generator_file})
-  endif()
+  add_custom_command(
+    OUTPUT ${PROJECT_BINARY_DIR}/${aot_file}.h ${PROJECT_BINARY_DIR}/${aot_file}.o
+    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+    COMMAND "$<TARGET_FILE:${_fileroot}>" "${aot_file}" ${ARGN}
+    DEPENDS "${_fileroot}"
+  )
+
+  set(${sourcevar} ${${sourcevar}} ${PROJECT_BINARY_DIR}/${aot_file}.h ${PROJECT_BINARY_DIR}/${aot_file}.o PARENT_SCOPE)
   #message("run=${_run_result},${_run_output}")
 endfunction()
