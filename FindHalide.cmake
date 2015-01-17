@@ -84,35 +84,56 @@ function(add_halide_generator sourcevar generator_file aot_file)
   get_filename_component(_fileroot ${_filepath} NAME_WE)
 
   if(NOT TARGET ${_fileroot})
-    message("add_executable(${_fileroot} ${_filename})")
-    add_executable(${_fileroot} ${_filename})
-    get_target_property(_sources ${_fileroot} SOURCES)
-    message(_sources=${_sources})
-    set_property(TARGET ${_fileroot} PROPERTY FOLDER "Halide Generators")
+    if(NOT BUILD_ARM)
+      message("add_executable(${_fileroot} ${_filename})")
+      add_executable(${_fileroot} ${_filename})
+      get_target_property(_sources ${_fileroot} SOURCES)
+      message(_sources=${_sources})
+      set_property(TARGET ${_fileroot} PROPERTY FOLDER "Halide Generators")
 
-    target_include_directories(${_fileroot} PUBLIC ${Halide_INCLUDE_DIR})
-    target_link_libraries(${_fileroot} PUBLIC ${Halide_STATIC_LIB})
-
+      target_include_directories(${_fileroot} PUBLIC ${Halide_INCLUDE_DIR})
+      target_link_libraries(${_fileroot} PUBLIC ${Halide_STATIC_LIB})
+    endif()
+    set(_compile_flags "-std=c++11")
+    if(${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux")
+      set(_link_flags -lpthread -lz -ldl)
+    else()
+      set(_link_flags -lz)
+    endif()
     if(WIN32)
       target_compile_options(${_fileroot} PRIVATE /MD /U_DEBUG)
 
       # FIXME: what's now the proper way to grab DLLs required for the build process
       file(COPY ${Halide_SHARED_LIB} DESTINATION ${PROJECT_BINARY_DIR}/bin/Release/)
       file(COPY ${Halide_SHARED_LIB} DESTINATION ${PROJECT_BINARY_DIR}/bin/Debug/)
-    else()
-      if(${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Linux")
-        target_link_libraries(${_fileroot} PUBLIC -lpthread -lz -ldl)
-      else()
-        target_link_libraries(${_fileroot} PUBLIC -lz)
-      endif()
     endif()
+    if(BUILD_ARM)
+      if(WIN32)
+        message(FATAL_ERROR "Halide ahead-of-time cross-compilation not supported on Windows")
+      endif()
+      add_custom_command(
+        OUTPUT ${PROJECT_BINARY_DIR}/bin/HalideGenerators/${_fileroot}
+        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+        COMMAND mkdir -p bin/HalideGenerators
+        COMMAND c++ "${_filepath}" -o bin/HalideGenerators/${_fileroot} -I${Halide_INCLUDE_DIR} ${_compile_flags} ${Halide_LIBRARY} ${_link_flags}
+        DEPENDS ${generator_file}
+      )
+    endif()
+  endif()
+
+  if(BUILD_ARM)
+    set(_command "${PROJECT_BINARY_DIR}/bin/HalideGenerators/${_fileroot}")
+    set(_depends "${PROJECT_BINARY_DIR}/bin/HalideGenerators/${_fileroot}")
+  else()
+    set(_command "$<TARGET_FILE:${_fileroot}>")
+    set(_depends "${_fileroot}")
   endif()
 
   add_custom_command(
     OUTPUT ${PROJECT_BINARY_DIR}/${aot_file}.h ${PROJECT_BINARY_DIR}/${aot_file}.o
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-    COMMAND "$<TARGET_FILE:${_fileroot}>" "${aot_file}" ${ARGN}
-    DEPENDS "${_fileroot}"
+    COMMAND "${_command}" "${aot_file}" ${ARGN}
+    DEPENDS "${_depends}"
   )
 
   set(${sourcevar} ${${sourcevar}} ${PROJECT_BINARY_DIR}/${aot_file}.h ${PROJECT_BINARY_DIR}/${aot_file}.o PARENT_SCOPE)
