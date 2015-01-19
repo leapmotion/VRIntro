@@ -122,5 +122,7 @@ function(generate_import_target namespace libtype)
     
     map_var_to_prop(${_target} INTERFACE_LINK_LIBRARIES ${namespace}_INTERFACE_LIBS) 
     map_var_to_prop(${_target} INTERFACE_INCLUDE_DIRECTORIES ${namespace}_INCLUDE_DIR)
+  else()
+    verbose_message("Skipping ${_target}, ${namespace}_FOUND was not set")
   endif()
 endfunction()
