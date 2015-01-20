@@ -13,7 +13,8 @@
 #   read from the IMPORTED_LOCATION and IMPORTED_LOCATION_<CONFIG> parameters and generate
 #   a custom post-build step to copy the shared library files to the appropriate location.
 #   On windows, this is the TARGET_FILE_DIR of <target>.  link_type should be one of
-#   PUBLIC, PRIVATE, or INTERFACE
+#   PUBLIC, PRIVATE, or INTERFACE.  Also searches INTERFACE_LINK_MODULES for libraries that
+#   need to be copied, but cannot be specified in the list of target_link_libraries
 #
 #  TARGET_PACKAGE(<target> <package> ...)
 #   Takes the same arguments as find_package, with the addition of the target you're
@@ -26,6 +27,7 @@ function(target_imported_libraries target)
   cmake_parse_arguments(target_imported_libraries "" "LINK_TYPE" "" ${ARGV})
   
   set(_library_list ${target_imported_libraries_UNPARSED_ARGUMENTS})
+
   target_link_libraries(${target} ${target_imported_libraries_LINK_TYPE} ${_library_list})
 
   #early out if the target isn't an EXECUTABLE
@@ -44,7 +46,8 @@ function(target_imported_libraries target)
 
     if(TARGET ${_import_lib})
       get_target_property(_depends ${_import_lib} INTERFACE_LINK_LIBRARIES)
-      foreach(_depend ${_depends})
+      get_target_property(_depends_modules ${_import_lib} INTERFACE_LINK_MODULES)
+      foreach(_depend ${_depends} ${_depends_modules})
         if(TARGET ${_depend})
           list(FIND _library_list ${_depend} _found_lib)
           if(_found_lib EQUAL -1) #make sure we don't do duplicate adds.
@@ -59,7 +62,7 @@ function(target_imported_libraries target)
 
       get_target_property(_type ${_import_lib} TYPE)
       get_target_property(_imported ${_import_lib} IMPORTED)
-      if(${_type} STREQUAL SHARED_LIBRARY AND ${_imported})
+      if((${_type} STREQUAL SHARED_LIBRARY OR ${_type} STREQUAL MODULE_LIBRARY) AND ${_imported})
         
         set(_found_configs_expr)
         set(_imported_location)
@@ -77,9 +80,16 @@ function(target_imported_libraries target)
 
         verbose_message("Adding copy command for ${_import_lib}: ${_imported_location}")
 
+        get_target_property(_install_subdir ${_import_lib} INSTALL_SUBDIR)
+        if(NOT _install_subdir)
+          set(_install_subdir)
+        else()
+          set(_install_subdir /${_install_subdir})
+        endif()
+
         if(MSVC)
           add_custom_command(TARGET ${target} POST_BUILD 
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different \"${_imported_location}\" \"$<TARGET_FILE_DIR:${target}>\")
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different \"${_imported_location}\" \"$<TARGET_FILE_DIR:${target}>${_install_subdir}\")
         elseif(APPLE)
           get_target_property(_is_bundle ${target} MACOSX_BUNDLE)
           if(_is_bundle)
