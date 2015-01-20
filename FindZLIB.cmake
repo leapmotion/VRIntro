@@ -28,7 +28,7 @@ find_path(ZLIB_ROOT_DIR
   PATH_SUFFIXES zlib zlib-${ZLIB_FIND_VERSION} 
 )
 
-set(ZLIB_INCLUDE_DIR ${ZLIB_ROOT_DIR}/include)
+find_path(ZLIB_INCLUDE_DIR zlib.h PATHS ${ZLIB_ROOT_DIR} ${ZLIB_ROOT_DIR}/include)
 
 if(BUILD_64_BIT)
   find_library(ZLIB_LIBRARY NAMES zlib z HINTS ${ZLIB_ROOT_DIR} PATH_SUFFIXES lib lib/x64)
