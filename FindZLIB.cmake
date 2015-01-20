@@ -2,91 +2,39 @@
 # FindZLIB
 # --------
 #
-# Find the native ZLIB includes and library.
+# Find the native ZLIB includes and library. Created by Walter Gray
 #
-# IMPORTED Targets
+# Interface Targets
+# ^^^^^^^^^^^^^^^^
+#  ZLIB::ZLIB`
+
+
+# Variables
 # ^^^^^^^^^^^^^^^^
 #
-# This module defines :prop_tgt:`IMPORTED` target ``ZLIB::ZLIB``, if
-# ZLIB has been found.
+#  ZLIB_INCLUDE_DIRS   
+#  ZLIB_LIBRARIES      
+#  ZLIB_FOUND          
 #
-# Result Variables
-# ^^^^^^^^^^^^^^^^
-#
-# This module defines the following variables:
-#
-# ::
-#
-#   ZLIB_INCLUDE_DIRS   - where to find zlib.h, etc.
-#   ZLIB_LIBRARIES      - List of libraries when using zlib.
-#   ZLIB_FOUND          - True if zlib found.
-#
-# ::
-#
-#   ZLIB_VERSION_STRING - The version of zlib found (x.y.z)
-#   ZLIB_VERSION_MAJOR  - The major version of zlib
-#   ZLIB_VERSION_MINOR  - The minor version of zlib
-#   ZLIB_VERSION_PATCH  - The patch version of zlib
-#   ZLIB_VERSION_TWEAK  - The tweak version of zlib
-#
-# Backward Compatibility
-# ^^^^^^^^^^^^^^^^^^^^^^
-#
-# The following variable are provided for backward compatibility
-#
-# ::
-#
-#   ZLIB_MAJOR_VERSION  - The major version of zlib
-#   ZLIB_MINOR_VERSION  - The minor version of zlib
-#   ZLIB_PATCH_VERSION  - The patch version of zlib
-#
-# Hints
-# ^^^^^
-#
-# A user may set ``ZLIB_ROOT`` to a zlib installation root to tell this
-# module where to look.
-# Modified by Walter Gray to work with Leap Motion's custom directory layouts.
-#=============================================================================
-# Copyright 2001-2011 Kitware, Inc.
-#
-# Distributed under the OSI-approved BSD License (the "License");
-# see accompanying file Copyright.txt for details.
-#
-# This software is distributed WITHOUT ANY WARRANTY; without even the
-# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-# See the License for more information.
-#=============================================================================
-# (To distribute this file outside of CMake, substitute the full
-#  License text for the above reference.)
+#  ZLIB_VERSION_STRING 
+#  ZLIB_VERSION_MAJOR  
+#  ZLIB_VERSION_MINOR  
+#  ZLIB_VERSION_PATCH  
+#  ZLIB_VERSION_TWEAK  
 
-set(_ZLIB_SEARCHES)
 
-# Search ZLIB_ROOT first if it is set.
-if(ZLIB_ROOT)
-  set(_ZLIB_SEARCH_ROOT PATHS ${ZLIB_ROOT} NO_DEFAULT_PATH)
-  list(APPEND _ZLIB_SEARCHES _ZLIB_SEARCH_ROOT)
+find_path(ZLIB_ROOT_DIR 
+  NAMES include/zlib.h 
+  PATH_SUFFIXES zlib zlib-${ZLIB_FIND_VERSION} 
+)
+
+set(ZLIB_INCLUDE_DIR ${ZLIB_ROOT_DIR}/include)
+
+if(BUILD_64_BIT)
+  find_library(ZLIB_LIBRARY NAMES zlib z HINTS ${ZLIB_ROOT_DIR} PATH_SUFFIXES lib lib/x64)
+else()
+  find_library(ZLIB_LIBRARY NAMES zlib z HINTS ${ZLIB_ROOT_DIR} PATH_SUFFIXES lib lib/x86)
 endif()
-
-# Normal search.
-set(_ZLIB_SEARCH_NORMAL
-  PATHS "[HKEY_LOCAL_MACHINE\\SOFTWARE\\GnuWin32\\Zlib;InstallPath]"
-        "$ENV{PROGRAMFILES}/zlib"
-  )
-list(APPEND _ZLIB_SEARCHES _ZLIB_SEARCH_NORMAL)
-
-set(ZLIB_NAMES z zlib zdll zlib1 zlibd zlibd1 zlibstat)
-
-# Try each search configuration.
-foreach(search ${_ZLIB_SEARCHES})
-  find_path(ZLIB_ROOT_DIR NAMES zlib.h include/zlib.h ${${search}} PATH_SUFFIXES zlib zlib-${ZLIB_FIND_VERSION})
-  find_path(ZLIB_INCLUDE_DIR NAMES zlib.h ${${search}} HINTS ${ZLIB_ROOT_DIR} PATH_SUFFIXES include)
-
-  if(BUILD_64_BIT)
-    find_library(ZLIB_LIBRARY NAMES ${ZLIB_NAMES} ${${search}} HINTS ${ZLIB_ROOT_DIR} PATH_SUFFIXES lib lib/x64)
-  else()
-    find_library(ZLIB_LIBRARY NAMES ${ZLIB_NAMES} ${${search}} HINTS ${ZLIB_ROOT_DIR} PATH_SUFFIXES lib lib/x86)
-  endif()
-endforeach()
 
 mark_as_advanced(ZLIB_LIBRARY ZLIB_INCLUDE_DIR)
 
@@ -104,10 +52,6 @@ if(ZLIB_INCLUDE_DIR AND EXISTS "${ZLIB_INCLUDE_DIR}/zlib.h")
         set(ZLIB_VERSION_TWEAK "${CMAKE_MATCH_1}")
         set(ZLIB_VERSION_STRING "${ZLIB_VERSION_STRING}.${ZLIB_VERSION_TWEAK}")
     endif()
-
-    set(ZLIB_MAJOR_VERSION "${ZLIB_VERSION_MAJOR}")
-    set(ZLIB_MINOR_VERSION "${ZLIB_VERSION_MINOR}")
-    set(ZLIB_PATCH_VERSION "${ZLIB_VERSION_PATCH}")
 endif()
 
 # handle the QUIETLY and REQUIRED arguments and set ZLIB_FOUND to TRUE if

@@ -27,8 +27,8 @@ find_path(WebsocketPP_ROOT_DIR
 
 set(WebsocketPP_INCLUDE_DIR ${WebsocketPP_ROOT_DIR}/include)
 
-find_library(WebsocketPP_LIBRARY_DEBUG websocketppd.lib HINTS ${WebsocketPP_ROOT_DIR} PATH_SUFFIXES lib)
-find_library(WebsocketPP_LIBRARY_RELEASE websocketpp.lib HINTS ${WebsocketPP_ROOT_DIR} PATH_SUFFIXES lib)
+find_library(WebsocketPP_LIBRARY_DEBUG websocketppd HINTS ${WebsocketPP_ROOT_DIR} PATH_SUFFIXES lib)
+find_library(WebsocketPP_LIBRARY_RELEASE websocketpp HINTS ${WebsocketPP_ROOT_DIR} PATH_SUFFIXES lib)
 include(SelectConfigurations)
 select_configurations(WebsocketPP LIBRARY LIBRARIES)
 

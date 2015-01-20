@@ -40,7 +40,7 @@ if(WIN32)
   include(SelectConfigurations)
   select_configurations(Crossroads LIBRARY LIBRARIES)
 else()
-  find_library(Crossroads_LIBRARIES "libxs${STATIC_LIBRARY_SUFFIX}" HINTS ${Crossroads_ROOT_DIR}/lib)
+  find_library(Crossroads_LIBRARY xs HINTS ${Crossroads_ROOT_DIR}/lib)
 endif()
 
 include(FindPackageHandleStandardArgs)
