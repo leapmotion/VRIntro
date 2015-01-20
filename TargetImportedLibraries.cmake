@@ -28,7 +28,19 @@ function(target_imported_libraries target)
 
   set(_library_list ${target_imported_libraries_UNPARSED_ARGUMENTS})
 
-  target_link_libraries(${target} ${target_imported_libraries_LINK_TYPE} ${_library_list})
+  set(_link_lib_list)
+  foreach(_lib ${_library_list})
+    if(NOT TARGET ${_lib})
+      list(APPEND _link_lib_list ${_lib})
+    else()
+      get_target_property(_type ${_lib} TYPE)
+      if(NOT _type STREQUAL MODULE_LIBRARY)
+        list(APPEND _link_lib_list ${_lib})
+      endif()
+    endif()
+  endforeach()
+
+  target_link_libraries(${target} ${target_imported_libraries_LINK_TYPE} ${_link_lib_list})
 
   #early out if the target isn't an EXECUTABLE
   get_target_property(_target_type ${target} TYPE)
