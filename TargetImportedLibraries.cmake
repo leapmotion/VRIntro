@@ -43,9 +43,9 @@ function(add_dependency_to_local_file_list target dependency)
   #TODO: Do something with this
   get_target_property(_install_subdir ${dependency} INSTALL_SUBDIR)
   if(NOT _install_subdir)
-    set(_install_subdir)
+    set(_install_subdir .)
   else()
-    set(_install_subdir /${_install_subdir})
+    set(_install_subdir ${_install_subdir})
   endif()
 
   get_target_property(_imported_location ${dependency} IMPORTED_LOCATION)
@@ -53,9 +53,9 @@ function(add_dependency_to_local_file_list target dependency)
   get_target_property(_imported_location_release ${dependency} IMPORTED_LOCATION_RELEASE)
 
   if(_imported_location)
-    add_local_files(${target} FILES ${_imported_location} )
+    add_local_files(${target} DIRECTORY ${_install_subdir} FILES ${_imported_location} )
   else()
-    add_local_files(${target} DEBUG ${_imported_location_debug} RELEASE ${_imported_location_release})
+    add_local_files(${target} DIRECTORY ${_install_subdir} DEBUG ${_imported_location_debug} RELEASE ${_imported_location_release})
   endif()
 endfunction()
 
