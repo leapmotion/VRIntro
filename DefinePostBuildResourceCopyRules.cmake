@@ -29,12 +29,12 @@ function(define_post_build_resource_copy_rules)
         TARGETS
     )
     cmake_parse_arguments(_arg "${_options}" "${_one_value_args}" "${_multi_value_args}" ${ARGN})
-
+    
     if(NOT _arg_TARGET)
         message(SEND_ERROR "must specify a value for TARGET in define_post_build_resource_copy_rules")
         return()
     endif()
-
+    
     if(_arg_RELATIVE_PATH_BASE OR _arg_RELATIVE_PATH_RESOURCES OR _arg_ABSOLUTE_PATH_RESOURCES)
         message(SEND_ERROR "using the old argument names. Please read the documentation and update your arguments")
         return()
@@ -46,14 +46,14 @@ function(define_post_build_resource_copy_rules)
     if(_arg_DESTINATION_PATH_BASE)
         set(_destination_dir "${_arg_DESTINATION_PATH_BASE}")
     endif()
-
+    
     # The "base" resources dir of where the resources are relative to
     set(_resource_base_dir "")
     # Override it with the RESOURCE_PATH_BASE value if specified.
     if(_arg_RESOURCE_PATH_BASE)
         set(_resource_base_dir "${_arg_RESOURCE_PATH_BASE}")
     endif()
-
+    
     # Decide where the resources directory is on each platform.
     if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") # This is the correct way to detect Mac OS X operating system -- see http://www.openguru.com/2009/04/cmake-detecting-platformoperating.html
         # TODO: apparently there is a different "correct" way to install files on Mac;
@@ -63,8 +63,8 @@ function(define_post_build_resource_copy_rules)
             # CMAKE_BUILD_TYPE will be one of Release, Debug, etc.
             set(_destination_dir "${_destination_dir}/${CMAKE_BUILD_TYPE}")
         endif()
-
-
+        
+        
         # Check to see if the target is a Mac OS X bundle.  If so, set the resources dir to the appropriate
         # directory in the bundle
         get_property(_mac_bundle TARGET ${_arg_TARGET} PROPERTY MACOSX_BUNDLE SET)
