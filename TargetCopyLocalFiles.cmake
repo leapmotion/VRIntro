@@ -82,6 +82,8 @@ endfunction()
 function(add_local_files target)
   cmake_parse_arguments(add_local_files "" "DIRECTORY" "FILES;DEBUG;RELEASE" ${ARGN})
 
+  add_local_file_copy_command(${target})
+  
   if(NOT add_local_files_DIRECTORY)
     set(add_local_files_DIRECTORY .)
   endif()
