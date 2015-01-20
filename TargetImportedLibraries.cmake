@@ -41,32 +41,49 @@ function(remove_from_prop_set scope target property item)
   set_property(${scope} ${target} PROPERTY ${property} ${_set})
 endfunction()
 
+# Adds the copy command which will reference the REQUIRED_LOCAL_FILES property on the target.
+#  The copy command, while platform dependent, will iterate through the list of files, typically
+#  DLLS, and will copy them to the appropriate location for the platform.
+function(add_module_copy_command target)
+  get_target_property(_has_command ${target} LOCAL_FILE_COPY_COMMAND_DEFINED)
+  if(_has_command)
+    return()
+  endif()
 
-# add_module_copy_command(target dependency):
-#   Given a target and a dependency which must be a defined, imported target (type module or shared)
-#   Defines a post-build command on the target which will copy the dependency's dll or .dylib file to
-#   the same directory as the target's executable.
-function(add_module_copy_command target dependency)
+  if(MSVC)
+    add_custom_command(TARGET ${target} POST_BUILD
+      COMMAND for %i in "(" $<TARGET_PROPERTY:${target},REQUIRED_LOCAL_FILES> $<$<CONFIG:DEBUG>:$<TARGET_PROPERTY:${target},REQUIRED_LOCAL_FILES_DEBUG>> $<$<CONFIG:DEBUG>:$<TARGET_PROPERTY:${target}, REQUIRED_LOCAL_FILES_RELEASE>> ");do" ${CMAKE_COMMAND} -E copy_if_different \"%i\" \"$<TARGET_FILE_DIR:${target}>\")
+  #elseif(APPLE)
+  #  get_target_property(_is_bundle ${target} MACOSX_BUNDLE)
+  #  if(_is_bundle)
+  #    add_custom_command(TARGET ${target} POST_BUILD
+  #      COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${target}>/../Frameworks/"
+  #      COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_imported_location}" "$<TARGET_FILE_DIR:${target}>/../Frameworks/"
+  #      COMMAND install_name_tool -change @loader_path/libLeap.dylib @loader_path/../Frameworks/libLeap.dylib "$<TARGET_FILE:${target}>")
+  #    #call install_name_tool and fixup the dylib paths here:
+  #  endif()
+  else()
+    message(WARNING "Automatic handling of shared libraries is unimplemented on this platform")
+  endif()
+
+endfunction()
+# add_dependency_to_copy_list(target dependency):
+#   Given a target and a dependency which must be a defined imported target (type module or shared),
+#   Adds the dependency's imported location to the target's list of REQUIRED_LOCAL_FILES
+function(add_dependency_to_copy_list target dependency)
   get_target_property(_type ${dependency} TYPE)
   get_target_property(_imported ${dependency} IMPORTED)
   if(NOT ((${_type} STREQUAL SHARED_LIBRARY OR ${_type} STREQUAL MODULE_LIBRARY) AND ${_imported}))
-    message(FATAL_ERROR "add_module_copy_command called with target ${target} on bad dependency ${dependency}")
+    message(FATAL_ERROR "add_dependency_to_copy_list called with target ${target} on bad dependency ${dependency}")
     return()
   endif()
 
   #if only the _<Config> variants are set, create a generator expression.
   get_target_property(_imported_location ${dependency} IMPORTED_LOCATION)
-  if(NOT _imported_location)
-    get_target_property(_imported_location_debug ${dependency} IMPORTED_LOCATION_DEBUG)
-    get_target_property(_imported_location_release ${dependency} IMPORTED_LOCATION_RELEASE)
-    if(NOT _imported_location_debug AND NOT _imported_location_release)
-      message(FATAL_ERROR "No IMPORTED_LOCATION specified for SHARED import target ${dependency}")
-    endif()
-    set(_imported_location "$<$<CONFIG:DEBUG>:${_imported_location_debug}>$<$<CONFIG:RELEASE>:${_imported_location_release}>")
-  endif()
+  get_target_property(_imported_location_debug ${dependency} IMPORTED_LOCATION_DEBUG)
+  get_target_property(_imported_location_release ${dependency} IMPORTED_LOCATION_RELEASE)
 
-  verbose_message("Adding copy command for ${dependency}: ${_imported_location}")
-
+  #TODO: Do something with this
   get_target_property(_install_subdir ${dependency} INSTALL_SUBDIR)
   if(NOT _install_subdir)
     set(_install_subdir)
@@ -74,25 +91,18 @@ function(add_module_copy_command target dependency)
     set(_install_subdir /${_install_subdir})
   endif()
 
-  if(MSVC)
-    if(_install_subdir)
-      add_custom_command(TARGET ${target} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${target}>${_install_subdir}")
-    endif()
-
-    add_custom_command(TARGET ${target} POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different \"${_imported_location}\" \"$<TARGET_FILE_DIR:${target}>${_install_subdir}\")
-  elseif(APPLE)
-    get_target_property(_is_bundle ${target} MACOSX_BUNDLE)
-    if(_is_bundle)
-      add_custom_command(TARGET ${target} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${target}>/../Frameworks/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_imported_location}" "$<TARGET_FILE_DIR:${target}>/../Frameworks/"
-        COMMAND install_name_tool -change @loader_path/libLeap.dylib @loader_path/../Frameworks/libLeap.dylib "$<TARGET_FILE:${target}>")
-      #call install_name_tool and fixup the dylib paths here:
-    endif()
+  if(_imported_location)
+    verbose_message("Adding required local file to ${target} for ${dependency}: ${_imported_location}")
+    add_to_prop_set(TARGET ${target} REQUIRED_LOCAL_FILES ${_imported_location})
   else()
-    message(WARNING "Automatic handling of shared libraries is unimplemented on this platform")
+    if(_imported_location_debug)
+      verbose_message("Adding required local file <DEBUG> to ${target} for ${dependency}: ${_imported_location_debug}")
+      add_to_prop_set(TARGET ${target} REQUIRED_LOCAL_FILES_DEBUG ${_imported_location_debug})
+    endif()
+    if(_imported_location_release)
+      verbose_message("Adding required local file <RELEASE> to ${target} for ${dependency}: ${_imported_location_release}")
+      add_to_prop_set(TARGET ${target} REQUIRED_LOCAL_FILES_RELEASE ${_imported_location_release})
+    endif()
   endif()
 endfunction()
 
@@ -102,7 +112,7 @@ function(scan_dependencies_for_dlls target)
       get_target_property(_type ${dependency} TYPE)
       get_target_property(_imported ${dependency} IMPORTED)
       if((${_type} STREQUAL SHARED_LIBRARY OR ${_type} STREQUAL MODULE_LIBRARY) AND ${_imported})
-        add_module_copy_command(${target} ${dependency})
+        add_dependency_to_copy_list(${target} ${dependency})
       endif()
 
       get_target_property(_libraries ${dependency} INTERFACE_LINK_LIBRARIES)
@@ -162,6 +172,8 @@ function(target_imported_libraries target)
   if(NOT ${_target_type} STREQUAL EXECUTABLE)
     return()
   endif()
+
+  add_module_copy_command(${target})
 
   get_target_property(_libraries ${target} INTERFACE_LINK_LIBRARIES)
   get_target_property(_modules ${target} INTERFACE_LINK_MODULES)
