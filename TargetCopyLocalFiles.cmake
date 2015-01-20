@@ -51,13 +51,17 @@ endfunction()
 include(CMakeParseArguments)
 if(MSVC)
   configure_file(${CMAKE_CURRENT_LIST_DIR}/copy_files_to_dirs.bat ${CMAKE_BINARY_DIR}/copy_files_to_dirs.bat COPYONLY)
+elseif(APPLE)
+  configure_file(${CMAKE_CURRENT_LIST_DIR}/copy_files_to_dirs_apple.sh ${CMAKE_BINARY_DIR}/copy_files_to_dirs.bat COPYONLY)
 endif()
+
 function(add_local_file_copy_command target)
   get_target_property(_has_command ${target} LOCAL_FILE_COPY_COMMAND_DEFINED)
   if(_has_command)
     return()
   endif()
-
+  set_property(TARGET ${target} PROPERTY LOCAL_FILE_COPY_COMMAND_DEFINED TRUE)
+  
   set(_file_dir ${CMAKE_BINARY_DIR}/$<CONFIG>/${target})
   file(GENERATE OUTPUT ${_file_dir}/LocalFilesToCopy.txt CONTENT "$<JOIN:$<TARGET_PROPERTY:${target},REQUIRED_LOCAL_FILES>$<$<CONFIG:DEBUG>:$<SEMICOLON>$<TARGET_PROPERTY:${target},REQUIRED_LOCAL_FILES_DEBUG>>$<$<CONFIG:RELEASE>:$<SEMICOLON>$<TARGET_PROPERTY:${target},REQUIRED_LOCAL_FILES_RELEASE>>,\n>")
   file(GENERATE OUTPUT ${_file_dir}/LocalFilesDirectories.txt CONTENT "$<JOIN:$<TARGET_PROPERTY:${target},LOCAL_FILE_DIRS>$<$<CONFIG:DEBUG>:$<SEMICOLON>$<TARGET_PROPERTY:${target},LOCAL_FILE_DIRS_DEBUG>>$<$<CONFIG:RELEASE>:$<SEMICOLON>$<TARGET_PROPERTY:${target},LOCAL_FILE_DIRS_RELEASE>>,\n>")
@@ -65,17 +69,17 @@ function(add_local_file_copy_command target)
   if(MSVC)
     add_custom_command(TARGET ${target} POST_BUILD COMMAND
       ${CMAKE_BINARY_DIR}/copy_files_to_dirs.bat ${_file_dir}/LocalFilesToCopy.txt ${_file_dir}/LocalFilesDirectories.txt $<TARGET_FILE_DIR:${target}>)
-#  #elseif(APPLE)
-  #  get_target_property(_is_bundle ${target} MACOSX_BUNDLE)
-  #  if(_is_bundle)
-  #    add_custom_command(TARGET ${target} POST_BUILD
-  #      COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${target}>/../Frameworks/"
-  #      COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_imported_location}" "$<TARGET_FILE_DIR:${target}>/../Frameworks/"
-  #      COMMAND install_name_tool -change @loader_path/libLeap.dylib @loader_path/../Frameworks/libLeap.dylib "$<TARGET_FILE:${target}>")
-  #    #call install_name_tool and fixup the dylib paths here:
+  elseif(APPLE)
+    add_custom_command(TARGET ${target} POST_BUILD COMMAND
+      ${CMAKE_BINARY_DIR}/copy_files_to_dirs.sh ${_file_dir}/LocalFilesToCopy.txt ${_file_dir}/LocalFilesDirectories.txt $<TARGET_FILE_DIR:${target}>)
+#    get_target_property(_is_bundle ${target} MACOSX_BUNDLE)
+#    if(_is_bundle)
+#      add_custom_command(TARGET ${target} POST_BUILD
+ #       COMMAND install_name_tool -change @loader_path/libLeap.dylib @loader_path/../Frameworks/libLeap.dylib "$<TARGET_FILE:${target}>")
+      #call install_name_tool and fixup the dylib paths here:
   #  endif()
   else()
-    message(WARNING "Automatic handling of shared libraries is unimplemented on this platform")
+    message(WARNING "Automatic handling of local files is unimplemented on this platform")
   endif()
 endfunction()
 
@@ -83,7 +87,7 @@ function(add_local_files target)
   cmake_parse_arguments(add_local_files "" "DIRECTORY" "FILES;DEBUG;RELEASE" ${ARGN})
 
   add_local_file_copy_command(${target})
-  
+
   if(NOT add_local_files_DIRECTORY)
     set(add_local_files_DIRECTORY .)
   endif()
