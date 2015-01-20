@@ -21,6 +21,26 @@
 
 include(CMakeParseArguments)
 
+#helper functions for manipulating target properties.
+function(add_to_prop_set scope target property item)
+  get_property(_set ${scope} ${target} PROPERTY ${property})
+  if(NOT _set)
+    set(_set)
+  endif()
+  list(APPEND _set ${item})
+  list(REMOVE_DUPLICATES _set)
+  set_property(${scope} ${target} PROPERTY ${property} ${_set})
+endfunction()
+
+function(remove_from_prop_set scope target property item)
+  get_property(_set ${scope} ${target} PROPERTY ${property})
+  if(NOT _set)
+    return()
+  endif()
+  list(REMOVE_ITEM _set ${item})
+  set_property(${scope} ${target} PROPERTY ${property} ${_set})
+endfunction()
+
 
 # add_module_copy_command(target dependency):
 #   Given a target and a dependency which must be a defined, imported target (type module or shared)
@@ -76,18 +96,6 @@ function(add_module_copy_command target dependency)
   endif()
 endfunction()
 
-#scan_dependencies_for_dlls(target, dependencies)
-#  for each dependency:
-#    if dependency is a target:
-#      if dependency is an imported shared or module target:
-#        add_module_copy_command(target, dependency)
-#      scan_dependencies_for_dlls(target, dependency:INTERFACE_LINK_LIBRARIES dependency:INTERFACE_LINK_MODULES)
-#      remove_from_set(target:UNRESOLVED_DEPENDENCIES dependency)
-#    else:
-#      add_to_set(target:UNRESOLVED_DEPENDENCIES dependency)
-#
-#  if target:UNRESOLVED_DEPENDENCIES
-#    add_to_set(global:UNRESOLVED_TARGETS target)
 function(scan_dependencies_for_dlls target)
   foreach(dependency ${ARGN})
     if(TARGET ${dependency})
@@ -105,34 +113,22 @@ function(scan_dependencies_for_dlls target)
       if(NOT _modules)
         set(_modules)
       endif()
-      scan_dependencies_for_dlls(${target} ${_libraries} ${_modules})
 
       #Remove the dependency from the list of unresolved dependencies for this target
-      get_target_property(_unresolved ${target} UNRESOLVED_DEPENDENCIES)
-      list(REMOVE_ITEM _unresolved ${dependency})
-      set_property(TARGET ${target} PROPERTY UNRESOLVED_DEPENDENCIES ${_unresolved})
-    elseif(NOT dependency MATCHES "^[$-][<-]")
+      remove_from_prop_set(TARGET ${target} UNRESOLVED_DEPENDENCIES ${dependency})
+
+      scan_dependencies_for_dlls(${target} ${_libraries} ${_modules})
+    elseif(NOT dependency MATCHES "^[$-][<-]" AND
+           NOT dependency MATCHES ".*[.-]..?.?$")
       #Dependency is not a target and not some freaky generator expression, add to the list of unresolved.
-      get_target_property(_unresolved ${target} UNRESOLVED_DEPENDENCIES)
-      if(NOT _unresolved)
-        set(_unresolved)
-      endif()
-      list(APPEND _unresolved ${dependency})
-      list(REMOVE_DUPLICATES _unresolved)
-      set_property(TARGET ${target} PROPERTY UNRESOLVED_DEPENDENCIES ${_unresolved})
+      add_to_prop_set(TARGET ${target} UNRESOLVED_DEPENDENCIES ${dependency})
     endif()
   endforeach()
 
   #If the target has unresolve dependencies, save it for later
   get_target_property(_target_unresolved ${target} UNRESOLVED_DEPENDENCIES)
   if(_target_unresolved)
-    get_property(_global_unresolved GLOBAL PROPERTY UNRESOLVED_TARGETS)
-    if(NOT _global_unresolved)
-      set(_global_unresolved)
-    endif()
-    list(APPEND _global_unresolved ${target})
-    list(REMOVE_DUPLICATES _global_unresolved)
-    set_property(GLOBAL PROPERTY UNRESOLVED_TARGETS ${_global_unresolved})
+    add_to_prop_set(GLOBAL "" UNRESOLVED_TARGETS ${target})
   endif()
 endfunction()
 
@@ -180,8 +176,7 @@ endfunction()
 
 #This function wraps find_package, then calls target_imported_libraries on the generated package)
 function(target_package target package )
-  list(REMOVE_AT ARGV 0) # pop the target
-  cmake_parse_arguments(target_package "" "LINK_TYPE" "" ${ARGV})
+  cmake_parse_arguments(target_package "" "LINK_TYPE" "" ${package} ${ARGN})
 
   if(TARGET ${package}::${package})
     verbose_message("${package}::${package} already exists, skipping find op")
@@ -198,24 +193,41 @@ endfunction()
 
 function(scan_unresolved)
   get_property(_global_unresolved GLOBAL PROPERTY UNRESOLVED_TARGETS)
+  if(_global_unresolved)
+    set(_global_unresolved)
+  endif()
+
+  #Do a 2 pass thing so we don't wind up removing unresolved targets added by scan_dependencies_for_dlls
   foreach(target ${_global_unresolved})
     get_target_property(_target_unresolved ${target} UNRESOLVED_DEPENDENCIES)
     verbose_message("found global unresolved target:${target} with dependencies:${_target_unresolved}")
     scan_dependencies_for_dlls(${target} ${_target_unresolved})
     get_target_property(_target_unresolved ${target} UNRESOLVED_DEPENDENCIES)
+  endforeach()
+
+  get_property(_global_unresolved GLOBAL PROPERTY UNRESOLVED_TARGETS)
+  if(_global_unresolved)
+    set(_global_unresolved)
+  endif()
+  foreach(target ${_global_unresolved})
+    get_target_property(_target_unresolved ${target} UNRESOLVED_DEPENDENCIES)
     if(NOT _target_unresolved)
       list(REMOVE_ITEM _global_unresolved ${target})
     endif()
   endforeach()
-
   set_property(GLOBAL PROPERTY UNRESOLVED_TARGETS ${_global_unresolved})
+
 endfunction()
 
 function(verify_all_copy_steps_resolved)
   scan_unresolved()
   get_property(_global_unresolved GLOBAL PROPERTY UNRESOLVED_TARGETS)
   if(_global_unresolved)
-    message(FATAL_ERROR "Targets with unresolved dependencies remain: ${_global_unresolved}")
+    message(WARNING "Targets with unresolved dependencies remain:\n")
+    foreach(target ${_global_unresolved})
+      get_target_property(_target_unresolved ${target} UNRESOLVED_DEPENDENCIES)
+      message(WARNING "${target}: ${_target_unresolved}")
+    endforeach()
   endif()
 endfunction()
 
