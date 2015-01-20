@@ -8,36 +8,155 @@
 #
 # ========================
 # TARGET_IMPORTED_LIBRARIES(<target> <link_type> <import_target>)
-#   Takes the same arguments as target_link_libraries, but for any listed library where
-#   <import_target> is a valid target with a TYPE property of SHARED_LIBRARY, it will
-#   read from the IMPORTED_LOCATION and IMPORTED_LOCATION_<CONFIG> parameters and generate
-#   a custom post-build step to copy the shared library files to the appropriate location.
-#   On windows, this is the TARGET_FILE_DIR of <target>.  link_type should be one of
-#   PUBLIC, PRIVATE, or INTERFACE.  Also searches INTERFACE_LINK_MODULES for libraries that
-#   need to be copied, but cannot be specified in the list of target_link_libraries
-#
+#   Takes the same arguments as target_link_libraries, but does some additional work
+#   to identify and copy any required shared libraries (.dll or .dylib files) to the appropriate
+#   location in a custom post-build step.  See documentation at the function definition for more info.
 #  TARGET_PACKAGE(<target> <package> ...)
 #   Takes the same arguments as find_package, with the addition of the target you're
 #   linking to as the first parameter.  Upon successfully finding the package, it
 #   attempts to call TARGET_IMPORTED_LIBRARIES(<target> <package>::<package>)
+#  VERIFY_LIBRARIES_DEFINED()
+#   Verifies that for all targets which were used with target_imported_libraries or target_package
+#   All dependencies were resolved and the copy commands were setup properly.
 
 include(CMakeParseArguments)
-function(target_imported_libraries target)
-  list(REMOVE_AT ARGV 0) #pop the target
-  cmake_parse_arguments(target_imported_libraries "" "LINK_TYPE" "" ${ARGV})
 
-  set(_library_list ${target_imported_libraries_UNPARSED_ARGUMENTS})
+
+# add_module_copy_command(target dependency):
+#   Given a target and a dependency which must be a defined, imported target (type module or shared)
+#   Defines a post-build command on the target which will copy the dependency's dll or .dylib file to
+#   the same directory as the target's executable.
+function(add_module_copy_command target dependency)
+  get_target_property(_type ${dependency} TYPE)
+  get_target_property(_imported ${dependency} IMPORTED)
+  if(NOT ((${_type} STREQUAL SHARED_LIBRARY OR ${_type} STREQUAL MODULE_LIBRARY) AND ${_imported}))
+    message(FATAL_ERROR "add_module_copy_command called with target ${target} on bad dependency ${dependency}")
+    return()
+  endif()
+
+  #if only the _<Config> variants are set, create a generator expression.
+  get_target_property(_imported_location ${dependency} IMPORTED_LOCATION)
+  if(NOT _imported_location)
+    get_target_property(_imported_location_debug ${dependency} IMPORTED_LOCATION_DEBUG)
+    get_target_property(_imported_location_release ${dependency} IMPORTED_LOCATION_RELEASE)
+    if(NOT _imported_location_debug AND NOT _imported_location_release)
+      message(FATAL_ERROR "No IMPORTED_LOCATION specified for SHARED import target ${dependency}")
+    endif()
+    set(_imported_location "$<$<CONFIG:DEBUG>:${_imported_location_debug}>$<$<CONFIG:RELEASE>:${_imported_location_release}>")
+  endif()
+
+  verbose_message("Adding copy command for ${dependency}: ${_imported_location}")
+
+  get_target_property(_install_subdir ${dependency} INSTALL_SUBDIR)
+  if(NOT _install_subdir)
+    set(_install_subdir)
+  else()
+    set(_install_subdir /${_install_subdir})
+  endif()
+
+  if(MSVC)
+    if(_install_subdir)
+      add_custom_command(TARGET ${target} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${target}>${_install_subdir}")
+    endif()
+
+    add_custom_command(TARGET ${target} POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different \"${_imported_location}\" \"$<TARGET_FILE_DIR:${target}>${_install_subdir}\")
+  elseif(APPLE)
+    get_target_property(_is_bundle ${target} MACOSX_BUNDLE)
+    if(_is_bundle)
+      add_custom_command(TARGET ${target} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${target}>/../Frameworks/"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_imported_location}" "$<TARGET_FILE_DIR:${target}>/../Frameworks/"
+        COMMAND install_name_tool -change @loader_path/libLeap.dylib @loader_path/../Frameworks/libLeap.dylib "$<TARGET_FILE:${target}>")
+      #call install_name_tool and fixup the dylib paths here:
+    endif()
+  else()
+    message(WARNING "Automatic handling of shared libraries is unimplemented on this platform")
+  endif()
+endfunction()
+
+#scan_dependencies_for_dlls(target, dependencies)
+#  for each dependency:
+#    if dependency is a target:
+#      if dependency is an imported shared or module target:
+#        add_module_copy_command(target, dependency)
+#      scan_dependencies_for_dlls(target, dependency:INTERFACE_LINK_LIBRARIES dependency:INTERFACE_LINK_MODULES)
+#      remove_from_set(target:UNRESOLVED_DEPENDENCIES dependency)
+#    else:
+#      add_to_set(target:UNRESOLVED_DEPENDENCIES dependency)
+#
+#  if target:UNRESOLVED_DEPENDENCIES
+#    add_to_set(global:UNRESOLVED_TARGETS target)
+function(scan_dependencies_for_dlls target)
+  foreach(dependency ${ARGN})
+    if(TARGET ${dependency})
+      get_target_property(_type ${dependency} TYPE)
+      get_target_property(_imported ${dependency} IMPORTED)
+      if((${_type} STREQUAL SHARED_LIBRARY OR ${_type} STREQUAL MODULE_LIBRARY) AND ${_imported})
+        add_module_copy_command(${target} ${dependency})
+      endif()
+
+      get_target_property(_libraries ${dependency} INTERFACE_LINK_LIBRARIES)
+      get_target_property(_modules ${dependency} INTERFACE_LINK_MODULES)
+      if(NOT _libraries)
+        set(_libraries)
+      endif()
+      if(NOT _modules)
+        set(_modules)
+      endif()
+      scan_dependencies_for_dlls(${target} ${_libraries} ${_modules})
+
+      #Remove the dependency from the list of unresolved dependencies for this target
+      get_target_property(_unresolved ${target} UNRESOLVED_DEPENDENCIES)
+      list(REMOVE_ITEM _unresolved ${dependency})
+      set_property(TARGET ${target} PROPERTY UNRESOLVED_DEPENDENCIES ${_unresolved})
+    elseif(NOT dependency MATCHES "^[$-][<-]")
+      #Dependency is not a target and not some freaky generator expression, add to the list of unresolved.
+      get_target_property(_unresolved ${target} UNRESOLVED_DEPENDENCIES)
+      if(NOT _unresolved)
+        set(_unresolved)
+      endif()
+      list(APPEND _unresolved ${dependency})
+      list(REMOVE_DUPLICATES _unresolved)
+      set_property(TARGET ${target} PROPERTY UNRESOLVED_DEPENDENCIES ${_unresolved})
+    endif()
+  endforeach()
+
+  #If the target has unresolve dependencies, save it for later
+  get_target_property(_target_unresolved ${target} UNRESOLVED_DEPENDENCIES)
+  if(_target_unresolved)
+    get_property(_global_unresolved GLOBAL PROPERTY UNRESOLVED_TARGETS)
+    if(NOT _global_unresolved)
+      set(_global_unresolved)
+    endif()
+    list(APPEND _global_unresolved ${target})
+    list(REMOVE_DUPLICATES _global_unresolved)
+    set_property(GLOBAL PROPERTY UNRESOLVED_TARGETS ${_global_unresolved})
+  endif()
+endfunction()
+
+function(target_imported_libraries target)
+  cmake_parse_arguments(target_imported_libraries "" "LINK_TYPE" "" ${ARGN})
+
+  set(dependencies ${target_imported_libraries_UNPARSED_ARGUMENTS})
 
   set(_link_lib_list)
-  foreach(_lib ${_library_list})
-    if(NOT TARGET ${_lib})
-      list(APPEND _link_lib_list ${_lib})
-    else()
-      get_target_property(_type ${_lib} TYPE)
-      if(NOT _type STREQUAL MODULE_LIBRARY)
-        list(APPEND _link_lib_list ${_lib})
+  foreach(dependency ${dependencies})
+    set(_ismodule FALSE)
+    if(TARGET ${dependency})
+      get_target_property(_type ${dependency} TYPE)
+      if(_type STREQUAL MODULE_LIBRARY)
+        set(_ismodule TRUE)
       endif()
     endif()
+
+    if(${_ismodule})
+      set_property(TARGET ${target} APPEND PROPERTY INTERFACE_LINK_MODULES ${dependency})
+    else()
+      list(APPEND _link_lib_list ${dependency})
+    endif()
+
   endforeach()
 
   target_link_libraries(${target} ${target_imported_libraries_LINK_TYPE} ${_link_lib_list})
@@ -48,84 +167,15 @@ function(target_imported_libraries target)
     return()
   endif()
 
-  #setup custom commands to copy .dll/dylib files for all dependencies
-  set(_lib_index 0 )
-  list(LENGTH _library_list _lib_length)
-
-  #foreach doesn't allow you to append to the list from within the loop.
-  while(_lib_index LESS _lib_length)
-    list(GET _library_list ${_lib_index} _import_lib)
-
-    if(TARGET ${_import_lib})
-      get_target_property(_depends ${_import_lib} INTERFACE_LINK_LIBRARIES)
-      get_target_property(_depends_modules ${_import_lib} INTERFACE_LINK_MODULES)
-      foreach(_depend ${_depends} ${_depends_modules})
-        if(TARGET ${_depend})
-          list(FIND _library_list ${_depend} _found_lib)
-          if(_found_lib EQUAL -1) #make sure we don't do duplicate adds.
-            verbose_message("${target}:Adding nested dependency ${_depend}")
-            list(APPEND _library_list ${_depend})
-          else()
-            verbose_message("${target}:skipping duplicate nested dependency ${_depend}")
-          endif()
-
-        endif()
-      endforeach()
-
-      get_target_property(_type ${_import_lib} TYPE)
-      get_target_property(_imported ${_import_lib} IMPORTED)
-      if((${_type} STREQUAL SHARED_LIBRARY OR ${_type} STREQUAL MODULE_LIBRARY) AND ${_imported})
-
-        set(_found_configs_expr)
-        set(_imported_location)
-
-        #if only the _<Config> variants are set, create a generator expression.
-        get_target_property(_imported_location ${_import_lib} IMPORTED_LOCATION)
-        if(NOT _imported_location)
-          get_target_property(_imported_location_debug ${_import_lib} IMPORTED_LOCATION_DEBUG)
-          get_target_property(_imported_location_release ${_import_lib} IMPORTED_LOCATION_RELEASE)
-          if(NOT _imported_location_debug AND NOT _imported_location_release)
-            message(FATAL_ERROR "No IMPORTED_LOCATION specified for SHARED import target ${_import_lib}")
-          endif()
-          set(_imported_location "$<$<CONFIG:DEBUG>:${_imported_location_debug}>$<$<CONFIG:RELEASE>:${_imported_location_release}>")
-        endif()
-
-        verbose_message("Adding copy command for ${_import_lib}: ${_imported_location}")
-
-        get_target_property(_install_subdir ${_import_lib} INSTALL_SUBDIR)
-        if(NOT _install_subdir)
-          set(_install_subdir)
-        else()
-          set(_install_subdir /${_install_subdir})
-        endif()
-
-        if(MSVC)
-          if(_install_subdir)
-            add_custom_command(TARGET ${target} POST_BUILD
-              COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${target}>${_install_subdir}")
-          endif()
-
-          add_custom_command(TARGET ${target} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different \"${_imported_location}\" \"$<TARGET_FILE_DIR:${target}>${_install_subdir}\")
-        elseif(APPLE)
-          get_target_property(_is_bundle ${target} MACOSX_BUNDLE)
-          if(_is_bundle)
-            add_custom_command(TARGET ${target} POST_BUILD
-              COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${target}>/../Frameworks/"
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_imported_location}" "$<TARGET_FILE_DIR:${target}>/../Frameworks/"
-              COMMAND install_name_tool -change @loader_path/libLeap.dylib @loader_path/../Frameworks/libLeap.dylib "$<TARGET_FILE:${target}>")
-            #call install_name_tool and fixup the dylib paths here:
-          endif()
-        else()
-          message(WARNING "Automatic handling of shared libraries is unimplemented on this platform")
-        endif()
-      endif()
-    endif()
-
-    math(EXPR _lib_index "${_lib_index} + 1") #an extremely verbose i++...
-    #if this is expensive, simply increment it when adding to the list.
-    list(LENGTH _library_list _lib_length) #this is likely to have changed
-  endwhile()
+  get_target_property(_libraries ${target} INTERFACE_LINK_LIBRARIES)
+  get_target_property(_modules ${target} INTERFACE_LINK_MODULES)
+  if(NOT _libraries)
+    set(_libraries)
+  endif()
+  if(NOT _modules)
+    set(_modules)
+  endif()
+  scan_dependencies_for_dlls(${target} ${_libraries} ${_modules})
 endfunction()
 
 #This function wraps find_package, then calls target_imported_libraries on the generated package)
@@ -145,3 +195,35 @@ function(target_package target package )
     target_imported_libraries(${target} ${package}::${package})
   endif()
 endfunction()
+
+function(scan_unresolved)
+  get_property(_global_unresolved GLOBAL PROPERTY UNRESOLVED_TARGETS)
+  foreach(target ${_global_unresolved})
+    get_target_property(_target_unresolved ${target} UNRESOLVED_DEPENDENCIES)
+    verbose_message("found global unresolved target:${target} with dependencies:${_target_unresolved}")
+    scan_dependencies_for_dlls(${target} ${_target_unresolved})
+    get_target_property(_target_unresolved ${target} UNRESOLVED_DEPENDENCIES)
+    if(NOT _target_unresolved)
+      list(REMOVE_ITEM _global_unresolved ${target})
+    endif()
+  endforeach()
+
+  set_property(GLOBAL PROPERTY UNRESOLVED_TARGETS ${_global_unresolved})
+endfunction()
+
+function(verify_all_copy_steps_resolved)
+  scan_unresolved()
+  get_property(_global_unresolved GLOBAL PROPERTY UNRESOLVED_TARGETS)
+  if(_global_unresolved)
+    message(FATAL_ERROR "Targets with unresolved dependencies remain: ${_global_unresolved}")
+  endif()
+endfunction()
+
+function(scan_unresolved_EOFHook Variable Access)
+  if(${Variable} STREQUAL CMAKE_BACKWARDS_COMPATIBILITY AND
+     (${Access} STREQUAL UNKNOWN_READ_ACCESS OR ${Access} STREQUAL READ_ACCESS))
+    scan_unresolved()
+  endif()
+endfunction()
+
+variable_watch(CMAKE_BACKWARDS_COMPATIBILITY scan_unresolved_EOFHook)
