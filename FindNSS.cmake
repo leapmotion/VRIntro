@@ -110,11 +110,15 @@ endforeach()
 list(REMOVE_AT CMAKE_FIND_LIBRARY_SUFFIXES -1)
 
 #Static library find section
-set(_static certdb certhi crmf cryptohi dbm freebl jar nspr4_s nss nssb nssckfw
+set(_static certdb certhi crmf cryptohi dbm freebl jar nss nssb nssckfw
 			nssdbm nssdev nsspki nssutil pk11wrap pkcs7 pkcs12 pkixcertsel pkixchecker
 			pkixcrlsel pkixmodule pkixparams pkixpki pkixresults pkixstore pkixsystem
-			pkixtop pkixutil plc4_s plds4_s sectool smime softokn sqlite ssl zlib
+			pkixtop pkixutil sectool smime softokn sqlite ssl 
 )
+if(WIN32)
+	list(APPEND _static nspr4_s plc4_s plds4_s zlib)
+endif()
+
 foreach(_lib ${_static})
 	find_library(NSS_${_lib}_LIBRARY ${_lib} HINTS ${NSS_ROOT_DIR} PATH_SUFFIXES lib lib/lib)
 	list(APPEND _required_vars NSS_${_lib}_LIBRARY)
