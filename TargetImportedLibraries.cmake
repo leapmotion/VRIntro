@@ -5,83 +5,40 @@
 # Created by Walter Gray
 # See CreateImportTargetHelpers.cmake for a suite of functions suitable for writing Find
 # modules compatible with this approach.
+# Makes use of the TargetCopyLocalFiles module to copy any dependant shared libraries at build time.
 #
 # ========================
-# TARGET_IMPORTED_LIBRARIES(<target> <link_type> <import_target>)
+#  TARGET_COPY_SHARED_LIBRARIES(<target>)
+#   Given a target, will cause all dependent shared libraries to be copied to the appropriate
+#   location: the local directory on windows or the resources folder for a mac .app package.
+#  TARGET_IMPORTED_LIBRARIES(<target> <link_type> <import_target>) - LEGACY
 #   Takes the same arguments as target_link_libraries, but does some additional work
 #   to identify and copy any required shared libraries (.dll or .dylib files) to the appropriate
 #   location in a custom post-build step.  See documentation at the function definition for more info.
-#  TARGET_PACKAGE(<target> <package> ...)
+#  TARGET_PACKAGE(<target> <package> ...) - LEGACY
 #   Takes the same arguments as find_package, with the addition of the target you're
 #   linking to as the first parameter.  Upon successfully finding the package, it
 #   attempts to call TARGET_IMPORTED_LIBRARIES(<target> <package>::<package>)
-#  VERIFY_LIBRARIES_DEFINED()
+#  VERIFY_SHARED_LIBRARIES_RESOLVED()
 #   Verifies that for all targets which were used with target_imported_libraries or target_package
 #   All dependencies were resolved and the copy commands were setup properly.
+#   Not strictly nessecary thanks to the variable_watch on CMAKE_BACKWARDS_COMPATIBILITY, but
+#   provides some helpful information.
 
 include(CMakeParseArguments)
+include(TargetCopyLocalFiles)
 
-#helper functions for manipulating target properties.
-function(add_to_prop_set scope target property item)
-  get_property(_set ${scope} ${target} PROPERTY ${property})
-  if(NOT _set)
-    set(_set)
-  endif()
-  list(APPEND _set ${item})
-  list(REMOVE_DUPLICATES _set)
-  set_property(${scope} ${target} PROPERTY ${property} ${_set})
-endfunction()
-
-function(remove_from_prop_set scope target property item)
-  get_property(_set ${scope} ${target} PROPERTY ${property})
-  if(NOT _set)
-    return()
-  endif()
-  list(REMOVE_ITEM _set ${item})
-  set_property(${scope} ${target} PROPERTY ${property} ${_set})
-endfunction()
-
-# Adds the copy command which will reference the REQUIRED_LOCAL_FILES property on the target.
-#  The copy command, while platform dependent, will iterate through the list of files, typically
-#  DLLS, and will copy them to the appropriate location for the platform.
-function(add_module_copy_command target)
-  get_target_property(_has_command ${target} LOCAL_FILE_COPY_COMMAND_DEFINED)
-  if(_has_command)
-    return()
-  endif()
-
-  if(MSVC)
-    add_custom_command(TARGET ${target} POST_BUILD
-      COMMAND for %i in "(" $<TARGET_PROPERTY:${target},REQUIRED_LOCAL_FILES> $<$<CONFIG:DEBUG>:$<TARGET_PROPERTY:${target},REQUIRED_LOCAL_FILES_DEBUG>> $<$<CONFIG:DEBUG>:$<TARGET_PROPERTY:${target}, REQUIRED_LOCAL_FILES_RELEASE>> ");do" ${CMAKE_COMMAND} -E copy_if_different \"%i\" \"$<TARGET_FILE_DIR:${target}>\")
-  #elseif(APPLE)
-  #  get_target_property(_is_bundle ${target} MACOSX_BUNDLE)
-  #  if(_is_bundle)
-  #    add_custom_command(TARGET ${target} POST_BUILD
-  #      COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${target}>/../Frameworks/"
-  #      COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_imported_location}" "$<TARGET_FILE_DIR:${target}>/../Frameworks/"
-  #      COMMAND install_name_tool -change @loader_path/libLeap.dylib @loader_path/../Frameworks/libLeap.dylib "$<TARGET_FILE:${target}>")
-  #    #call install_name_tool and fixup the dylib paths here:
-  #  endif()
-  else()
-    message(WARNING "Automatic handling of shared libraries is unimplemented on this platform")
-  endif()
-
-endfunction()
-# add_dependency_to_copy_list(target dependency):
+# add_dependency_to_local_file_list(target dependency):
 #   Given a target and a dependency which must be a defined imported target (type module or shared),
-#   Adds the dependency's imported location to the target's list of REQUIRED_LOCAL_FILES
-function(add_dependency_to_copy_list target dependency)
+#   Adds the dependency's imported location to the target's list of REQUIRED_LOCAL_FILES, used
+#   by add_local_file_copy_command. A generally internal command.
+function(add_dependency_to_local_file_list target dependency)
   get_target_property(_type ${dependency} TYPE)
   get_target_property(_imported ${dependency} IMPORTED)
   if(NOT ((${_type} STREQUAL SHARED_LIBRARY OR ${_type} STREQUAL MODULE_LIBRARY) AND ${_imported}))
-    message(FATAL_ERROR "add_dependency_to_copy_list called with target ${target} on bad dependency ${dependency}")
+    message(FATAL_ERROR "add_dependency_to_local_file_list called with target ${target} on bad dependency ${dependency}")
     return()
   endif()
-
-  #if only the _<Config> variants are set, create a generator expression.
-  get_target_property(_imported_location ${dependency} IMPORTED_LOCATION)
-  get_target_property(_imported_location_debug ${dependency} IMPORTED_LOCATION_DEBUG)
-  get_target_property(_imported_location_release ${dependency} IMPORTED_LOCATION_RELEASE)
 
   #TODO: Do something with this
   get_target_property(_install_subdir ${dependency} INSTALL_SUBDIR)
@@ -91,28 +48,31 @@ function(add_dependency_to_copy_list target dependency)
     set(_install_subdir /${_install_subdir})
   endif()
 
+  get_target_property(_imported_location ${dependency} IMPORTED_LOCATION)
+  get_target_property(_imported_location_debug ${dependency} IMPORTED_LOCATION_DEBUG)
+  get_target_property(_imported_location_release ${dependency} IMPORTED_LOCATION_RELEASE)
+
   if(_imported_location)
-    verbose_message("Adding required local file to ${target} for ${dependency}: ${_imported_location}")
-    add_to_prop_set(TARGET ${target} REQUIRED_LOCAL_FILES ${_imported_location})
+    add_local_files(${target} FILES ${_imported_location} )
   else()
-    if(_imported_location_debug)
-      verbose_message("Adding required local file <DEBUG> to ${target} for ${dependency}: ${_imported_location_debug}")
-      add_to_prop_set(TARGET ${target} REQUIRED_LOCAL_FILES_DEBUG ${_imported_location_debug})
-    endif()
-    if(_imported_location_release)
-      verbose_message("Adding required local file <RELEASE> to ${target} for ${dependency}: ${_imported_location_release}")
-      add_to_prop_set(TARGET ${target} REQUIRED_LOCAL_FILES_RELEASE ${_imported_location_release})
-    endif()
+    add_local_files(${target} DEBUG ${_imported_location_debug} RELEASE ${_imported_location_release})
   endif()
 endfunction()
 
+# scan_dependencies_for_dlls(target ...)
+#  Recursively scans a target's INTERFACE_LINK_LIBRARIES and INTERFACE_LINK_MODULES properties
+#  for targets, adding any shared libraries or modules IMPORTED_LOCATIONs to the target's list
+#  of copied local files.  Any dependency which are found (and are not generator expressions or .lib/.so files)
+#  but are not targets are appended to the target's UNRESOLVED_DEPENDENCIES property for resolution on
+#  a later pass.  Any targets who'se UNRESOLVED_DEPENDENCIES property is non-empty is added to the global
+#  list of UNRESOLVED_TARGETS
 function(scan_dependencies_for_dlls target)
   foreach(dependency ${ARGN})
     if(TARGET ${dependency})
       get_target_property(_type ${dependency} TYPE)
       get_target_property(_imported ${dependency} IMPORTED)
       if((${_type} STREQUAL SHARED_LIBRARY OR ${_type} STREQUAL MODULE_LIBRARY) AND ${_imported})
-        add_dependency_to_copy_list(${target} ${dependency})
+        add_dependency_to_local_file_list(${target} ${dependency})
       endif()
 
       get_target_property(_libraries ${dependency} INTERFACE_LINK_LIBRARIES)
@@ -142,6 +102,26 @@ function(scan_dependencies_for_dlls target)
   endif()
 endfunction()
 
+function(target_copy_shared_libraries target)
+  #early out if the target isn't an EXECUTABLE
+  get_target_property(_target_type ${target} TYPE)
+  if(NOT ${_target_type} STREQUAL EXECUTABLE)
+    return()
+  endif()
+
+  add_local_file_copy_command(${target})
+
+  get_target_property(_libraries ${target} INTERFACE_LINK_LIBRARIES)
+  get_target_property(_modules ${target} INTERFACE_LINK_MODULES)
+  if(NOT _libraries)
+    set(_libraries)
+  endif()
+  if(NOT _modules)
+    set(_modules)
+  endif()
+  scan_dependencies_for_dlls(${target} ${_libraries} ${_modules})
+endfunction()
+
 function(target_imported_libraries target)
   cmake_parse_arguments(target_imported_libraries "" "LINK_TYPE" "" ${ARGN})
 
@@ -166,24 +146,8 @@ function(target_imported_libraries target)
   endforeach()
 
   target_link_libraries(${target} ${target_imported_libraries_LINK_TYPE} ${_link_lib_list})
+  target_copy_shared_libraries(${target})
 
-  #early out if the target isn't an EXECUTABLE
-  get_target_property(_target_type ${target} TYPE)
-  if(NOT ${_target_type} STREQUAL EXECUTABLE)
-    return()
-  endif()
-
-  add_module_copy_command(${target})
-
-  get_target_property(_libraries ${target} INTERFACE_LINK_LIBRARIES)
-  get_target_property(_modules ${target} INTERFACE_LINK_MODULES)
-  if(NOT _libraries)
-    set(_libraries)
-  endif()
-  if(NOT _modules)
-    set(_modules)
-  endif()
-  scan_dependencies_for_dlls(${target} ${_libraries} ${_modules})
 endfunction()
 
 #This function wraps find_package, then calls target_imported_libraries on the generated package)
@@ -231,7 +195,7 @@ function(scan_unresolved)
 
 endfunction()
 
-function(verify_all_copy_steps_resolved)
+function(verify_shared_libraries_resolved)
   scan_unresolved()
   get_property(_global_unresolved GLOBAL PROPERTY UNRESOLVED_TARGETS)
   if(_global_unresolved)
