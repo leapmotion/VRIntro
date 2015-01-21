@@ -52,7 +52,7 @@ include(CMakeParseArguments)
 if(MSVC)
   configure_file(${CMAKE_CURRENT_LIST_DIR}/copy_files_to_dirs.bat ${CMAKE_BINARY_DIR}/copy_files_to_dirs.bat COPYONLY)
 elseif(APPLE)
-  configure_file(${CMAKE_CURRENT_LIST_DIR}/copy_files_to_dirs_apple.sh ${CMAKE_BINARY_DIR}/copy_files_to_dirs.bat COPYONLY)
+  configure_file(${CMAKE_CURRENT_LIST_DIR}/copy_files_to_dirs_apple.sh ${CMAKE_BINARY_DIR}/copy_files_to_dirs.sh COPYONLY)
 endif()
 
 function(add_local_file_copy_command target)
