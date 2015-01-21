@@ -24,16 +24,16 @@
 
 
 find_path(ZLIB_ROOT_DIR 
-  NAMES include/zlib.h 
+  NAMES include/zlib.h zlib.h
   PATH_SUFFIXES zlib zlib-${ZLIB_FIND_VERSION} 
 )
 
 find_path(ZLIB_INCLUDE_DIR zlib.h PATHS ${ZLIB_ROOT_DIR} ${ZLIB_ROOT_DIR}/include)
 
 if(BUILD_64_BIT)
-  find_library(ZLIB_LIBRARY NAMES zlib z HINTS ${ZLIB_ROOT_DIR} PATH_SUFFIXES lib lib/x64)
+  find_library(ZLIB_LIBRARY NAMES zlibstat zlib z HINTS ${ZLIB_ROOT_DIR} PATH_SUFFIXES lib lib/x64)
 else()
-  find_library(ZLIB_LIBRARY NAMES zlib z HINTS ${ZLIB_ROOT_DIR} PATH_SUFFIXES lib lib/x86)
+  find_library(ZLIB_LIBRARY NAMES zlibstat zlib z HINTS ${ZLIB_ROOT_DIR} PATH_SUFFIXES lib lib/x86)
 endif()
 
 mark_as_advanced(ZLIB_LIBRARY ZLIB_INCLUDE_DIR)
