@@ -48,13 +48,18 @@ function(remove_from_prop_set scope target property item)
   set_property(${scope} ${target} PROPERTY ${property} ${_set})
 endfunction()
 
-include(CMakeParseArguments)
+#Copy over the script files used by add_local_file_copy_command
 if(MSVC)
-  configure_file(${CMAKE_CURRENT_LIST_DIR}/copy_files_to_dirs.bat ${CMAKE_BINARY_DIR}/copy_files_to_dirs.bat COPYONLY)
+  set(_copy_files_to_dirs_script copy_files_to_dirs.bat)
 elseif(APPLE)
-  configure_file(${CMAKE_CURRENT_LIST_DIR}/copy_files_to_dirs_apple.sh ${CMAKE_BINARY_DIR}/copy_files_to_dirs.sh COPYONLY)
+  set(_copy_files_to_dirs_script copy_files_to_dirs_apple.sh)
 endif()
 
+if(_copy_files_to_dirs_script)
+  file(COPY ${CMAKE_CURRENT_LIST_DIR}/${_copy_files_to_dirs_script} DESTINATION ${CMAKE_BINARY_DIR})
+endif()
+
+include(CMakeParseArguments)
 function(add_local_file_copy_command target)
   get_target_property(_has_command ${target} LOCAL_FILE_COPY_COMMAND_DEFINED)
   if(_has_command)
@@ -66,18 +71,9 @@ function(add_local_file_copy_command target)
   file(GENERATE OUTPUT ${_file_dir}/LocalFilesToCopy.txt CONTENT "$<JOIN:$<TARGET_PROPERTY:${target},REQUIRED_LOCAL_FILES>$<$<CONFIG:DEBUG>:$<SEMICOLON>$<TARGET_PROPERTY:${target},REQUIRED_LOCAL_FILES_DEBUG>>$<$<CONFIG:RELEASE>:$<SEMICOLON>$<TARGET_PROPERTY:${target},REQUIRED_LOCAL_FILES_RELEASE>>,\n>")
   file(GENERATE OUTPUT ${_file_dir}/LocalFilesDirectories.txt CONTENT "$<JOIN:$<TARGET_PROPERTY:${target},LOCAL_FILE_DIRS>$<$<CONFIG:DEBUG>:$<SEMICOLON>$<TARGET_PROPERTY:${target},LOCAL_FILE_DIRS_DEBUG>>$<$<CONFIG:RELEASE>:$<SEMICOLON>$<TARGET_PROPERTY:${target},LOCAL_FILE_DIRS_RELEASE>>,\n>")
 
-  if(MSVC)
+  if(_copy_files_to_dirs_script)
     add_custom_command(TARGET ${target} POST_BUILD COMMAND
-      ${CMAKE_BINARY_DIR}/copy_files_to_dirs.bat ${_file_dir}/LocalFilesToCopy.txt ${_file_dir}/LocalFilesDirectories.txt $<TARGET_FILE_DIR:${target}>)
-  elseif(APPLE)
-    add_custom_command(TARGET ${target} POST_BUILD COMMAND
-      ${CMAKE_BINARY_DIR}/copy_files_to_dirs.sh ${_file_dir}/LocalFilesToCopy.txt ${_file_dir}/LocalFilesDirectories.txt $<TARGET_FILE_DIR:${target}>)
-#    get_target_property(_is_bundle ${target} MACOSX_BUNDLE)
-#    if(_is_bundle)
-#      add_custom_command(TARGET ${target} POST_BUILD
- #       COMMAND install_name_tool -change @loader_path/libLeap.dylib @loader_path/../Frameworks/libLeap.dylib "$<TARGET_FILE:${target}>")
-      #call install_name_tool and fixup the dylib paths here:
-  #  endif()
+      ${CMAKE_BINARY_DIR}/${_copy_files_to_dirs_script} ${_file_dir}/LocalFilesToCopy.txt ${_file_dir}/LocalFilesDirectories.txt $<TARGET_FILE_DIR:${target}>)
   else()
     message(WARNING "Automatic handling of local files is unimplemented on this platform")
   endif()
