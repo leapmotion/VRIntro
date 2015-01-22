@@ -18,13 +18,16 @@
 #  Crossroads_LIBRARY_RELEASE
 #  Crossroads_LIBRARY_DEBUG
 
+if(USE_LIBCXX)
+  set(_suffix "-libc++")
+endif()
 
 find_path(Crossroads_ROOT_DIR
 	NAMES include/xs/xs.h
-	PATH_SUFFIXES libxs-${Crossroads_FIND_VERSION}-${ALTERNATE_LIBRARY}
+	PATH_SUFFIXES libxs-${Crossroads_FIND_VERSION}${_suffix}
 				  libxs-${Crossroads_FIND_VERSION}
 				  libxs
-	)
+)
 
 set(Crossroads_INCLUDE_DIR ${Crossroads_ROOT_DIR}/include)
 
