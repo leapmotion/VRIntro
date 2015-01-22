@@ -23,7 +23,7 @@ find_path(FlatBuffers_ROOT_DIR
 
 set(FlatBuffers_INCLUDE_DIR ${FlatBuffers_ROOT_DIR}/include)
 
-find_program(FlatBuffers_FLATC flatc HINTS ${FlatBuffers_ROOT_DIR} PATH_SUFFIXES bin/${CROSS_COMPILE_EXE_TYPE})
+find_program(FlatBuffers_FLATC flatc HINTS ${FlatBuffers_ROOT_DIR} PATH_SUFFIXES bin/${CROSS_COMPILE_EXE_TYPE} bin)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(FlatBuffers DEFAULT_MSG FlatBuffers_INCLUDE_DIR FlatBuffers_FLATC)
