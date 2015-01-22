@@ -41,6 +41,7 @@ if(WIN32)
   select_configurations(Crossroads LIBRARY LIBRARIES)
 else()
   find_library(Crossroads_LIBRARY xs HINTS ${Crossroads_ROOT_DIR}/lib)
+  set(Crossroads_LIBRARIES ${Crossroads_LIBRARY})
 endif()
 
 include(FindPackageHandleStandardArgs)
