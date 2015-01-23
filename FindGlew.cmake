@@ -7,7 +7,7 @@
 #
 # Interface Targets
 # ^^^^^^^^^^^^^^^^^
-#   FindGlew::FindGlew
+#   Glew::Glew
 #
 # Variables
 # ^^^^^^^^^
