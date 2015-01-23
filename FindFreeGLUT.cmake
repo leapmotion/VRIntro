@@ -18,10 +18,10 @@
 
 
 find_path(FreeGLUT_ROOT_DIR
-	NAMES include/GL/freeglut.h
-	PATH_SUFFIXES freeglut-${FreeGLUT_FIND_VERSION}
-				  freeglut
-	)
+  NAMES include/GL/freeglut.h
+  PATH_SUFFIXES freeglut-${FreeGLUT_FIND_VERSION}
+                freeglut
+)
 
 set(FreeGLUT_INCLUDE_DIR ${FreeGLUT_ROOT_DIR}/include)
 

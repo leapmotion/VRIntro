@@ -23,10 +23,10 @@ if(USE_LIBCXX)
 endif()
 
 find_path(Crossroads_ROOT_DIR
-	NAMES include/xs/xs.h
-	PATH_SUFFIXES libxs-${Crossroads_FIND_VERSION}${_suffix}
-				  libxs-${Crossroads_FIND_VERSION}
-				  libxs
+  NAMES include/xs/xs.h
+  PATH_SUFFIXES libxs-${Crossroads_FIND_VERSION}${_suffix}
+                libxs-${Crossroads_FIND_VERSION}
+                libxs
 )
 
 set(Crossroads_INCLUDE_DIR ${Crossroads_ROOT_DIR}/include)
@@ -36,7 +36,7 @@ if(WIN32)
     find_library(Crossroads_LIBRARY_DEBUG "libxs_d.lib" HINTS ${Crossroads_ROOT_DIR}/lib/x64)
     find_library(Crossroads_LIBRARY_RELEASE "libxs.lib" HINTS ${Crossroads_ROOT_DIR}/lib/x64)
   else()
-  	find_library(Crossroads_LIBRARY_DEBUG "libxs_d.lib" HINTS ${Crossroads_ROOT_DIR}/lib/Win32)
+    find_library(Crossroads_LIBRARY_DEBUG "libxs_d.lib" HINTS ${Crossroads_ROOT_DIR}/lib/Win32)
     find_library(Crossroads_LIBRARY_RELEASE "libxs.lib" HINTS ${Crossroads_ROOT_DIR}/lib/Win32)
   endif()
 

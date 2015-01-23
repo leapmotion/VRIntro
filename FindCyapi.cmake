@@ -18,10 +18,10 @@
 
 
 find_path(CyAPI_ROOT_DIR
-	NAMES inc/CyAPI.h
-	PATH_SUFFIXES CyAPI-${CyAPI_FIND_VERSION}
-				        CyAPI
-	)
+          NAMES inc/CyAPI.h
+          PATH_SUFFIXES CyAPI-${CyAPI_FIND_VERSION}
+                        CyAPI
+)
 
 set(CyAPI_INCLUDE_DIR ${CyAPI_ROOT_DIR}/inc)
 

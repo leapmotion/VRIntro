@@ -18,8 +18,8 @@
 
 set(_suffix "")
 if(${USE_LIBCXX})
- 	set(_suffix "-libc++")
- endif()
+  set(_suffix "-libc++")
+endif()
 
 find_path(WebsocketPP_ROOT_DIR
           NAMES include/websocketpp/websocketpp.hpp
