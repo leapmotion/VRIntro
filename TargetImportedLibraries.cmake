@@ -72,7 +72,16 @@ endfunction()
 #  a later pass.  Any targets who'se UNRESOLVED_DEPENDENCIES property is non-empty is added to the global
 #  list of UNRESOLVED_TARGETS
 function(scan_dependencies_for_dlls target)
+  set(pruned_dependencies)
   foreach(dependency ${ARGN})
+    set(_added FALSE)
+    add_to_prop_set(TARGET ${target} SCANNED_DEPENDENCIES ${dependency} _added)
+    if(_added)
+      list(APPEND pruned_dependencies ${dependency})
+    endif()
+  endforeach()
+
+  foreach(dependency ${pruned_dependencies})
     if(TARGET ${dependency})
       get_target_property(_type ${dependency} TYPE)
       get_target_property(_imported ${dependency} IMPORTED)
