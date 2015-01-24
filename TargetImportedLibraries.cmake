@@ -72,40 +72,39 @@ endfunction()
 #  a later pass.  Any targets who'se UNRESOLVED_DEPENDENCIES property is non-empty is added to the global
 #  list of UNRESOLVED_TARGETS
 function(scan_dependencies_for_dlls target)
-  set(pruned_dependencies)
   foreach(dependency ${ARGN})
-    set(_added FALSE)
-    add_to_prop_set(TARGET ${target} SCANNED_DEPENDENCIES ${dependency} _added)
-    if(_added)
-      list(APPEND pruned_dependencies ${dependency})
-    endif()
-  endforeach()
+    set(_found FALSE)
+    is_in_prop_set(TARGET ${target} RESOLVED_DEPENDENCIES ${dependency} _found)
+    if(_found)
+      verbose_message("Skipping already found dependency for ${target}: ${dependency}")
+    else()
+      if(TARGET ${dependency})
+        verbose_message("Adding dependency to ${target}:${dependency}")
+        add_to_prop_set(TARGET ${target} RESOLVED_DEPENDENCIES ${dependency})
+        remove_from_prop_set(TARGET ${target} UNRESOLVED_DEPENDENCIES ${dependency})
 
-  foreach(dependency ${pruned_dependencies})
-    if(TARGET ${dependency})
-      get_target_property(_type ${dependency} TYPE)
-      get_target_property(_imported ${dependency} IMPORTED)
-      if((${_type} STREQUAL SHARED_LIBRARY OR ${_type} STREQUAL MODULE_LIBRARY) AND ${_imported})
-        add_dependency_to_local_file_list(${target} ${dependency})
+        get_target_property(_type ${dependency} TYPE)
+        get_target_property(_imported ${dependency} IMPORTED)
+
+        if((${_type} STREQUAL SHARED_LIBRARY OR ${_type} STREQUAL MODULE_LIBRARY) AND ${_imported})
+          add_dependency_to_local_file_list(${target} ${dependency})
+        endif()
+
+        get_target_property(_libraries ${dependency} INTERFACE_LINK_LIBRARIES)
+        get_target_property(_modules ${dependency} INTERFACE_LINK_MODULES)
+        if(NOT _libraries)
+          set(_libraries)
+        endif()
+        if(NOT _modules)
+          set(_modules)
+        endif()
+
+        scan_dependencies_for_dlls(${target} ${_libraries} ${_modules})
+      elseif(NOT dependency MATCHES "^[$-][<-]" AND NOT dependency MATCHES ".*[.-]..?.?$")
+        #Dependency is not a target and not some freaky generator expression, add to the list of unresolved.
+        verbose_message("Adding unresolved dependency to ${target}:${dependency}")
+        add_to_prop_set(TARGET ${target} UNRESOLVED_DEPENDENCIES ${dependency})
       endif()
-
-      get_target_property(_libraries ${dependency} INTERFACE_LINK_LIBRARIES)
-      get_target_property(_modules ${dependency} INTERFACE_LINK_MODULES)
-      if(NOT _libraries)
-        set(_libraries)
-      endif()
-      if(NOT _modules)
-        set(_modules)
-      endif()
-
-      #Remove the dependency from the list of unresolved dependencies for this target
-      remove_from_prop_set(TARGET ${target} UNRESOLVED_DEPENDENCIES ${dependency})
-
-      scan_dependencies_for_dlls(${target} ${_libraries} ${_modules})
-    elseif(NOT dependency MATCHES "^[$-][<-]" AND
-           NOT dependency MATCHES ".*[.-]..?.?$")
-      #Dependency is not a target and not some freaky generator expression, add to the list of unresolved.
-      add_to_prop_set(TARGET ${target} UNRESOLVED_DEPENDENCIES ${dependency})
     endif()
   endforeach()
 

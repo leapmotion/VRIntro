@@ -29,6 +29,16 @@ function(add_to_prop_set scope target property item) #success_var is an optional
   endif()
 endfunction()
 
+function(is_in_prop_set scope target property item found_var)
+  get_property(_set ${scope} ${target} PROPERTY ${property})
+  set(${found_var} FALSE PARENT_SCOPE)
+
+  list(FIND _set ${item} _index)
+  if(${_index} GREATER -1)
+    set(${found_var} TRUE PARENT_SCOPE)
+  endif()
+endfunction()
+
 function(add_to_prop_list scope target property item)
   get_property(_set ${scope} ${target} PROPERTY ${property})
   if(NOT _set)
