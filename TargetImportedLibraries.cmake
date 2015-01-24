@@ -183,7 +183,7 @@ endfunction()
 
 function(scan_unresolved)
   get_property(_global_unresolved GLOBAL PROPERTY UNRESOLVED_TARGETS)
-  if(_global_unresolved)
+  if(NOT _global_unresolved)
     set(_global_unresolved)
   endif()
 
