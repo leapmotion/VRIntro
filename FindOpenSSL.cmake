@@ -5,21 +5,23 @@ find_path(OPENSSL_ROOT_DIR
   PATH_SUFFIXES openssl
 )
 
-include(${CMAKE_ROOT}/Modules/FindOpenSSL.cmake)
-
-
 if(MSVC)
   find_library(OPENSSL_SSL_LIBRARY_DEBUG NAMES libeay32.lib HINTS ${OPENSSL_ROOT_DIR}/lib/debug)
   find_library(OPENSSL_SSL_LIBRARY_RELEASE NAMES libeay32.lib HINTS ${OPENSSL_ROOT_DIR}/lib/release)
   find_library(OPENSSL_CRYPTO_LIBRARY_DEBUG NAMES ssleay32.lib HINTS ${OPENSSL_ROOT_DIR}/lib/debug)
   find_library(OPENSSL_CRYPTO_LIBRARY_RELEASE NAMES ssleay32.lib HINTS ${OPENSSL_ROOT_DIR}/lib/release)
+  find_path(OPENSSL_INCLUDE_DIR NAMES openssl/opensslconf.h HINTS ${OPENSSL_ROOT_DIR} PATH_SUFFIXES include)
+
   mark_as_advanced(OPENSSL_SSL_LIBRARY_DEBUG OPENSSL_SSL_LIBRARY_RELEASE OPENSSL_CRYPTO_LIBRARY_DEBUG OPENSSL_CRYPTO_LIBRARY_RELEASE)
-  #override the bad OPENSSL_LIBRARIES value
+
   include(SelectConfigurations)
   select_configurations(OPENSSL_SSL LIBRARY LIBRARIES)
   select_configurations(OPENSSL_CRYPTO LIBRARY LIBRARIES)
+
+else()
+  include(${CMAKE_ROOT}/Modules/FindOpenSSL.cmake)
 endif()
-  
+
 if(EXISTS "${OPENSSL_CRYPTO_LIBRARY_DEBUG}" OR EXISTS "${OPENSSL_CRYPTO_LIBRARY}")
   set(OPENSSL_CRYPTO_FOUND TRUE)
 endif()
