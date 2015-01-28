@@ -1,4 +1,5 @@
- #!/bin/bash
+#!/bin/bash
+
 IFS=$'\n' read -d '' -r -a files < $1
 IFS=$'\n' read -d '' -r -a dirs < $2
 
