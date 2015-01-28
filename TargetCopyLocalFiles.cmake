@@ -80,6 +80,13 @@ function(add_local_file_copy_command target)
   set_property(TARGET ${target} PROPERTY LOCAL_FILE_COPY_COMMAND_DEFINED TRUE)
 
   set(_file_dir ${CMAKE_BINARY_DIR}/$<CONFIG>/${target})
+
+  #Pre generate the storage directories for the copy manifests, some platforms
+  #Don't like creating files in directories that don't exist yet.
+  foreach(config ${CMAKE_CONFIGURATION_TYPES})
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/${config}/${target})
+  endforeach()
+
   file(GENERATE OUTPUT ${_file_dir}/LocalFilesToCopy.txt CONTENT "$<JOIN:$<TARGET_PROPERTY:${target},REQUIRED_LOCAL_FILES>$<$<CONFIG:DEBUG>:$<SEMICOLON>$<TARGET_PROPERTY:${target},REQUIRED_LOCAL_FILES_DEBUG>>$<$<CONFIG:RELEASE>:$<SEMICOLON>$<TARGET_PROPERTY:${target},REQUIRED_LOCAL_FILES_RELEASE>>,\n>")
   file(GENERATE OUTPUT ${_file_dir}/LocalFilesDirectories.txt CONTENT "$<JOIN:$<TARGET_PROPERTY:${target},LOCAL_FILE_DIRS>$<$<CONFIG:DEBUG>:$<SEMICOLON>$<TARGET_PROPERTY:${target},LOCAL_FILE_DIRS_DEBUG>>$<$<CONFIG:RELEASE>:$<SEMICOLON>$<TARGET_PROPERTY:${target},LOCAL_FILE_DIRS_RELEASE>>,\n>")
 
