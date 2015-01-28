@@ -30,11 +30,12 @@ find_library(LibUSB_LIBRARY
 #This is a little bit of a hack - if this becomes a common use-case we may need
 #to add the ability to specify destination file names to add_local_files
 if(BUILD_LINUX AND NOT LibUSB_LIBRARY_ORIGINAL)
-  set(LibUSB_LIBRARY_ORIGINAL ${LibUSB_LIBRARY} CACHE)
+  set(LibUSB_LIBRARY_ORIGINAL ${LibUSB_LIBRARY} CACHE FILEPATH "")
   mark_as_advanced(LibUSB_LIBRARY_ORIGINAL)
 
-  get_filename_component(_basename ${LibUSB_LIBRARY} NAME)
-  set(LibUSB_LIBRARY ${CMAKE_BINARY_DIR}/libusb-temp/${_basename}.0 CACHE)
+  get_filename_component(_basename "${LibUSB_LIBRARY}" NAME)
+  set(LibUSB_LIBRARY ${CMAKE_BINARY_DIR}/libusb-temp/${_basename}.0 CACHE FILEPATH "" FORCE)
+
   file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/libusb-temp)
   configure_file(${LibUSB_LIBRARY_ORIGINAL} ${LibUSB_LIBRARY} COPYONLY)
 endif()
