@@ -29,7 +29,7 @@ find_library(LibUSB_LIBRARY
 
 #This is a little bit of a hack - if this becomes a common use-case we may need
 #to add the ability to specify destination file names to add_local_files
-if(BUILD_LINUX AND NOT LibUSB_LIBRARY_ORIGINAL)
+if(BUILD_LINUX AND NOT BUILD_ANDROID AND NOT LibUSB_LIBRARY_ORIGINAL)
   set(LibUSB_LIBRARY_ORIGINAL ${LibUSB_LIBRARY} CACHE FILEPATH "")
   mark_as_advanced(LibUSB_LIBRARY_ORIGINAL)
 
