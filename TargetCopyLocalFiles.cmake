@@ -59,10 +59,12 @@ function(remove_from_prop_set scope target property item)
 endfunction()
 
 #Copy over the script files used by add_local_file_copy_command
-if(MSVC)
+if(WIN32)
   set(_copy_files_to_dirs_script copy_files_to_dirs.bat)
 elseif(APPLE)
   set(_copy_files_to_dirs_script copy_files_to_dirs_apple.sh)
+elseif(UNIX)
+  set(_copy_files_to_dirs_script copy_files_to_dirs_linux.sh)
 endif()
 
 if(_copy_files_to_dirs_script)
