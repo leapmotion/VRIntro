@@ -33,8 +33,8 @@ if(BUILD_LINUX AND NOT LibUSB_LIBRARY_ORIGINAL)
   set(LibUSB_LIBRARY_ORIGINAL ${LibUSB_LIBRARY} CACHE FILEPATH "")
   mark_as_advanced(LibUSB_LIBRARY_ORIGINAL)
 
-  get_filename_component(_basename "${LibUSB_LIBRARY}" NAME)
-  set(LibUSB_LIBRARY ${CMAKE_BINARY_DIR}/libusb-temp/${_basename}.0 CACHE FILEPATH "" FORCE)
+  get_filename_component(_basename "${LibUSB_LIBRARY}" NAME_WE)
+  set(LibUSB_LIBRARY ${CMAKE_BINARY_DIR}/libusb-temp/${_basename}.0${CMAKE_SHARED_LIBRARY_SUFFIX}.0 CACHE FILEPATH "" FORCE)
 
   file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/libusb-temp)
   configure_file(${LibUSB_LIBRARY_ORIGINAL} ${LibUSB_LIBRARY} COPYONLY)
