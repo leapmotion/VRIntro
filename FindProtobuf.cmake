@@ -23,11 +23,14 @@ find_library(Protobuf_LIBRARY
         "${Protobuf_ROOT_DIR}/lib/Release"
 )
 
-find_library(Protobuf_LIBRARY_DEBUG
-  NAMES protobuf libprotobuf
-  HINTS ${Protobuf_ROOT_DIR}/lib/Debug
-)
-mark_as_advanced(Protobuf_LIBRARY_DEBUG)
+if(WIN32)
+  set(Protobuf_LIBRARY_RELEASE ${Protobuf_LIBRARY})
+  find_library(Protobuf_LIBRARY_DEBUG
+    NAMES protobuf libprotobuf
+    HINTS ${Protobuf_ROOT_DIR}/lib/Debug
+  )
+  mark_as_advanced(Protobuf_LIBRARY_DEBUG)
+endif()
 
 find_program(Protobuf_protoc protoc HINTS ${Protobuf_ROOT_DIR} PATH_SUFFIXES bin${CROSS_COMPILE_EXE_TYPE})
 
