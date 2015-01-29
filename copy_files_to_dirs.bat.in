@@ -8,8 +8,6 @@ set n=%i%;
 cd %3
 
 for /L %%i in (1,1,%n%) do (
-  @CMAKE_COMMAND@ -E make_directory !dirs[%%i]!
-  @CMAKE_COMMAND@ -E copy_if_different !files[%%i]! !dirs[%%i]!
+  "@CMAKE_COMMAND@" -E make_directory !dirs[%%i]!
+  "@CMAKE_COMMAND@" -E copy_if_different !files[%%i]! !dirs[%%i]!
 )
-
-::${CMAKE_COMMAND} -E copy_if_different \"%%i\" \"$<TARGET_FILE_DIR:${target}>/.\")
