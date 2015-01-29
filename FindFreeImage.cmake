@@ -43,5 +43,7 @@ include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(FreeImage DEFAULT_MSG FreeImage_ROOT_DIR FreeImage_INCLUDE_DIR FreeImage_LIBRARY_RELEASE FreeImage_LIBRARY_DEBUG)
 
 include(CreateImportTargetHelpers)
-
 generate_import_target(FreeImage STATIC)
+
+find_dependency(ZLIB)
+set_property(TARGET FreeImage::FreeImage APPEND PROPERTY INTERFACE_LINK_LIBRARIES ZLIB::ZLIB)
