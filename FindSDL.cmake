@@ -303,6 +303,10 @@ find_path(
 )
 verbose_message("SDL_INCLUDE_DIR = ${SDL_INCLUDE_DIR}")
 
+unset(SDL_SHARED_LIB CACHE)
+unset(SDL_STATIC_LIB CACHE)
+unset(SDL_IMPORT_LIB CACHE)
+
 find_multitype_library(
   SDL_SHARED_LIB
   SDL_STATIC_LIB
