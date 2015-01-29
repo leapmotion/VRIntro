@@ -5,6 +5,6 @@ IFS=$'\n' read -d '' -r -a dirs < $2
 
 cd $3
 for i in ${!files[@]}; do
-  cmake -E make_directory ${dirs[$i]}
-  cmake -E copy_if_different ${files[$i]} ${dirs[$i]}
+  @CMAKE_COMMAND@ -E make_directory ${dirs[$i]}
+  @CMAKE_COMMAND@ -E copy_if_different ${files[$i]} ${dirs[$i]}
 done
