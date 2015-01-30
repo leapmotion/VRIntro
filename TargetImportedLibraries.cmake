@@ -23,7 +23,8 @@
 #   Verifies that for all targets which were used with target_imported_libraries or target_package
 #   All dependencies were resolved and the copy commands were setup properly.
 #   Not strictly nessecary thanks to the variable_watch on CMAKE_BACKWARDS_COMPATIBILITY, but
-#   provides some helpful information.
+#   provides some helpful information. If you plan on calling this, you can set
+#   COPY_LOCAL_FILES_NO_AUTOSCAN to TRUE before including this file to improve cmake performance.
 
 include(CMakeParseArguments)
 include(TargetCopyLocalFiles)
@@ -165,7 +166,6 @@ function(target_imported_libraries target)
 
   target_link_libraries(${target} ${target_imported_libraries_LINK_TYPE} ${_link_lib_list})
   target_copy_shared_libraries(${target})
-
 endfunction()
 
 #This function wraps find_package, then calls target_imported_libraries on the generated package)
@@ -232,4 +232,6 @@ function(scan_unresolved_EOFHook Variable Access)
   endif()
 endfunction()
 
-variable_watch(CMAKE_BACKWARDS_COMPATIBILITY scan_unresolved_EOFHook)
+if(NOT COPY_LOCAL_FILES_NO_AUTOSCAN)
+  variable_watch(CMAKE_BACKWARDS_COMPATIBILITY scan_unresolved_EOFHook)
+endif()
