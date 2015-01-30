@@ -132,6 +132,11 @@ function(target_copy_shared_libraries target)
   if(NOT _modules)
     set(_modules)
   endif()
+
+  if(NOT _libraries AND NOT _modules)
+    message(WARNING "${target} does not have any defined dependencies - call target_link_libraries before you call this!")
+  endif()
+
   scan_dependencies_for_dlls(${target} ${_libraries} ${_modules})
 endfunction()
 
