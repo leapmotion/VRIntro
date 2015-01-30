@@ -68,7 +68,7 @@ elseif(UNIX)
 endif()
 
 if(_copy_files_to_dirs_script)
-  file(COPY ${CMAKE_CURRENT_LIST_DIR}/${_copy_files_to_dirs_script} DESTINATION ${CMAKE_BINARY_DIR})
+  configure_file(${CMAKE_CURRENT_LIST_DIR}/${_copy_files_to_dirs_script}.in ${CMAKE_BINARY_DIR}/${_copy_files_to_dirs_script} @ONLY)
 endif()
 
 include(CMakeParseArguments)
