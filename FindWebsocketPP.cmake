@@ -14,7 +14,7 @@
 #  WebsocketPP_ROOT_DIR
 #  WebsocketPP_FOUND
 #  WebsocketPP_INCLUDE_DIR
-#  WebsocketPP_LIBRARIES
+#  WebsocketPP_LIBRARY_<CONFIG>
 
 set(_suffix "")
 if(${USE_LIBCXX})
@@ -27,13 +27,15 @@ find_path(WebsocketPP_ROOT_DIR
 
 set(WebsocketPP_INCLUDE_DIR ${WebsocketPP_ROOT_DIR}/include)
 
-find_library(WebsocketPP_LIBRARY_DEBUG websocketppd HINTS ${WebsocketPP_ROOT_DIR} PATH_SUFFIXES lib)
-find_library(WebsocketPP_LIBRARY_RELEASE websocketpp HINTS ${WebsocketPP_ROOT_DIR} PATH_SUFFIXES lib)
-include(SelectConfigurations)
-select_configurations(WebsocketPP LIBRARY LIBRARIES)
+find_library(WebsocketPP_LIBRARY websocketpp HINTS ${WebsocketPP_ROOT_DIR} PATH_SUFFIXES lib)
+set(WebsocketPP_LIBRARY_RELEASE ${WebsocketPP_LIBRARY})
+
+if(WIN32)
+  find_library(WebsocketPP_LIBRARY_DEBUG websocketppd HINTS ${WebsocketPP_ROOT_DIR} PATH_SUFFIXES lib)
+endif()
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(WebsocketPP DEFAULT_MSG WebsocketPP_INCLUDE_DIR WebsocketPP_LIBRARIES)
+find_package_handle_standard_args(WebsocketPP DEFAULT_MSG WebsocketPP_INCLUDE_DIR WebsocketPP_LIBRARY)
 
 include(CreateImportTargetHelpers)
 generate_import_target(WebsocketPP STATIC)
