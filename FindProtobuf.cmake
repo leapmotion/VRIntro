@@ -40,5 +40,9 @@ find_package_handle_standard_args(Protobuf DEFAULT_MSG
 
 generate_import_target(Protobuf STATIC)
 
+include(CMakeFindDependencyMacro)
+find_dependency(ZLIB)
+set_property(TARGET Protobuf::Protobuf APPEND PROPERTY INTERFACE_LINK_LIBRARIES ZLIB::ZLIB)
+
 add_executable(Protobuf::protoc IMPORTED)
 set_property(TARGET Protobuf::protoc PROPERTY IMPORTED_LOCATION ${Protobuf_protoc})
