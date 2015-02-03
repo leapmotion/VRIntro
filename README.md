@@ -9,7 +9,7 @@ function properly on older versions.
 ##### Usage
 First add the cmake-module repo as a remote, so you can more easily reference it
 ```
-  git remote add -f cmake-modules-repo git@sf-github.leap.corp:leapmotion/cmake-module.git
+  git remote add -f cmake-modules-repo git@github.com:leapmotion/cmake-modules.git
 ```
 
 To setup cmake-modules in your repository (only run once as a setup step):
