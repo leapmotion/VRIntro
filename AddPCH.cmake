@@ -1,4 +1,4 @@
-#MSVC pch helper.  Copied from http://pastebin.com/84dm5rXZ and modified by Walter Gray.
+#MSVC pch helper. Copied from http://pastebin.com/84dm5rXZ and modified by Walter Gray.
 #Files already in SourcesVar will be marked as using a PCH, then the pch files will be
 #appended to the list.
 

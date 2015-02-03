@@ -14,10 +14,10 @@
 #  TARGET_IMPORTED_LIBRARIES(<target> <link_type> <import_target>) - LEGACY
 #   Takes the same arguments as target_link_libraries, but does some additional work
 #   to identify and copy any required shared libraries (.dll or .dylib files) to the appropriate
-#   location in a custom post-build step.  See documentation at the function definition for more info.
+#   location in a custom post-build step. See documentation at the function definition for more info.
 #  TARGET_PACKAGE(<target> <package> ...) - LEGACY
 #   Takes the same arguments as find_package, with the addition of the target you're
-#   linking to as the first parameter.  Upon successfully finding the package, it
+#   linking to as the first parameter. Upon successfully finding the package, it
 #   attempts to call TARGET_IMPORTED_LIBRARIES(<target> <package>::<package>)
 #  VERIFY_SHARED_LIBRARIES_RESOLVED()
 #   Verifies that for all targets which were used with target_imported_libraries or target_package
@@ -68,9 +68,9 @@ endfunction()
 # scan_dependencies_for_dlls(target ...)
 #  Recursively scans a target's INTERFACE_LINK_LIBRARIES and INTERFACE_LINK_MODULES properties
 #  for targets, adding any shared libraries or modules IMPORTED_LOCATIONs to the target's list
-#  of copied local files.  Any dependency which are found (and are not generator expressions or .lib/.so files)
+#  of copied local files. Any dependency which are found (and are not generator expressions or .lib/.so files)
 #  but are not targets are appended to the target's UNRESOLVED_DEPENDENCIES property for resolution on
-#  a later pass.  Any targets who'se UNRESOLVED_DEPENDENCIES property is non-empty is added to the global
+#  a later pass. Any targets who'se UNRESOLVED_DEPENDENCIES property is non-empty is added to the global
 #  list of UNRESOLVED_TARGETS
 function(scan_dependencies_for_dlls target)
   foreach(dependency ${ARGN})

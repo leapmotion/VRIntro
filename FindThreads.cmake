@@ -146,8 +146,8 @@ endif()
 
 if(CMAKE_USE_PTHREADS_INIT)
   if(CMAKE_SYSTEM MATCHES "HP-UX-*")
-    # Use libcma if it exists and can be used.  It provides more
-    # symbols than the plain pthread library.  CMA threads
+    # Use libcma if it exists and can be used. It provides more
+    # symbols than the plain pthread library. CMA threads
     # have actually been deprecated:
     #   http://docs.hp.com/en/B3920-90091/ch12s03.html#d0e11395
     #   http://docs.hp.com/en/947/d8.html

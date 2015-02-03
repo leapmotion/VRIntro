@@ -36,14 +36,14 @@
 #
 # This script defines the following interface targets:
 #   SFML::
-#           SFML - Meta-target.  Links to all targets below.
+#           SFML - Meta-target. Links to all targets below.
 #           Main - The minimum required core target.
 #           Audio
 #           Graphics
 #           Network
 #           System
 #           Window
-#           
+#
 #   Targets for different components will only defined for modules in the COMPONENTS list passed to find_package.
 #   If no components are listed, it is assumed that all components are requested.
 #
@@ -204,7 +204,7 @@ foreach(FIND_SFML_COMPONENT ${SFML_FIND_COMPONENTS})
     if (SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_DEBUG OR SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_RELEASE)
         # library found
         set(SFML_${FIND_SFML_COMPONENT_UPPER}_FOUND TRUE)
-        
+
         # if both are found, set SFML_XXX_LIBRARY to contain both
         if (SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_DEBUG AND SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_RELEASE)
             set(SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY debug     ${SFML_${FIND_SFML_COMPONENT_UPPER}_LIBRARY_DEBUG}
@@ -300,7 +300,7 @@ if( SFML_FOUND AND NOT TARGET SFML::SFML)
 
     if(_componentLOWER STREQUAL "main") #main is always a static lib
       generate_import_target(SFML_MAIN STATIC TARGET SFML::Main)
-      
+
     else()
       generate_import_target(SFML_${_componentUPPER} ${_libtype} TARGET SFML::${_componentCap})
     endif()

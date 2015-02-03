@@ -2,12 +2,12 @@
 # FindSDL
 # -------
 #
-# Locate SDL library.  Modified by Walter Gray to be compatible with SDL 2.x and
-# provide import library pseudo targets. Untested with SDL 1.x.  Then modified
-# by Victor Dods to forget SDL 1.x, and only look for SDL 2.x.  This find module
+# Locate SDL library. Modified by Walter Gray to be compatible with SDL 2.x and
+# provide import library pseudo targets. Untested with SDL 1.x. Then modified
+# by Victor Dods to forget SDL 1.x, and only look for SDL 2.x. This find module
 # should be renamed to FindSDL2.cmake -- it is useful to note that the developers
-# of SDL have actually changed the name of the library, not just the version.  It
-# is actually "SDL2", not "SDL" anymore.  Thus a fully-qualified lib directory name
+# of SDL have actually changed the name of the library, not just the version. It
+# is actually "SDL2", not "SDL" anymore. Thus a fully-qualified lib directory name
 # would be something like "SDL2-2.0.3", and not "SDL-2.0.3" as one would expect.
 #
 # Imported Targets
@@ -39,8 +39,8 @@
 #   SDL_MAIN_LIBRARY
 #     Where to find SDLmain.lib/.a
 #   SDL_LIBRARY_TYPE
-#     Either STATIC or SHARED depending on if SDL.dll/dylib is found.  If both are available,
-#     defaults to SHARED.  Setting this in the cache will attempt to force one or the other
+#     Either STATIC or SHARED depending on if SDL.dll/dylib is found. If both are available,
+#     defaults to SHARED. Setting this in the cache will attempt to force one or the other
 #   SDL_VERSION_STRING
 #     A human-readable string containing the version of SDL
 #   SDL_LIBRARIES
@@ -60,7 +60,7 @@
 #
 #
 # Don't forget to include SDLmain.h and SDLmain.m your project for the
-# OS X framework based version.  (Other versions link to -lSDLmain which
+# OS X framework based version. (Other versions link to -lSDLmain which
 # this module will try to find on your behalf.) Also for OS X, this
 # module will automatically add the -framework Cocoa on your behalf.
 #
@@ -68,26 +68,26 @@
 #
 # Additional Note: If you see an empty SDL_LIBRARY_TEMP in your
 # configuration and no SDL_LIBRARY, it means CMake did not find your SDL
-# library (SDL.dll, libsdl.so, SDL.framework, etc).  Set
+# library (SDL.dll, libsdl.so, SDL.framework, etc). Set
 # SDL_LIBRARY_TEMP to point to your SDL library, and configure again.
 # Similarly, if you see an empty SDL_MAIN_LIBRARY, you should set this
-# value as appropriate.  These values are used to generate the final
+# value as appropriate. These values are used to generate the final
 # SDL_LIBRARY variable, but when these values are unset, SDL_LIBRARY
 # does not get created.
 #
 #
 #
 # $SDLDIR is an environment variable that would correspond to the
-# ./configure --prefix=$SDLDIR used in building SDL.  l.e.galup 9-20-02
+# ./configure --prefix=$SDLDIR used in building SDL. l.e.galup 9-20-02
 #
-# Modified by Eric Wing.  Added code to assist with automated building
+# Modified by Eric Wing. Added code to assist with automated building
 # by using environmental variables and providing a more
-# controlled/consistent search behavior.  Added new modifications to
+# controlled/consistent search behavior. Added new modifications to
 # recognize OS X frameworks and additional Unix paths (FreeBSD, etc).
 # Also corrected the header search path to follow "proper" SDL
-# guidelines.  Added a search for SDLmain which is needed by some
-# platforms.  Added a search for threads which is needed by some
-# platforms.  Added needed compile switches for MinGW.
+# guidelines. Added a search for SDLmain which is needed by some
+# platforms. Added a search for threads which is needed by some
+# platforms. Added needed compile switches for MinGW.
 #
 # Modified by Walter Gray. Added code to find SDL2, and create an import
 # target.
@@ -99,7 +99,7 @@
 #
 # Note that the header path has changed from SDL/SDL.h to just SDL.h
 # This needed to change because "proper" SDL convention is #include
-# "SDL.h", not <SDL/SDL.h>.  This is done for portability reasons
+# "SDL.h", not <SDL/SDL.h>. This is done for portability reasons
 # because not all systems place things in SDL/ (see FreeBSD).
 
 #=============================================================================
@@ -141,7 +141,7 @@ endfunction()
 
 #Checks <namespace>_SHARED_LIB, <namespace>_STATIC_LIB and <namespace>_IMPORT_LIB
 #And fills <namespace>_LIBRARY with the appropriate lib type depending on which is found
-#If both are found, it will default to shared.  We may, at a later time, also add verification
+#If both are found, it will default to shared. We may, at a later time, also add verification
 #of if the static library is actually a static lib and not an import lib on windows.
 #It will then fill <namespace>_LIBRARY_TYPE with either SHARED or STATIC
 function(select_library_type namespace)
@@ -210,12 +210,12 @@ if(NOT EXISTS SDL_ROOT_DIR)
   # NOTE: this could be done much more cleanly if we write a multiple-return-value find_file and find_path.
   # As it stands, cmake's find_file and find_path functions return at most one value, even if there are
   # multiple matches, and which one it returns depends on a rather complicated prioritized list of dirs.
-  
+
   #Find any dirs in the prefix path matching SDL* and add them to the list of candidates
   find_likely_dirs(SDL _likely_dirs "${CMAKE_PREFIX_PATH}")
 
   set(_best_version "")
-  
+
   #TODO: create a filter function that takes a function(to determine version given a path)
   #and filters dirs based on the package version & if EXACT has been set.
   foreach(_dir ${_likely_dirs})
@@ -347,10 +347,10 @@ endif()
 
 # For OS X, SDL uses Cocoa as a backend so it must link to Cocoa (as
 # well as the dependencies of Cocoa (the frameworks: Carbon, IOKit,
-# and the library: iconv)).  CMake doesn't display the -framework Cocoa
+# and the library: iconv)). CMake doesn't display the -framework Cocoa
 # string in the UI even though it actually is there if I modify a
-# pre-used variable.  I think it has something to do with the CACHE
-# STRING.  So I use a temporary variable until the end so I can set
+# pre-used variable. I think it has something to do with the CACHE
+# STRING. So I use a temporary variable until the end so I can set
 # the "real" variable in one-shot.
 if(APPLE)
   list(APPEND SDL_INTERFACE_LIBS "-framework Cocoa" "-framework IOKit"  "-framework Carbon" "iconv")
@@ -401,7 +401,7 @@ if(SDL_FOUND AND NOT TARGET SDL::SDL)
 
   # NOTE: this is commented out because SDL does not in principle need to depend
   # on X11 (it should be using Cocoa), and thus the SDL library we use should be
-  # configured to not use X11.  Jon has rolled an SDL build with X11 disabled, and
+  # configured to not use X11. Jon has rolled an SDL build with X11 disabled, and
   # that build should be making it into our external libraries.
   # # HACK FOR MAC X11 DEPENDENCY
   # # TODO - Create a modernized FindX11.cmake module, make SDL depend on it on macs
