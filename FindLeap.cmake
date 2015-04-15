@@ -34,7 +34,7 @@ if(MSVC)
   endif()
 
   find_library(Leap_IMPORT_LIB_RELEASE "Leap.lib" HINTS "${Leap_ROOT_DIR}/lib/${_bit_suffix}")
-  find_library(Leap_IMPORT_LIB_DEBUG "Leapd.lib" HINTS "${Leap_ROOT_DIR}/lib/${_bit_suffix}")
+  find_library(Leap_IMPORT_LIB_DEBUG "Leap.lib" HINTS "${Leap_ROOT_DIR}/lib/${_bit_suffix}")
 
   find_file(Leap_LIBRARY_RELEASE
             NAMES Leap.dll
