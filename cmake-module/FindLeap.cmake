@@ -16,6 +16,7 @@
 #   Leap_INCLUDE_DIR
 #   Leap_LIBRARY
 #   Leap_IMPORT_LIB
+#   Leap_64_BIT - Set this to ON if you want to link with the 64 bit binaries
 
 find_path(Leap_ROOT_DIR
           NAMES include/Leap.h
@@ -26,8 +27,14 @@ find_path(Leap_ROOT_DIR
 
 set(Leap_INCLUDE_DIR "${Leap_ROOT_DIR}/include")
 if(MSVC)
-  find_library(Leap_IMPORT_LIB_RELEASE "Leap.lib" HINTS "${Leap_ROOT_DIR}/lib/x86")
-  find_library(Leap_IMPORT_LIB_DEBUG "Leapd.lib" HINTS "${Leap_ROOT_DIR}/lib/x86")
+  if(Leap_64_BIT)
+    set(_bit_suffix x64)
+  else()
+    set(_bit_suffix x86)
+  endif()
+
+  find_library(Leap_IMPORT_LIB_RELEASE "Leap.lib" HINTS "${Leap_ROOT_DIR}/lib/${_bit_suffix}")
+  find_library(Leap_IMPORT_LIB_DEBUG "Leap.lib" HINTS "${Leap_ROOT_DIR}/lib/${_bit_suffix}")
 
   find_file(Leap_LIBRARY_RELEASE
             NAMES Leap.dll

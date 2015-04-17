@@ -9,7 +9,7 @@
 # ^^^^^^^^^^^^^^^^^
 #   Cinder::Cinder
 #     Interface target. references Cinder::Core and all
-#	    required boost libraries with the required ordering.
+#     required boost libraries with the required ordering.
 #
 #   Cinder::Core
 #     Static import target. Does not include cinder's dependencies.
@@ -29,7 +29,7 @@
 #     The location of the main cinder library
 #
 # This module will also find and add the Boost package which is included with Cinder,
-# create a master Boost::Boost interface library which links to a series of 
+# create a master Boost::Boost interface library which links to a series of
 # Boost::<component> static import libraries.
 
 if(MSVC10)
@@ -43,7 +43,7 @@ find_path(Cinder_ROOT_DIR
                         cinder)
 
 
-find_path(Cinder_INCLUDE_DIR 
+find_path(Cinder_INCLUDE_DIR
           NAMES "cinder/Cinder.h"
           HINTS "${Cinder_ROOT_DIR}"
           PATH_SUFFIXES "include")
