@@ -1,6 +1,8 @@
 set(CMAKE_CONFIGURATION_TYPES "Release;Debug" CACHE STRING "" FORCE)
 
 include(TargetImportedLibraries) # for Walter's target_package command
+include(LeapCMakeTemplates)
+leap_find_external_libraries()
 
 ###################################################################################################
 # We use an EXTERNAL_LIBRARY_DIR variable as a hint to where all the libraries can be found.
