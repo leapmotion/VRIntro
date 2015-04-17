@@ -96,11 +96,9 @@ void APIFrameSupplier::PopulateInteractionLayer(InteractionLayer& target, const 
   }
 }
 
-void APIFrameSupplier::PopulatePassthroughLayer(PassthroughLayer& target, int i) const {
-  const Leap::Frame& frame = m_LeapController.frame();
-
+void APIFrameSupplier::PopulatePassthroughLayer(PassthroughLayer& target, int i, bool useLatestImage) const {
   // Set passthrough images
-  const Leap::ImageList& images = frame.images();
+  const Leap::ImageList& images = useLatestImage ? m_LeapController.images() : m_LeapController.frame().images();
   if (images.count() == 2) {
     if (images[i].width() == 640) {
       target.SetImage(images[i].data(), images[i].width(), images[i].height());
@@ -112,8 +110,7 @@ void APIFrameSupplier::PopulatePassthroughLayer(PassthroughLayer& target, int i)
 }
 
 bool APIFrameSupplier::IsDragonfly() const {
-  const Leap::Frame& frame = m_LeapController.frame();
-  const Leap::ImageList& images = frame.images();
+  const Leap::ImageList& images = m_LeapController.images();
 
   return images.count() == 2 && images[0].width() != 640;
 }

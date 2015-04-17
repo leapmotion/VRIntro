@@ -43,6 +43,7 @@ VRIntroApp::VRIntroApp(bool showMirror) :
   m_OculusMode(true),
   m_CrippleMode(false),
   m_CroppleMode(false),
+  m_UseLatestImage(true),
   m_ShowMirror(showMirror),
   m_Selected(0),
   m_Zoom(1.0f),
@@ -136,7 +137,7 @@ void VRIntroApp::Update(TimeDelta real_time_delta) {
   float leap_baseline = m_FrameSupplier->IsDragonfly() ? 64.0f : 40.0f;
   // Set passthrough images
   for (int i = 0; i < 2; i++) {
-    m_FrameSupplier->PopulatePassthroughLayer(*m_PassthroughLayer[i], m_CrippleMode ? 0 : i);
+    m_FrameSupplier->PopulatePassthroughLayer(*m_PassthroughLayer[i], m_CrippleMode ? 0 : i, m_UseLatestImage);
     m_PassthroughLayer[i]->SetCrippleMode(m_CroppleMode);
     m_PassthroughLayer[i]->SetStencil(m_GhostHandLayer->Alpha() == 1);
   }
@@ -299,6 +300,9 @@ EventHandlerAction VRIntroApp::HandleKeyboardEvent(const SDL_KeyboardEvent &ev) 
       break;
     case 'v':
       m_CroppleMode = !m_CroppleMode;
+      break;
+    case 'i':
+      m_UseLatestImage = !m_UseLatestImage;
       break;
     case SDLK_F1:
       // Help menu
