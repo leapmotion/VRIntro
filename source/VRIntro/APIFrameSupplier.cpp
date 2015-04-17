@@ -96,9 +96,9 @@ void APIFrameSupplier::PopulateInteractionLayer(InteractionLayer& target, const 
   }
 }
 
-void APIFrameSupplier::PopulatePassthroughLayer(PassthroughLayer& target, int i) const {
+void APIFrameSupplier::PopulatePassthroughLayer(PassthroughLayer& target, int i, bool useLatestImage) const {
   // Set passthrough images
-  const Leap::ImageList& images = m_LeapController.images();
+  const Leap::ImageList& images = useLatestImage ? m_LeapController.images() : m_LeapController.frame().images();
   if (images.count() == 2) {
     if (images[i].width() == 640) {
       target.SetImage(images[i].data(), images[i].width(), images[i].height());

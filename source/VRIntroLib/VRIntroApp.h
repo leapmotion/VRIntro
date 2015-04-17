@@ -105,6 +105,7 @@ private:
   bool m_OculusMode;
   bool m_CrippleMode;
   bool m_CroppleMode;
+  bool m_UseLatestImage;
 
   int m_Width;
   int m_Height;
