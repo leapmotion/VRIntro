@@ -10,8 +10,6 @@
 #include "GLTexture2Loader.h"
 #include "GLShaderLoader.h"
 
-void foo(const std::string& message) {}
-
 FlyingLayer::FlyingLayer(const EigenTypes::Vector3f& initialEyePos, const std::string& server_url) :
   InteractionLayer(initialEyePos),
   m_PopupShader(Resource<GLShader>("shaders/transparent")),
@@ -22,7 +20,7 @@ FlyingLayer::FlyingLayer(const EigenTypes::Vector3f& initialEyePos, const std::s
   m_GridOrientation(EigenTypes::Matrix4x4f::Identity()),
   m_LineThickness(3.0f),
   m_GridBrightness(80),
-  m_WebSocketClient(server_url, &foo) {
+  m_WebSocketClient(server_url, [this](const std::string& message){ ReceiveCallback(message); }) {
 
   // Define popup text coordinates
   static const float edges[] = {
@@ -198,4 +196,16 @@ EventHandlerAction FlyingLayer::HandleKeyboardEvent(const SDL_KeyboardEvent &ev)
   default:
     return EventHandlerAction::PASS_ON;
   }
+}
+
+void FlyingLayer::UpdateMultiplayer(TimeDelta real_time_delta) {
+  // Read 
+}
+
+void FlyingLayer::RenderMultiplayer(TimeDelta real_time_delta) const {
+
+}
+
+void FlyingLayer::ReceiveCallback(const std::string& message) const {
+   std::cout << __LINE__ << ":\t   message = " << (message) << std::endl;
 }

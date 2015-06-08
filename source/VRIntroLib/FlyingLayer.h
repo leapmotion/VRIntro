@@ -24,6 +24,9 @@ private:
   std::shared_ptr<GLShader> m_PopupShader;
 
   void RenderPopup() const;
+  void UpdateMultiplayer(TimeDelta real_time_delta);
+  void RenderMultiplayer(TimeDelta real_time_delta) const;
+  void ReceiveCallback(const std::string& message) const;
 
   WebSocketClient m_WebSocketClient;
 
