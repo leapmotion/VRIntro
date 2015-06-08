@@ -34,6 +34,10 @@ set(VRIntroLib_SOURCES
   MathUtility.h
   MathUtility.cpp
   PhysicsLayer.h
+  contrib/easywsclient.hpp
+  contrib/easywsclient.cpp
+  WebSocketClient.h
+  WebSocketClient.cpp
 )
 
 add_windows_sources(
@@ -79,4 +83,5 @@ endif()
 
 if(WIN32)
   target_link_libraries(VRIntroLib comctl32.lib Dwmapi.lib Shlwapi.lib)
+  target_link_libraries(VRIntroLib ws2_32)
 endif()
