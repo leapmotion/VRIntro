@@ -85,6 +85,28 @@ define_post_build_resource_copy_rules(
         images/level4_popup.png
         images/no_images.png
         images/random.png
+        images/faces/0.jpg
+        images/faces/1.jpg
+        images/faces/2.jpg
+        images/faces/3.jpg
+        images/faces/4.jpg
+        images/faces/5.jpg
+        images/faces/6.jpg
+        images/faces/7.jpg
+        images/faces/8.jpg
+        images/faces/9.jpg
+        images/faces/10.jpg
+        images/faces/11.jpg
+        images/faces/12.jpg
+        images/faces/13.jpg
+        images/faces/14.jpg
+        images/faces/15.jpg
+        images/faces/16.jpg
+        images/faces/17.jpg
+        images/faces/18.jpg
+        images/faces/19.jpg
+        images/faces/20.jpg
+        images/faces/21.jpg
         RunMirrored.bat
     ABSOLUTE_PATH_RESOURCES
         ${Components_DIR}/resources/material-frag.glsl
