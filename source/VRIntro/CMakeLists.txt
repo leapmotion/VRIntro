@@ -50,11 +50,11 @@ endif()
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" VRIntro_SOURCES)
 add_executable(VRIntro 
-		${_add_executable_options} 
-		${VRIntro_SOURCES}
-                ${COPY_IMG_RESOURCES}
-                ${COPY_VRINTRO_GLSL_RESOURCES}
-                ${COPY_COMPONENTS_GLSL_RESOURCES}
+    ${_add_executable_options} 
+    ${VRIntro_SOURCES}
+    ${COPY_IMG_RESOURCES}
+    ${COPY_VRINTRO_GLSL_RESOURCES}
+    ${COPY_COMPONENTS_GLSL_RESOURCES}
 )
 target_link_libraries(VRIntro VRIntroLib)
 target_package(VRIntro Leap)
@@ -89,6 +89,6 @@ define_post_build_resource_copy_rules(
     ABSOLUTE_PATH_RESOURCES
         ${Components_DIR}/resources/material-frag.glsl
         ${Components_DIR}/resources/matrix-transformed-vert.glsl
-		"${SDL_SHARED_LIB}"
+        "${SDL_SHARED_LIB}"
 )
 endif()
