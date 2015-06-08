@@ -10,7 +10,9 @@
 #include "GLTexture2Loader.h"
 #include "GLShaderLoader.h"
 
-FlyingLayer::FlyingLayer(const EigenTypes::Vector3f& initialEyePos) :
+void foo(const std::string& message) {}
+
+FlyingLayer::FlyingLayer(const EigenTypes::Vector3f& initialEyePos, const std::string& server_url) :
   InteractionLayer(initialEyePos),
   m_PopupShader(Resource<GLShader>("shaders/transparent")),
   m_PopupTexture(Resource<GLTexture2>("images/level4_popup.png")),
@@ -19,7 +21,8 @@ FlyingLayer::FlyingLayer(const EigenTypes::Vector3f& initialEyePos) :
   m_RotationAA(EigenTypes::Vector3f::Zero()),
   m_GridOrientation(EigenTypes::Matrix4x4f::Identity()),
   m_LineThickness(3.0f),
-  m_GridBrightness(80) {
+  m_GridBrightness(80),
+  m_WebSocketClient(server_url, &foo) {
 
   // Define popup text coordinates
   static const float edges[] = {

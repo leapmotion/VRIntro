@@ -1,12 +1,13 @@
 #pragma once
 
 #include "Interactionlayer.h"
+#include "WebSocketClient.h"
 
 class GLShader;
 
 class FlyingLayer : public InteractionLayer {
 public:
-  FlyingLayer(const EigenTypes::Vector3f& initialEyePos);
+  FlyingLayer(const EigenTypes::Vector3f& initialEyePos, const std::string& server_url = "");
   //virtual ~FlyingLayer ();
 
 
@@ -23,6 +24,8 @@ private:
   std::shared_ptr<GLShader> m_PopupShader;
 
   void RenderPopup() const;
+
+  WebSocketClient m_WebSocketClient;
 
   EigenTypes::Vector3f m_GridCenter;
   //EigenTypes::Vector3f m_AveragePalm;
