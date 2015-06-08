@@ -21,7 +21,7 @@ class MessageLayer;
 // Interface class for top-level control of an application.
 class VRIntroApp : public Application {
 public:
-  VRIntroApp(bool showMirror = false);
+  VRIntroApp(const std::string& serverUrl, bool showMirror = false);
   // Application interface methods.  See Application for comments and details.
 
   virtual void Initialize() override;
@@ -98,6 +98,7 @@ private:
   HWND m_MirrorHWND;
 #endif
   bool m_ShowMirror;
+  std::string m_ServerUrl;
 
   int  m_Selected;
   bool m_HealthWarningDismissed;

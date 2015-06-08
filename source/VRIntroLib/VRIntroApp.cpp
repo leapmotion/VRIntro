@@ -37,7 +37,8 @@
 #undef Success
 #endif
 
-VRIntroApp::VRIntroApp(bool showMirror) :
+VRIntroApp::VRIntroApp(const std::string& serverUrl, bool showMirror) :
+  m_ServerUrl(serverUrl),
   m_HealthWarningDismissed(false),
   m_HelpToggled(false),
   m_OculusMode(true),
@@ -438,7 +439,7 @@ void VRIntroApp::InitializeApplicationLayers() {
   m_MappedLayers.push_back(std::shared_ptr<GridLayer>(new GridLayer(defaultEyePose)));
   m_MappedLayers.push_back(std::shared_ptr<SpheresLayer>(new SpheresLayer(defaultEyePose)));
   m_MappedLayers.push_back(std::shared_ptr<SpaceLayer>(new SpaceLayer(defaultEyePose)));
-  m_MappedLayers.push_back(std::shared_ptr<FlyingLayer>(new FlyingLayer(defaultEyePose)));
+  m_MappedLayers.push_back(std::shared_ptr<FlyingLayer>(new FlyingLayer(defaultEyePose, m_ServerUrl)));
   m_MappedLayers.push_back(std::shared_ptr<FractalLayer>(new FractalLayer(defaultEyePose)));
   m_MappedLayers.push_back(std::shared_ptr<QuadsLayer>(new QuadsLayer(defaultEyePose)));
 #if USE_BULLET == 1
