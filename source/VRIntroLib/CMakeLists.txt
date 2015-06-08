@@ -34,6 +34,8 @@ set(VRIntroLib_SOURCES
   MathUtility.h
   MathUtility.cpp
   PhysicsLayer.h
+  PlayerState.h
+  PlayerState.cpp
   WebSocketClient.h
   WebSocketClient.cpp
   contrib/easywsclient.hpp
