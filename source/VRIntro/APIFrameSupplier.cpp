@@ -71,7 +71,7 @@ void APIFrameSupplier::PopulateInteractionLayer(InteractionLayer& target, const 
         outHand.jointConnections[j*3 + k] = rotation*bone.prevJoint().toVector3<EigenTypes::Vector3f>() + translation;
       }
     }
-    outHand.avgExtended = numExtended == 0 ? palm : (const EigenTypes::Vector3f)(sumExtended/numExtended);
+    outHand.avgExtended = numExtended == 0 ? palm : (const EigenTypes::Vector3f)(sumExtended/static_cast<float>(numExtended));
 
     const float thumbDist = (outHand.jointConnections[0] - palm).norm();
     const EigenTypes::Vector3f wrist = palm - thumbDist*(palmDir*0.8f + static_cast<float>(hand.isLeft() ? -1 : 1)*palmSide*0.5f);
