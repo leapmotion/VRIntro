@@ -72,8 +72,8 @@ public:
     typedef std::map<std::string, Json> object;
 
     // Constructors for the various types of JSON value.
-    Json() noexcept;                // NUL
-    Json(std::nullptr_t) noexcept;  // NUL
+    Json();                // NUL
+    Json(std::nullptr_t);  // NUL
     Json(double value);             // NUMBER
     Json(int value);                // NUMBER
     Json(bool value);               // BOOL
