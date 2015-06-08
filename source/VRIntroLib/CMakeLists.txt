@@ -34,10 +34,12 @@ set(VRIntroLib_SOURCES
   MathUtility.h
   MathUtility.cpp
   PhysicsLayer.h
-  contrib/easywsclient.hpp
-  contrib/easywsclient.cpp
   WebSocketClient.h
   WebSocketClient.cpp
+  contrib/easywsclient.hpp
+  contrib/easywsclient.cpp
+  contrib/json11.hpp
+  contrib/json11.cpp
 )
 
 add_windows_sources(
