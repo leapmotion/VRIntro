@@ -225,7 +225,7 @@ void VRIntroApp::Render(TimeDelta real_time_delta) const {
     Projection projection;
     static const double VFOV = 1.0;
     double hfov = VFOV*m_Width/static_cast<double>(m_Height);
-    projection.Perspective(-hfov, -VFOV, hfov, VFOV, 0.1, 10000.0);
+    projection.Perspective(-hfov, -VFOV, hfov, VFOV, 0.1, 100000.0);
 
     RenderEye(real_time_delta, 0, projection.Matrix().cast<float>()); // TODO: Should add an option to oculus vr for eye-agnostic view (halfway between the two eyes)
 

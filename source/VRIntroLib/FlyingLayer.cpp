@@ -10,8 +10,18 @@
 #include "GLTexture2Loader.h"
 #include "GLShaderLoader.h"
 
+#include "contrib/json11.hpp"
+
+using json11::Json;
+
+const float FlyingLayer::X_PERIOD = 100.0f;
+const float FlyingLayer::Y_PERIOD = 100.0f;
+const float FlyingLayer::Z_PERIOD = 100.0f;
+
 FlyingLayer::FlyingLayer(const EigenTypes::Vector3f& initialEyePos, const std::string& server_url) :
   InteractionLayer(initialEyePos),
+  m_AvatarShader(Resource<GLShader>("shaders/avatar")),
+  m_TrailShader(Resource<GLShader>("shaders/trail")),
   m_PopupShader(Resource<GLShader>("shaders/transparent")),
   m_PopupTexture(Resource<GLTexture2>("images/level4_popup.png")),
   m_GridCenter(initialEyePos),
@@ -20,7 +30,9 @@ FlyingLayer::FlyingLayer(const EigenTypes::Vector3f& initialEyePos, const std::s
   m_GridOrientation(EigenTypes::Matrix4x4f::Identity()),
   m_LineThickness(3.0f),
   m_GridBrightness(80),
-  m_WebSocketClient(server_url, [this](const std::string& message){ ReceiveCallback(message); }) {
+  m_WebSocketClient(server_url, [this](const std::string& message) { ReceiveCallback(message); }),
+                  m_MyID(-1),
+m_TrailAlphas(PlayerState::NUM_TRAILS*2*2) {
 
   // Define popup text coordinates
   static const float edges[] = {
@@ -34,6 +46,20 @@ FlyingLayer::FlyingLayer(const EigenTypes::Vector3f& initialEyePos, const std::s
   m_PopupBuffer.Bind();
   m_PopupBuffer.Allocate(edges, sizeof(edges), GL_STATIC_DRAW);
   m_PopupBuffer.Unbind();
+
+  m_TrailBuffer.Create(GL_ARRAY_BUFFER);
+  m_TrailBuffer.Bind();
+  m_TrailBuffer.Allocate(NULL, (PlayerState::NUM_TRAILS+1)*10*sizeof(float), GL_DYNAMIC_DRAW);
+  m_TrailBuffer.Unbind();
+
+  // Populate trail alphas
+  for (int i = 0; i < PlayerState::NUM_TRAILS; i++) {
+    float alpha = std::exp(-4.0f*static_cast<float>(PlayerState::NUM_TRAILS + 1 - i)/static_cast<float>(PlayerState::NUM_TRAILS));
+    m_TrailAlphas[2*i] = alpha;
+    m_TrailAlphas[2*i + 1] = alpha;
+    m_TrailAlphas[2*(PlayerState::NUM_TRAILS + i)] = alpha;
+    m_TrailAlphas[2*(PlayerState::NUM_TRAILS + i) + 1] = alpha;
+  }
 }
 
 void FlyingLayer::Update(TimeDelta real_time_delta) {
@@ -73,11 +99,16 @@ void FlyingLayer::Update(TimeDelta real_time_delta) {
   static const float MAX_VELOCITY_SQNORM = 0.2f;
   static const float MAX_ROTATION_SQNORM = 1.0f;
   float dt = static_cast<float>(real_time_delta);
-  m_GridCenter -= m_Velocity*std::min(MAX_VELOCITY_SQNORM, m_Velocity.squaredNorm())*(dt/PERIOD_TRANS);
+  m_GridCenter -= 0.5f*m_Velocity*std::min(MAX_VELOCITY_SQNORM, m_Velocity.squaredNorm())*(dt/PERIOD_TRANS);
   const EigenTypes::Matrix3x3f rot = MathUtility::RotationVectorToMatrix((dt/PERIOD_ROT)*m_RotationAA*std::min(MAX_ROTATION_SQNORM, m_RotationAA.squaredNorm()));
   //std::cout << __LINE__ << ":\t   rot = " << (rot) << std::endl;
   //EigenTypes::Matrix3x3f foo = ;
   m_GridOrientation.block<3, 3>(0, 0) = m_EyeView.transpose()*rot.transpose()*m_EyeView*m_GridOrientation.block<3, 3>(0, 0);
+
+  m_Orientation = m_GridOrientation.block<3, 3>(0, 0).transpose();
+  m_Center = -m_GridCenter;
+
+  UpdateMultiplayer(real_time_delta);
 }
 
 void FlyingLayer::Render(TimeDelta real_time_delta) const {
@@ -147,6 +178,8 @@ void FlyingLayer::Render(TimeDelta real_time_delta) const {
     RenderPopup();
   }
   glDepthMask(GL_TRUE);
+
+  RenderMultiplayer(real_time_delta);
 }
 
 void FlyingLayer::RenderPopup() const {
@@ -199,13 +232,120 @@ EventHandlerAction FlyingLayer::HandleKeyboardEvent(const SDL_KeyboardEvent &ev)
 }
 
 void FlyingLayer::UpdateMultiplayer(TimeDelta real_time_delta) {
-  // Read 
+  m_SelfPlayer.position = m_Center;
+  m_SelfPlayer.orientation = m_Orientation;
+
+  m_WebSocketClient.Send(m_SelfPlayer.ToJSON().dump());
 }
 
 void FlyingLayer::RenderMultiplayer(TimeDelta real_time_delta) const {
+  EigenTypes::Matrix4x4f modelView = EigenTypes::Matrix4x4f::Identity();
+  modelView.block<3, 3>(0, 0) = m_EyeView;
 
+  Eigen::AffineCompact3f transform(m_GridOrientation.block<3, 3>(0, 0));
+  transform.translate(m_GridCenter);
+  EigenTypes::Matrix4x4f postTransform = EigenTypes::Matrix4x4f::Identity();
+  postTransform.block<3, 4>(0, 0) = transform.matrix();
+
+  std::lock_guard<std::mutex> lock(m_DataMutex);
+
+  // Draw trails
+  glDepthMask(GL_FALSE);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+  m_TrailShader->Bind();
+
+  GLShaderMatrices::UploadUniforms(*m_TrailShader, (modelView*postTransform).cast<double>(), m_Projection.cast<double>(), BindFlags::NONE);
+
+  for (std::map<int, PlayerState>::const_iterator it = m_OtherPlayers.begin(); it != m_OtherPlayers.end(); ++it) {
+    int playerID = it->first;
+    const PlayerState& state = it->second;
+
+    glUniform3fv(m_TrailShader->LocationOfUniform("color"), 1, ColorFromID(playerID, 1.0f, 1.0f, 1.0f).Data().block<3,1>(0,0).data());
+    //glUniform3f(m_TrailShader->LocationOfUniform("color"), 1.0f, 1.0f, 1.0f);
+
+    // Draw trail always
+    m_TrailBuffer.Bind();
+    int size = 2*PlayerState::NUM_TRAILS+1;
+
+    glEnableVertexAttribArray(m_TrailShader->LocationOfAttribute("position"));
+    glEnableVertexAttribArray(m_TrailShader->LocationOfAttribute("alpha"));
+    glVertexAttribPointer(m_TrailShader->LocationOfAttribute("position"), 3, GL_FLOAT, GL_TRUE, 3*sizeof(float), 0);
+    glVertexAttribPointer(m_TrailShader->LocationOfAttribute("alpha"), 1, GL_FLOAT, GL_TRUE, 1*sizeof(float), (const GLvoid*)(size*3*sizeof(float)));
+    // If self, do not wrap trail around unit cell
+    if (playerID == m_MyID) {
+      glUniform3f(m_TrailShader->LocationOfUniform("period"), 2000.0f, 2000.0f, 2000.0f);
+    } else {
+      glUniform3f(m_TrailShader->LocationOfUniform("period"), X_PERIOD, Y_PERIOD, Z_PERIOD);
+    }
+    glUniform3fv(m_TrailShader->LocationOfUniform("my_position"), 1, m_Center.data());
+
+    int offset = 2*offset;
+    m_TrailBuffer.Write(state.trails.data(), size*3*sizeof(float));
+    glBufferSubData(GL_ARRAY_BUFFER, size*3*sizeof(float), size*sizeof(float), (const GLvoid*)(&m_TrailAlphas[(PlayerState::NUM_TRAILS - state.render_offset)*2]));
+    //m_TrailBuffer.Write(m_TrailAlphas[state.render_offset], size*3*sizeof(float));
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, size);
+
+    glDisableVertexAttribArray(m_TrailShader->LocationOfAttribute("position"));
+    glDisableVertexAttribArray(m_TrailShader->LocationOfAttribute("alpha"));
+    m_TrailBuffer.Unbind();
+  }
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glDepthMask(GL_TRUE);
+  m_TrailShader->Unbind();
+
+  // Draw avatars
+  m_AvatarShader->Bind();
+
+  const EigenTypes::Vector3f desiredLightPos(0, 1.5, 0.5);
+  const EigenTypes::Vector3f lightPos = m_EyeView*m_Orientation.transpose()*desiredLightPos;
+  const int lightPosLoc = m_Shader->LocationOfUniform("light_position");
+  glUniform3f(lightPosLoc, lightPos[0], lightPos[1], lightPos[2]);
+
+  // Common property
+  m_Sphere.Material().SetAmbientLightingProportion(0.3f);
+
+  m_Renderer.GetModelView().Matrix() = modelView.cast<double>();
+
+  for (std::map<int, PlayerState>::const_iterator it = m_OtherPlayers.begin(); it != m_OtherPlayers.end(); ++it) {
+    int playerID = it->first;
+
+    // Draw avatar only if it is not self
+    if (playerID != m_MyID) {
+      const PlayerState& state = it->second;
+
+      m_Sphere.SetRadius(0.2);
+      //vec3 position_mod = my_position - 0.5*period + mod(position - my_position + 0.5*period, period);
+      EigenTypes::Vector3f period(X_PERIOD, Y_PERIOD, Z_PERIOD);
+      EigenTypes::Vector3f mod_position = m_Center - 0.5f*period + (state.position - m_Center + 0.5f*period).binaryExpr(period, [](const float& a, const float& b) { return fmod(a, b); });
+      m_Sphere.Translation() = (transform*mod_position).cast<double>();
+      m_Sphere.LinearTransformation() = (m_GridOrientation.block<3, 3>(0, 0)*state.orientation).cast<double>();
+      m_Sphere.Material().SetDiffuseLightColor(ColorFromID(playerID, 1.0f, 1.0f, 1.0f));
+      m_Sphere.Material().SetAmbientLightColor(ColorFromID(playerID, 1.0f, 1.0f, 1.0f));
+      PrimitiveBase::DrawSceneGraph(m_Sphere, m_Renderer);
+    }
+  }
+  m_AvatarShader->Unbind();
 }
 
-void FlyingLayer::ReceiveCallback(const std::string& message) const {
-   std::cout << __LINE__ << ":\t   message = " << (message) << std::endl;
+void FlyingLayer::ReceiveCallback(const std::string& message) {
+  std::string err;
+  Json packet = Json::parse(message, err);
+  int playerID = packet["player"].int_value();
+  std::string eventType = packet["event"].string_value();
+
+  if (eventType == "update") {
+    std::lock_guard<std::mutex> lock(m_DataMutex);
+    m_OtherPlayers[playerID].FromJSON(packet["data"]);
+  } else if (eventType == "disconnect") {
+    m_OtherPlayers.erase(playerID);
+  } else if (eventType == "this_is_you") {
+    m_MyID = playerID;
+  }
+}
+
+Color FlyingLayer::ColorFromID(int id, float s, float v, float a) {
+  float hue = fmod(0.61803398875f*static_cast<float>(id), 1.0f);
+  Color color;
+  color.FromHSV(240.0f*hue, s, v, a);
+  return color;
 }
