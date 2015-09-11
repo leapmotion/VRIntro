@@ -7,7 +7,7 @@
 
 APIFrameSupplier::APIFrameSupplier() {
   m_LeapController.addListener(m_LeapListener);
-  m_LeapController.setPolicyFlags(static_cast<Leap::Controller::PolicyFlag>(Leap::Controller::POLICY_IMAGES | Leap::Controller::POLICY_OPTIMIZE_HMD));
+  m_LeapController.setPolicyFlags(static_cast<Leap::Controller::PolicyFlag>(Leap::Controller::POLICY_BACKGROUND_FRAMES | Leap::Controller::POLICY_IMAGES | Leap::Controller::POLICY_OPTIMIZE_HMD));
 }
 
 APIFrameSupplier::~APIFrameSupplier() {
