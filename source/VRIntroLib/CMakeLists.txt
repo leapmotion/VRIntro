@@ -71,6 +71,7 @@ endif()
 
 add_library(VRIntroLib STATIC ${VRIntroLib_SOURCES})
 
+find_package(Eigen 3.2.1 REQUIRED)
 target_link_components(VRIntroLib Application GLController GLShaderLoader GLTexture2Loader Primitives SDLController OculusVR)
 target_package(VRIntroLib Eigen)
 if(USE_BULLET)

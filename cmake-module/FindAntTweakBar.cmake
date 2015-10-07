@@ -7,62 +7,39 @@
 #
 # Interface Targets
 # ^^^^^^^^^^^^^^^^^
-#   FindAntTweakBar::FindAntTweakBar
+#   AntTweakBar::AntTweakBar
 #
 # Variables
 # ^^^^^^^^^
-#   AntTweakBar_DIR
+#   AntTweakBar_ROOT_DIR
 #   AntTweakBar_FOUND
 #   AntTweakBar_INCLUDE_DIR
-#   AntTweakBar_LIBRARIES
-#   AntTweakBar_64_BIT - can be overridden
+#   AntTweakBar_SHARED_LIB
+#   AntTweakBar_IMPORT_LIB - Windows only
 #
-find_path(AntTweakBar_DIR
+
+find_path(AntTweakBar_ROOT_DIR
           NAMES include/AntTweakBar.h
-          PATH_SUFFIXES AntTweakBar)
-		  
-find_path(
-    AntTweakBar_INCLUDE_DIR
-    NAMES include/AntTweakBar.h
-    HINTS ${AntTweakBar_ROOT_DIR}
-    PATH_SUFFIXES include    
-    NO_DEFAULT_PATH
-    )
+          PATH_SUFFIXES AntTweakBar${ALTERNATE_LIBRARY}
+                        AntTweakBar
+)
 
-if(DEFINED BUILD_64_BIT)
-  set(AntTweakBar_64_BIT ON)
-endif()
-
-if(NOT DEFINED AntTweakBar_64_BIT)
-  if (CMAKE_SIZEOF_VOID_P EQUAL 8) # 64bit
-    set(AntTweakBar_64_BIT ON)
-  else() # 32bit
-    set(AntTweakBar_64_BIT OFF)
-  endif()   
-endif()
+set(AntTweakBar_INCLUDE_DIR ${AntTweakBar_ROOT_DIR}/include)
 
 if(MSVC)
-  if(AntTweakBar_64_BIT)
-    find_library(AntTweakBar_LIBRARY_RELEASE "AntTweakBar64.lib" HINTS "${AntTweakBar_DIR}" PATH_SUFFIXES lib)
-    find_library(AntTweakBar_LIBRARY_DEBUG "AntTweakBar64.lib" HINTS "${AntTweakBar_DIR}" PATH_SUFFIXES lib/debug)
-  else()
-    find_library(AntTweakBar_LIBRARY_RELEASE "AntTweakBar.lib" HINTS "${AntTweakBar_DIR}" PATH_SUFFIXES lib)
-    find_library(AntTweakBar_LIBRARY_DEBUG "AntTweakBar.lib" HINTS "${AntTweakBar_DIR}" PATH_SUFFIXES lib/debug)
-  endif()
-else()
-# TODO: Need more logic on Mac/Linux
-  find_library(AntTweakBar_LIBRARY_RELEASE "libAntTweakBar.a" HINTS "${AntTweakBar_DIR}" PATH_SUFFIXES lib)
-  find_library(AntTweakBar_LIBRARY_DEBUG "libAntTweakBar.a" HINTS "${AntTweakBar_DIR}" PATH_SUFFIXES lib/debug)
+  find_library(AntTweakBar_IMPORT_LIB NAMES AntTweakBar.lib AntTweakBar64.lib HINTS ${AntTweakBar_ROOT_DIR} PATH_SUFFIXES lib)
+  mark_as_advanced(AntTweakBar_IMPORT_LIB)
 endif()
 
-include(SelectConfigurations)
-select_configurations(AntTweakBar LIBRARY LIBRARIES)
+list(INSERT CMAKE_FIND_LIBRARY_SUFFIXES 0 ${CMAKE_SHARED_LIBRARY_SUFFIX})  
+find_library(AntTweakBar_SHARED_LIB NAMES AntTweakBar AntTweakBar64 HINTS ${AntTweakBar_ROOT_DIR} PATH_SUFFIXES lib)
+list(REMOVE_AT CMAKE_FIND_LIBRARY_SUFFIXES 0)
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(	AntTweakBar DEFAULT_MSG 
-									AntTweakBar_DIR AntTweakBar_INCLUDE_DIR 
-									AntTweakBar_LIBRARY_RELEASE AntTweakBar_LIBRARY_DEBUG)
+find_package_handle_standard_args(AntTweakBar DEFAULT_MSG
+                                  AntTweakBar_ROOT_DIR AntTweakBar_INCLUDE_DIR
+                                  AntTweakBar_SHARED_LIB)
 
 include(CreateImportTargetHelpers)
+generate_import_target(AntTweakBar SHARED)
 
-generate_import_target(AntTweakBar STATIC)

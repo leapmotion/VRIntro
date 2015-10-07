@@ -9,7 +9,7 @@ function(target_strip Target)
       set_target_properties(${Target} PROPERTIES LINK_FLAGS_DEBUG "/NODEFAULTLIB:MSVCRT")
     endif()
   else()
-    set_target_properties(${Target} PROPERTIES LINK_FLAGS_RELEASE 
-		"-Xlinker -unexported_symbol -Xlinker \"*\" -Xlinker -dead_strip -Xlinker -dead_strip_dylibs")
+    set_target_properties(${Target} PROPERTIES LINK_FLAGS_RELEASE
+    "-Xlinker -unexported_symbol -Xlinker \"*\" -Xlinker -dead_strip -Xlinker -dead_strip_dylibs")
   endif()
 endfunction()

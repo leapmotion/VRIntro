@@ -2,11 +2,11 @@
 #ConditionalSources
 #---------------
 # Created by Walter Gray
-# 
+#
 # This module defines a set of functions for specifying conditionally compiled source files,
-# generally platform specific ones.  Files that are listed but whose condition is not met will
+# generally platform specific ones. Files that are listed but whose condition is not met will
 # still be visible in any IDE generated projects, but will not be compiled and will be isolated in
-# a named filter group.  This is particularly useful for find and replace operations in multi-platform
+# a named filter group. This is particularly useful for find and replace operations in multi-platform
 # codebases.
 #
 # There are two groups of functions
